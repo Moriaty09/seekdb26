@@ -774,6 +774,7 @@ int ObFileTableUtils::infer_csv_schema(ObIAllocator &allocator, ObFileTableDef &
                  K(reader.line_no()), K(column_count), "actual", fields.size());
       } else {
         for (int64_t i = 0; i < column_count; ++i) {
+          if (fields.at(i).empty()) def.columns_.at(i).nullable_ = true;
           inferred.at(i) = widen_csv_type(inferred.at(i), classify_csv_value(fields.at(i)));
         }
       }
@@ -820,6 +821,7 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
   char *line = nullptr;
   size_t cap = 0;
   int64_t line_no = 0;
+  int64_t data_row_count = 0;
   struct stat st;
   std::vector<CsvInferType> inferred;
   const std::string path(def.path_.ptr(), def.path_.length());
@@ -841,6 +843,7 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
       ++line_no;
       while (len > 0 && ('\n' == line[len - 1] || '\r' == line[len - 1])) --len;
       if (0 == len) continue;
+      ++data_row_count;
       rapidjson::Document doc;
       if (static_cast<size_t>(len) > FILE_SQL_MAX_RECORD_BYTES) {
         ret = OB_SIZE_OVERFLOW;
@@ -852,6 +855,7 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
       } else if (doc.HasParseError() || !doc.IsObject()) {
         ret = OB_ERR_INVALID_JSON_TEXT;
       } else {
+        std::vector<bool> present(def.columns_.count(), false);
         for (rapidjson::Value::ConstMemberIterator it = doc.MemberBegin(); OB_SUCC(ret) && it != doc.MemberEnd(); ++it) {
           if (!it->name.IsString() || it->value.IsArray() || it->value.IsObject()) {
             ret = OB_NOT_SUPPORTED;
@@ -870,12 +874,21 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
               OX (col.meta_.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI));
               OX (col.meta_.set_collation_level(CS_LEVEL_IMPLICIT));
               OX (col.accuracy_.set_length(OB_MAX_VARCHAR_LENGTH));
+              OX (col.nullable_ = data_row_count > 1);
               OZ (def.columns_.push_back(col));
-              if (OB_SUCC(ret)) { inferred.push_back(CSV_NULL); idx = inferred.size() - 1; }
+              if (OB_SUCC(ret)) {
+                inferred.push_back(CSV_NULL);
+                present.push_back(true);
+                idx = inferred.size() - 1;
+              }
             }
             if (OB_SUCC(ret)) {
+              present.at(idx) = true;
               CsvInferType type = CSV_STRING;
-              if (it->value.IsNull()) type = CSV_NULL;
+              if (it->value.IsNull()) {
+                type = CSV_NULL;
+                def.columns_.at(idx).nullable_ = true;
+              }
               else if (it->value.IsBool()) type = CSV_BOOL;
               else if (it->value.IsInt64() ||
                        (it->value.IsUint64() &&
@@ -887,6 +900,9 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
               inferred.at(idx) = widen_csv_type(inferred.at(idx), type);
             }
           }
+        }
+        for (int64_t i = 0; OB_SUCC(ret) && i < def.columns_.count(); ++i) {
+          if (!present.at(i)) def.columns_.at(i).nullable_ = true;
         }
       }
     }

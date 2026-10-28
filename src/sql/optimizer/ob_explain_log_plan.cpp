@@ -25,6 +25,20 @@ using namespace oceanbase::common;
 using namespace oceanbase::json;
 using namespace oceanbase::sql::log_op_def;
 
+namespace
+{
+const char *file_column_type_name(const ObObjType type)
+{
+  const char *name = "VARCHAR";
+  if (ObTinyIntType == type) name = "BOOLEAN";
+  else if (ObIntType == type) name = "BIGINT";
+  else if (ObDoubleType == type) name = "DOUBLE";
+  else if (ObDateType == type) name = "DATE";
+  else if (ObDateTimeType == type) name = "DATETIME";
+  return name;
+}
+}
+
 /**
  *  This function does two things:
  *
@@ -46,6 +60,41 @@ int ObExplainLogPlan::generate_normal_raw_plan()
     const ObExplainStmt *explain_stmt = static_cast<const ObExplainStmt*>(get_stmt());
     if (OB_ISNULL(child_stmt = explain_stmt->get_explain_query_stmt())) {
       ret = OB_ERR_UNEXPECTED;
+    } else if (explain_stmt->is_file_table_describe()) {
+      const ObFileTableDef *file_def = NULL;
+      for (int64_t i = 0; OB_ISNULL(file_def) && i < child_stmt->get_table_items().count(); ++i) {
+        const TableItem *item = child_stmt->get_table_items().at(i);
+        if (OB_NOT_NULL(item) && OB_NOT_NULL(item->file_table_def_)) {
+          file_def = item->file_table_def_;
+        }
+      }
+      if (OB_ISNULL(file_def)) {
+        ret = OB_ERR_UNEXPECTED;
+      } else if (OB_FAIL(allocate_values_as_top(top))) {
+      } else if (OB_ISNULL(top) || OB_UNLIKELY(LOG_VALUES != top->get_type())) {
+        ret = OB_ERR_UNEXPECTED;
+      } else {
+        set_plan_root(top);
+        top->mark_is_plan_root();
+        values_op = static_cast<ObLogValues *>(top);
+        for (int64_t i = 0; OB_SUCC(ret) && i < file_def->columns_.count(); ++i) {
+          const ObFileTableColumnDef &column = file_def->columns_.at(i);
+          ObObj cells[6];
+          cells[0].set_varchar(column.name_);
+          cells[1].set_varchar(file_column_type_name(column.meta_.get_type()));
+          cells[2].set_varchar(column.nullable_ ? "YES" : "NO");
+          cells[3].set_null();
+          cells[4].set_null();
+          cells[5].set_null();
+          ObNewRow row(cells, ARRAYSIZEOF(cells));
+          OZ (values_op->add_row(row));
+        }
+        if (OB_SUCC(ret)) {
+          values_op->set_op_id(0);
+          set_max_op_id(1);
+          optimizer_context_.set_packed(false);
+        }
+      }
     } else if (OB_ISNULL(child_plan = optimizer_context_.get_log_plan_factory().
                          create(optimizer_context_, *child_stmt))) {
       ret = OB_ALLOCATE_MEMORY_FAILED;
@@ -99,7 +148,8 @@ int ObExplainLogPlan::generate_normal_raw_plan()
     }
     get_optimizer_context().get_all_exprs().reuse();
     if (OB_FAIL(ret)) {
-    } else if (OB_FAIL(allocate_output_expr_for_values_op(*values_op))) {
+    } else if (OB_FAIL(allocate_output_expr_for_values_op(
+                 *values_op, explain_stmt->is_file_table_describe() ? 6 : 1))) {
     } else {
       get_optimizer_context().set_plan_type(ObPhyPlanType::OB_PHY_PLAN_LOCAL,
                                             ObPhyPlanType::OB_PHY_PLAN_LOCAL,

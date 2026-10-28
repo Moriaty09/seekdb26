@@ -54,6 +54,8 @@ public:
   void set_into_table(const common::ObString& into_table) { into_table_ = into_table; }
   const common::ObString& get_statement_id() const { return statement_id_; }
   void set_statement_id(const common::ObString& statement_id) { statement_id_ = statement_id; }
+  void set_file_table_describe(bool value) { is_file_table_describe_ = value; }
+  bool is_file_table_describe() const { return is_file_table_describe_; }
   virtual bool is_affect_found_rows() const { return is_select_explain(); }
   bool is_explain_extended() const { return EXPLAIN_EXTENDED == format_
                                             || EXPLAIN_EXTENDED_NOADDR == format_; }
@@ -66,6 +68,7 @@ private:
   ObDMLStmt *explain_query_stmt_;
   common::ObString into_table_;
   common::ObString statement_id_;
+  bool is_file_table_describe_;
   DISALLOW_COPY_AND_ASSIGN(ObExplainStmt);
 };
 

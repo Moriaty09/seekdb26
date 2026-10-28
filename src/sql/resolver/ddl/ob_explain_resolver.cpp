@@ -41,6 +41,9 @@ int ObExplainResolver::resolve(const ParseNode &parse_tree)
   } else {
     ParseNode *child_node = parse_tree.children_[EXPLAIN_CHILD_STMT];
     ObStmt *child_stmt = NULL;
+    const bool is_describe = OB_NOT_NULL(parse_tree.children_[EXPLAIN_FORMAT]) &&
+                             T_INT == parse_tree.children_[EXPLAIN_FORMAT]->type_ &&
+                             1 == parse_tree.children_[EXPLAIN_FORMAT]->value_;
     ObExplainDisplayOpt opt;
     opt.with_tree_line_ = true;
     if (OB_ISNULL(child_node)) {
@@ -65,7 +68,7 @@ int ObExplainResolver::resolve(const ParseNode &parse_tree)
       } else {
         explain_stmt->set_explain_query_stmt(static_cast<ObDMLStmt *>(child_stmt));
         ParseNode *format = parse_tree.children_[EXPLAIN_FORMAT];
-        if (NULL != format) {
+        if (NULL != format && !is_describe) {
           switch (format->type_) {
           case T_OUTLINE:
           {
@@ -112,6 +115,15 @@ int ObExplainResolver::resolve(const ParseNode &parse_tree)
             LOG_WARN("unknown explain format", "format", format->type_);
             break;
           }
+        }
+        if (OB_SUCC(ret) && is_describe && child_stmt->is_select_stmt()) {
+          const ObDMLStmt *dml_stmt = static_cast<const ObDMLStmt *>(child_stmt);
+          bool has_file_table = false;
+          for (int64_t i = 0; !has_file_table && i < dml_stmt->get_table_items().count(); ++i) {
+            has_file_table = OB_NOT_NULL(dml_stmt->get_table_items().at(i)) &&
+                             OB_NOT_NULL(dml_stmt->get_table_items().at(i)->file_table_def_);
+          }
+          explain_stmt->set_file_table_describe(has_file_table);
         }
       }
     }

@@ -138,11 +138,12 @@ enum ObFileTableFormat {
 };
 
 struct ObFileTableColumnDef {
-  ObFileTableColumnDef() : name_(), meta_(), accuracy_() {}
+  ObFileTableColumnDef() : name_(), meta_(), accuracy_(), nullable_(false) {}
   common::ObString name_;
   common::ObObjMeta meta_;
   common::ObAccuracy accuracy_;
-  TO_STRING_KV(K_(name), K_(meta), K_(accuracy));
+  bool nullable_;
+  TO_STRING_KV(K_(name), K_(meta), K_(accuracy), K_(nullable));
 };
 
 struct ObFileTableDef {

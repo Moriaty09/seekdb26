@@ -270,7 +270,9 @@ int ObSql::fill_result_set(ObResultSet &result_set,
       break;
     }
     case stmt::T_EXPLAIN: {
-      ObString tname = ObString::make_string("explain_table");
+      const ObExplainStmt &explain_stmt = static_cast<const ObExplainStmt &>(basic_stmt);
+      ObString tname = ObString::make_string(explain_stmt.is_file_table_describe()
+                                               ? "file_schema" : "explain_table");
       ObString cname = ObString::make_string("Query Plan");
       field.tname_ = tname;
       field.org_tname_ = tname;
@@ -281,7 +283,18 @@ int ObSql::fill_result_set(ObResultSet &result_set,
       field.type_.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
       field.type_.set_collation_level(CS_LEVEL_IMPLICIT);
       field.type_.set_varchar(type_name);
-      if (OB_FAIL(result_set.reserve_field_columns(1))) {
+      if (explain_stmt.is_file_table_describe()) {
+        static const char *COLUMN_NAMES[] = {
+          "column_name", "column_type", "null", "key", "default", "extra"
+        };
+        if (OB_FAIL(result_set.reserve_field_columns(ARRAYSIZEOF(COLUMN_NAMES)))) {
+        }
+        for (int64_t i = 0; OB_SUCC(ret) && i < ARRAYSIZEOF(COLUMN_NAMES); ++i) {
+          field.cname_ = ObString::make_string(COLUMN_NAMES[i]);
+          field.org_cname_ = field.cname_;
+          OZ (result_set.add_field_column(field));
+        }
+      } else if (OB_FAIL(result_set.reserve_field_columns(1))) {
       } else if (OB_FAIL(result_set.add_field_column(field))) {
       }
       break;

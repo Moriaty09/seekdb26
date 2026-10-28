@@ -10343,17 +10343,18 @@ int ObLogPlan::get_cached_hash_sharding_info(const ObIArray<ObRawExpr*> &hash_ex
   return ret;
 }
 
-int ObLogPlan::allocate_output_expr_for_values_op(ObLogicalOperator &values_op)
+int ObLogPlan::allocate_output_expr_for_values_op(ObLogicalOperator &values_op, int64_t output_count)
 {
   int ret = OB_SUCCESS;
-  if (OB_ISNULL(optimizer_context_.get_session_info())) {
+  if (OB_ISNULL(optimizer_context_.get_session_info()) || output_count <= 0) {
     ret = OB_ERR_UNEXPECTED;
   } else {
     // Static typing engine need expr to output rows. We generate a const output expr
     // for values_op operator.
-    ObConstRawExpr *output = NULL;
-    if (OB_FAIL(optimizer_context_.get_expr_factory().create_raw_expr(T_VARCHAR, output))) {
-    } else {
+    for (int64_t i = 0; OB_SUCC(ret) && i < output_count; ++i) {
+      ObConstRawExpr *output = NULL;
+      if (OB_FAIL(optimizer_context_.get_expr_factory().create_raw_expr(T_VARCHAR, output))) {
+      } else {
       ObObj v;
       v.set_varchar(" ");
       v.set_collation_type(ObCharset::get_system_collation());
@@ -10366,6 +10367,7 @@ int ObLogPlan::allocate_output_expr_for_values_op(ObLogicalOperator &values_op)
         values_op.set_op_id(0);
         if (OB_FAIL(get_optimizer_context().get_all_exprs().append(output))) {
         } else { /*do nothing*/ }
+      }
       }
     }
   }
