@@ -3498,6 +3498,30 @@ int ObAlterTableResolver::resolve_add_column(const ParseNode &node, ObColumnName
                 }
               }
               OZ (alter_table_stmt->get_alter_table_arg().ai_column_defs_.push_back(ai_def));
+              const char *suffixes[] = {"state", "request", "result_spec"};
+              for (int64_t hidden_idx = 0; OB_SUCC(ret) && hidden_idx < 3; ++hidden_idx) {
+                AlterColumnSchema hidden;
+                ObSqlString hidden_name;
+                hidden.alter_type_ = OB_DDL_ADD_COLUMN;
+                hidden.set_is_hidden(true);
+                hidden.set_nullable(true);
+                hidden.set_charset_type(CHARSET_UTF8MB4);
+                hidden.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
+                hidden.set_table_id(alter_column_schema.get_table_id());
+                if (0 == hidden_idx) {
+                  hidden.set_data_type(ObIntType);
+                  hidden.set_data_length(static_cast<int32_t>(sizeof(int64_t)));
+                } else {
+                  hidden.set_data_type(ObVarcharType);
+                  hidden.set_data_length(1 == hidden_idx ? 64 : 1024);
+                }
+                OZ (hidden_name.append_fmt("__ai_%.*s_%s",
+                                           alter_column_schema.get_column_name_str().length(),
+                                           alter_column_schema.get_column_name_str().ptr(),
+                                           suffixes[hidden_idx]));
+                OZ (hidden.set_column_name(hidden_name.string()));
+                OZ (alter_table_stmt->add_column(hidden));
+              }
             }
           }
         }

@@ -10932,12 +10932,21 @@ int ObDDLService::alter_table_in_trans(obcall::ObAlterTableArg &alter_table_arg,
         for (int64_t i = 0; OB_SUCC(ret) && i < alter_table_arg.ai_column_defs_.count(); ++i) {
           const ObAIColumnDef &input_def = alter_table_arg.ai_column_defs_.at(i);
           const ObColumnSchemaV2 *result_col = new_table_schema.get_column_schema(input_def.column_name_);
+          const ObColumnSchemaV2 *hidden_cols[3] = {NULL, NULL, NULL};
+          const char *suffixes[] = {"state", "request", "result_spec"};
           ObDMLSqlSplicer dml;
           ObSqlString sql;
           int64_t affected_rows = 0;
           if (OB_ISNULL(result_col)) {
             ret = OB_ERR_UNEXPECTED;
           } else {
+            for (int64_t hidden_idx = 0; OB_SUCC(ret) && hidden_idx < 3; ++hidden_idx) {
+              ObSqlString hidden_name;
+              OZ (hidden_name.append_fmt("__ai_%.*s_%s", input_def.column_name_.length(),
+                                         input_def.column_name_.ptr(), suffixes[hidden_idx]));
+              hidden_cols[hidden_idx] = new_table_schema.get_column_schema(hidden_name.string());
+              if (OB_ISNULL(hidden_cols[hidden_idx])) { ret = OB_ERR_UNEXPECTED; }
+            }
             OZ (dml.add_pk_column("table_id", new_table_schema.get_table_id()));
             OZ (dml.add_pk_column("column_id", result_col->get_column_id()));
             OZ (dml.add_column("column_name", ObHexEscapeSqlStr(input_def.column_name_)));
@@ -10950,9 +10959,11 @@ int ObDDLService::alter_table_in_trans(obcall::ObAlterTableArg &alter_table_arg,
             }
             OZ (dml.add_column("sync_mode", "async"));
             OZ (dml.add_column("max_retries", input_def.max_retries_));
-            OZ (dml.add_column("state_column_id", input_def.state_column_id_));
-            OZ (dml.add_column("request_column_id", input_def.request_column_id_));
-            OZ (dml.add_column("result_spec_column_id", input_def.result_spec_column_id_));
+            if (OB_SUCC(ret)) {
+              OZ (dml.add_column("state_column_id", hidden_cols[0]->get_column_id()));
+              OZ (dml.add_column("request_column_id", hidden_cols[1]->get_column_id()));
+              OZ (dml.add_column("result_spec_column_id", hidden_cols[2]->get_column_id()));
+            }
             OZ (dml.add_column("definition_version", 1));
             OZ (dml.splice_insert_sql(OB_ALL_AI_COLUMN_TNAME, sql));
             if (OB_SUCC(ret) && OB_FAIL(trans.write(sql.ptr(), affected_rows))) {
