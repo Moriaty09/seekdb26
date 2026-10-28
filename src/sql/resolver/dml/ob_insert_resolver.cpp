@@ -396,6 +396,28 @@ int ObInsertResolver::resolve_insert_field(const ParseNode &insert_into, TableIt
       OB_FAIL(resolve_insert_columns(insert_into.children_[1], insert_stmt->get_insert_table_info()))) {
   }
 
+  if (OB_SUCC(ret) && 2 == insert_into.num_child_
+      && OB_NOT_NULL(insert_into.children_[1])) {
+    const ObTableSchema *table_schema = NULL;
+    OZ (schema_checker_->get_table_schema(table_item->get_base_table_item().ref_id_, table_schema));
+    if (OB_SUCC(ret) && OB_ISNULL(table_schema)) {
+      ret = OB_ERR_UNEXPECTED;
+    }
+    const ObIArray<ObColumnRefRawExpr *> &columns = insert_stmt->get_values_desc();
+    for (int64_t i = 0; OB_SUCC(ret) && i < columns.count(); ++i) {
+      ObSqlString state_name;
+      if (OB_ISNULL(columns.at(i))) {
+        ret = OB_ERR_UNEXPECTED;
+      } else if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state",
+                                                columns.at(i)->get_column_name().length(),
+                                                columns.at(i)->get_column_name().ptr()))) {
+      } else if (OB_NOT_NULL(table_schema->get_column_schema(state_name.string()))) {
+        ret = OB_NOT_SUPPORTED;
+        LOG_USER_ERROR(OB_NOT_SUPPORTED, "direct assignment to an AI COLUMN");
+      }
+    }
+  }
+
   if (OB_SUCC(ret)) {
     const ObTableSchema *table_schema = NULL;
     OZ(schema_checker_->get_table_schema(

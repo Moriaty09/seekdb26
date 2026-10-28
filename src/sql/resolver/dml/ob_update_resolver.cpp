@@ -87,6 +87,33 @@ int ObUpdateResolver::resolve(const ParseNode &parse_tree)
     } else if (OB_FAIL(resolve_assignments(*assign_list,
                                            tables_assign,
                                            current_scope_))) {
+    } else {
+      // AI result columns are maintained by the asynchronous publisher.  A
+      // matching hidden state column is the durable schema marker, so this
+      // check remains valid after plan-cache/schema reconstruction.
+      for (int64_t i = 0; OB_SUCC(ret) && i < tables_assign.count(); ++i) {
+        const TableItem *item = update_stmt->get_table_item_by_id(tables_assign.at(i).table_id_);
+        const ObTableSchema *schema = NULL;
+        if (OB_ISNULL(item)
+            || OB_FAIL(schema_checker_->get_table_schema(item->get_base_table_item().ref_id_, schema))
+            || OB_ISNULL(schema)) {
+          if (OB_SUCC(ret)) { ret = OB_ERR_UNEXPECTED; }
+        } else {
+          for (int64_t j = 0; OB_SUCC(ret) && j < tables_assign.at(i).assignments_.count(); ++j) {
+            const ObColumnRefRawExpr *column = tables_assign.at(i).assignments_.at(j).column_expr_;
+            ObSqlString state_name;
+            if (OB_ISNULL(column)) {
+              ret = OB_ERR_UNEXPECTED;
+            } else if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state",
+                                                      column->get_column_name().length(),
+                                                      column->get_column_name().ptr()))) {
+            } else if (OB_NOT_NULL(schema->get_column_schema(state_name.string()))) {
+              ret = OB_NOT_SUPPORTED;
+              LOG_USER_ERROR(OB_NOT_SUPPORTED, "direct assignment to an AI COLUMN");
+            }
+          }
+        }
+      }
     }
   }
 
