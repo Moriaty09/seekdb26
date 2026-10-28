@@ -172,9 +172,10 @@ private:
 
 struct ParquetSchemaElement
 {
-  ParquetSchemaElement() : has_type_(false), type_(-1), repetition_(-1), name_(), children_(0), converted_type_(-1) {}
+  ParquetSchemaElement() : has_type_(false), type_(-1), type_length_(-1), repetition_(-1), name_(), children_(0), converted_type_(-1) {}
   bool has_type_;
   int64_t type_;
+  int64_t type_length_;
   int64_t repetition_;
   std::string name_;
   int64_t children_;
@@ -188,6 +189,7 @@ int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &el
     OZ (reader.field(last, id, type));
     if (OB_FAIL(ret) || 0 == type) break;
     if (1 == id && (4 == type || 5 == type || 6 == type)) { elem.has_type_ = true; OZ (reader.sint(elem.type_)); }
+    else if (2 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.type_length_));
     else if (3 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.repetition_));
     else if (4 == id && 8 == type) OZ (reader.binary(elem.name_));
     else if (5 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.children_));
@@ -266,9 +268,10 @@ struct ObFileTableParquetReader::Impl
     int64_t codec_;
   };
   struct Column {
-    Column() : physical_type_(-1), converted_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
+    Column() : physical_type_(-1), type_length_(-1), converted_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
                chunk_remaining_(0), page_value_idx_(0), page_physical_idx_(0) {}
     int64_t physical_type_;
+    int64_t type_length_;
     int64_t converted_type_;
     bool optional_;
     std::vector<Chunk> chunks_;
@@ -348,6 +351,7 @@ std::string format_parquet_int96(const uint32_t julian_day, const uint64_t nanos
 }
 
 int decode_parquet_plain_values(const int64_t physical_type,
+                                const int64_t type_length,
                                 const int64_t converted_type,
                                 const uint8_t *data,
                                 const size_t size,
@@ -394,6 +398,9 @@ int decode_parquet_plain_values(const int64_t physical_type,
         if (len > size - p) ret = OB_INVALID_DATA;
         else { value.assign(reinterpret_cast<const char *>(data + p), len); p += len; }
       }
+    } else if (7 == physical_type) {
+      if (type_length <= 0 || static_cast<uint64_t>(type_length) > size - p) ret = OB_INVALID_DATA;
+      else { value.assign(reinterpret_cast<const char *>(data + p), type_length); p += type_length; }
     } else {
       ret = OB_NOT_SUPPORTED;
     }
@@ -530,10 +537,13 @@ int ObFileTableParquetReader::open(const ObString &path)
       if (row_groups.at(g).size() != column_count || row_group_rows.at(g) < 0) ret = OB_INVALID_DATA;
       else rows_sum += row_group_rows.at(g);
       for (size_t c = 0; OB_SUCC(ret) && c < column_count; ++c) {
-        if (!schema.at(c + 1).has_type_ || row_group_types.at(g).at(c) != schema.at(c + 1).type_ ||
+        if (!schema.at(c + 1).has_type_ ||
+            (7 == schema.at(c + 1).type_ && schema.at(c + 1).type_length_ <= 0) ||
+            row_group_types.at(g).at(c) != schema.at(c + 1).type_ ||
             row_groups.at(g).at(c).value_count_ != row_group_rows.at(g)) ret = OB_NOT_SUPPORTED;
         else {
           impl_->columns_.at(c).physical_type_ = schema.at(c + 1).type_;
+          impl_->columns_.at(c).type_length_ = schema.at(c + 1).type_length_;
           impl_->columns_.at(c).converted_type_ = schema.at(c + 1).converted_type_;
           impl_->columns_.at(c).optional_ = 0 != schema.at(c + 1).repetition_;
           impl_->columns_.at(c).chunks_.push_back(row_groups.at(g).at(c));
@@ -682,7 +692,7 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     else ret = OB_NOT_SUPPORTED;
     if (OB_SUCC(ret) && decoded.size() != static_cast<size_t>(uncompressed)) ret = OB_INVALID_DATA;
     if (OB_SUCC(ret)) {
-      OZ (decode_parquet_plain_values(column.physical_type_, column.converted_type_, decoded.data(), decoded.size(),
+      OZ (decode_parquet_plain_values(column.physical_type_, column.type_length_, column.converted_type_, decoded.data(), decoded.size(),
                                       num_values, column.dictionary_values_));
     }
     // Dictionary pages do not represent rows.  Continue until a data page is loaded.
@@ -713,7 +723,7 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
   }
   if (OB_SUCC(ret) && 0 == encoding) {
     int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
-    OZ (decode_parquet_plain_values(column.physical_type_, column.converted_type_, values.data(), values.size(),
+    OZ (decode_parquet_plain_values(column.physical_type_, column.type_length_, column.converted_type_, values.data(), values.size(),
                                     non_null, column.page_values_));
   } else if (OB_SUCC(ret)) {
     int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
@@ -1354,9 +1364,10 @@ int ObFileTableUtils::infer_parquet_schema(ObIAllocator &allocator, ObFileTableD
         col.meta_.set_int(); col.accuracy_.set_precision(20); col.accuracy_.set_scale(0);
       } else if (4 == src.type_ || 5 == src.type_) {
         col.meta_.set_double(); col.accuracy_.set_precision(PRECISION_UNKNOWN_YET); col.accuracy_.set_scale(SCALE_UNKNOWN_YET);
-      } else if (6 == src.type_ || 7 == src.type_) {
+      } else if (6 == src.type_ || (7 == src.type_ && src.type_length_ > 0)) {
         col.meta_.set_varchar(); col.meta_.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
-        col.meta_.set_collation_level(CS_LEVEL_IMPLICIT); col.accuracy_.set_length(OB_MAX_VARCHAR_LENGTH);
+        col.meta_.set_collation_level(CS_LEVEL_IMPLICIT);
+        col.accuracy_.set_length(7 == src.type_ ? src.type_length_ : OB_MAX_VARCHAR_LENGTH);
       } else if (3 == src.type_) {
         col.meta_.set_datetime(); col.accuracy_.set_scale(6);
       } else {
