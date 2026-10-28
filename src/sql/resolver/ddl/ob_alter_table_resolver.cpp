@@ -4320,6 +4320,18 @@ int ObAlterTableResolver::resolve_drop_column(
                                                         node.children_[i], true))) {
       } else if (OB_FAIL(alter_column_schema.set_column_name(alter_column_schema.get_origin_column_name()))) {
       } else {
+        const ObString &drop_name = alter_column_schema.get_origin_column_name();
+        const ObColumnSchemaV2 *drop_column = table_schema_->get_column_schema(drop_name);
+        ObSqlString state_name;
+        if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state",
+                                          drop_name.length(), drop_name.ptr()))) {
+        } else if (OB_NOT_NULL(table_schema_->get_column_schema(state_name.string()))
+                   || (OB_NOT_NULL(drop_column) && drop_column->is_hidden()
+                       && drop_name.prefix_match("__ai_"))) {
+          ret = OB_NOT_SUPPORTED;
+          LOG_USER_ERROR(OB_NOT_SUPPORTED,
+                         "dropping an AI COLUMN or its internal state columns");
+        }
         if (OB_SUCC(ret)) {
           alter_column_schema.alter_type_ = OB_DDL_DROP_COLUMN;
           ObAlterTableArg::AlterAlgorithm algorithm = ObAlterTableArg::AlterAlgorithm::INPLACE;
