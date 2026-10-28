@@ -95,14 +95,24 @@ int ObFunctionTableOp::inner_rescan()
   if (OB_FAIL(ObOperator::inner_rescan())) {
   } else {
     node_idx_ = 0;
-    if (FILE_TABLE_CSV == MY_SPEC.file_format_) {
+    if (FILE_TABLE_CSV == MY_SPEC.file_format_ || FILE_TABLE_JSONL == MY_SPEC.file_format_ ||
+        FILE_TABLE_PARQUET == MY_SPEC.file_format_) {
+      ObFileTableDef def;
+      def.path_ = MY_SPEC.file_path_;
+      def.file_size_ = MY_SPEC.file_size_;
+      def.file_mtime_ns_ = MY_SPEC.file_mtime_ns_;
+      def.file_device_ = MY_SPEC.file_device_;
+      def.file_inode_ = MY_SPEC.file_inode_;
+      OZ (ObFileTableUtils::validate_unchanged(def));
+    }
+    if (OB_SUCC(ret) && FILE_TABLE_CSV == MY_SPEC.file_format_) {
       OZ (csv_reader_.rewind());
       if (OB_SUCC(ret) && MY_SPEC.file_header_) {
         OZ (csv_reader_.next(file_fields_));
       }
-    } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_) {
+    } else if (OB_SUCC(ret) && FILE_TABLE_JSONL == MY_SPEC.file_format_) {
       OZ (jsonl_reader_.rewind());
-    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_) {
+    } else if (OB_SUCC(ret) && FILE_TABLE_PARQUET == MY_SPEC.file_format_) {
       OZ (parquet_reader_.rewind());
     } else if (FILE_TABLE_GLOB == MY_SPEC.file_format_) {
       glob_idx_ = 0;
@@ -230,6 +240,19 @@ int ObFunctionTableOp::inner_get_next_row_file()
         expr->set_evaluated_projected(eval_ctx_);
       }
     }
+  }
+  if (OB_ITER_END == ret) {
+    // Detect replacement or modification that happened after inner_open().
+    // Returning an error at end-of-scan prevents a successful statement from
+    // silently combining rows from different file versions.
+    ObFileTableDef def;
+    def.path_ = MY_SPEC.file_path_;
+    def.file_size_ = MY_SPEC.file_size_;
+    def.file_mtime_ns_ = MY_SPEC.file_mtime_ns_;
+    def.file_device_ = MY_SPEC.file_device_;
+    def.file_inode_ = MY_SPEC.file_inode_;
+    const int check_ret = ObFileTableUtils::validate_unchanged(def);
+    if (OB_SUCCESS != check_ret) ret = check_ret;
   }
   return ret;
 }
