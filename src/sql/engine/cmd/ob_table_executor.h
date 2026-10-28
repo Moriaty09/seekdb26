@@ -101,6 +101,9 @@ private:
                       ObSqlString &ins_sql);
   int prepare_alter_arg(ObCreateTableStmt &stmt, const ObSQLSessionInfo *my_session, const ObString &create_table_name, obcall::ObAlterTableArg &alter_table_arg);
   int prepare_drop_arg(const ObCreateTableStmt &stmt, const ObSQLSessionInfo *my_session, obcall::ObTableItem &table_item, obcall::ObDropTableArg &drop_table_arg);
+  int create_ai_column_dml_triggers(ObSQLSessionInfo *session,
+                                    const obcall::ObCreateTableArg &create_table_arg,
+                                    const uint64_t table_id);
 };
 
 class ObAlterTableStmt;

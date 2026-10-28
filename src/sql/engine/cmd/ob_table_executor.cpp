@@ -38,6 +38,7 @@
 #include "sql/resolver/ddl/ob_purge_stmt.h"
 #include "sql/resolver/ddl/ob_optimize_stmt.h"
 #include "sql/resolver/dml/ob_delete_resolver.h"
+#include "sql/resolver/ob_resolver_utils.h"
 #include "sql/engine/cmd/ob_partition_executor_utils.h"
 
 #include "sql/printer/ob_select_stmt_printer.h"
@@ -57,6 +58,99 @@ ObCreateTableExecutor::ObCreateTableExecutor()
 
 ObCreateTableExecutor::~ObCreateTableExecutor()
 {
+}
+
+int ObCreateTableExecutor::create_ai_column_dml_triggers(
+    ObSQLSessionInfo *session,
+    const obcall::ObCreateTableArg &create_table_arg,
+    const uint64_t table_id)
+{
+  int ret = OB_SUCCESS;
+  const ObTableSchema &table_schema = create_table_arg.schema_;
+  const ObRowkeyInfo &rowkey_info = table_schema.get_rowkey_info();
+  ObSqlString use_sql;
+  ObSqlString trigger_sql;
+  common::sqlclient::ObISQLConnection *conn = NULL;
+  common::sqlclient::ObISQLConnectionGuard conn_guard;
+  int64_t affected_rows = 0;
+
+  if (OB_ISNULL(session) || OB_UNLIKELY(OB_INVALID_ID == table_id)) {
+    ret = OB_INVALID_ARGUMENT;
+  } else if (OB_UNLIKELY(rowkey_info.get_size() <= 0)) {
+    // A durable task must identify one business row unambiguously.
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "AI COLUMN on a table without a primary key");
+  } else if (OB_FAIL(use_sql.append("USE "))) {
+  } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(use_sql, create_table_arg.db_name_))) {
+  } else if (OB_FAIL(trigger_sql.append_fmt("CREATE TRIGGER `__ai_%lu_ins` BEFORE INSERT ON ", table_id))) {
+  } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(trigger_sql, table_schema.get_table_name_str()))) {
+  } else if (OB_FAIL(trigger_sql.append(" FOR EACH ROW BEGIN SET @__ai_request_id = UUID(); "))) {
+  }
+
+  for (int64_t i = 0; OB_SUCC(ret) && i < create_table_arg.ai_column_defs_.count(); ++i) {
+    const obcall::ObAIColumnDef &def = create_table_arg.ai_column_defs_.at(i);
+    if (OB_FAIL(trigger_sql.append(
+          "INSERT INTO `oceanbase`.`__all_ai_column_task`"
+          "(`task_id`,`table_id`,`column_id`,`request_id`,`rowkey_predicate`,"
+          "`state`,`retry_count`,`eligible_ts`,`lease_owner`,`lease_expire_ts`,"
+          "`definition_version`,`input_payload`,`last_error`) VALUES"
+          "(UUID_SHORT(),"))) {
+    } else if (OB_FAIL(trigger_sql.append_fmt("%lu,%lu,@__ai_request_id,CONCAT(",
+                                               table_id, def.column_id_))) {
+    }
+    for (int64_t j = 0; OB_SUCC(ret) && j < rowkey_info.get_size(); ++j) {
+      uint64_t column_id = OB_INVALID_ID;
+      const ObColumnSchemaV2 *column_schema = NULL;
+      ObSqlString predicate_prefix;
+      if (OB_FAIL(rowkey_info.get_column_id(j, column_id))) {
+      } else if (OB_ISNULL(column_schema = table_schema.get_column_schema(column_id))) {
+        ret = OB_ERR_UNEXPECTED;
+      } else if (j > 0 && OB_FAIL(trigger_sql.append(","))) {
+      } else if (OB_FAIL(predicate_prefix.append(j > 0 ? " AND " : ""))) {
+      } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                           predicate_prefix, column_schema->get_column_name_str()))) {
+      } else if (OB_FAIL(predicate_prefix.append(" = "))) {
+      } else if (OB_FAIL(sql_append_hex_escape_str(predicate_prefix.string(), trigger_sql))) {
+      } else if (OB_FAIL(trigger_sql.append(","))) {
+      } else if (column_schema->get_data_type_class() != ObIntTC
+                 && column_schema->get_data_type_class() != ObUIntTC
+                 && column_schema->get_data_type_class() != ObFloatTC
+                 && column_schema->get_data_type_class() != ObDoubleTC
+                 && column_schema->get_data_type_class() != ObNumberTC
+                 && column_schema->get_data_type_class() != ObDecimalIntTC
+                 && column_schema->get_data_type_class() != ObBitTC
+                 && OB_FAIL(trigger_sql.append("QUOTE("))) {
+      } else if (OB_FAIL(trigger_sql.append("NEW."))) {
+      } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                           trigger_sql, column_schema->get_column_name_str()))) {
+      } else if (column_schema->get_data_type_class() != ObIntTC
+                 && column_schema->get_data_type_class() != ObUIntTC
+                 && column_schema->get_data_type_class() != ObFloatTC
+                 && column_schema->get_data_type_class() != ObDoubleTC
+                 && column_schema->get_data_type_class() != ObNumberTC
+                 && column_schema->get_data_type_class() != ObDecimalIntTC
+                 && column_schema->get_data_type_class() != ObBitTC
+                 && OB_FAIL(trigger_sql.append(")"))) {
+      }
+    }
+    if (OB_SUCC(ret) && OB_FAIL(trigger_sql.append(
+          "),0,0,NOW(6),'',NULL,1,'{}',''); "))) {
+    }
+  }
+  if (OB_SUCC(ret) && OB_FAIL(trigger_sql.append("END"))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(
+               query::ObInnerSQLConnectionAccess::create_connection_with_external_session(
+                   session, conn_guard))) {
+  } else if (OB_SUCC(ret) && OB_ISNULL(conn = conn_guard.get_ptr())) {
+    ret = OB_INNER_STAT_ERROR;
+  } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(use_sql.ptr(), affected_rows, true))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(trigger_sql.ptr(), affected_rows, true))) {
+  }
+  if (OB_FAIL(ret)) {
+    LOG_WARN("failed to create AI column DML trigger", K(ret), K(table_id),
+             K(use_sql), K(trigger_sql));
+  }
+  return ret;
 }
 
 int ObCreateTableExecutor::prepare_stmt(ObCreateTableStmt &stmt,
@@ -486,6 +580,9 @@ int ObCreateTableExecutor::execute(ObExecContext &ctx, ObCreateTableStmt &stmt)
         if (OB_FAIL(ObDDLExecutorUtil::execute_pcreate_table(
             my_session, ctx.root_command_service(), "[parallel create table]",
                                                           create_table_arg, res))) {
+        } else if (!res.do_nothing_ && !create_table_arg.ai_column_defs_.empty()
+                   && OB_FAIL(create_ai_column_dml_triggers(
+                       my_session, create_table_arg, res.table_id_))) {
         }
       }
     } else {
