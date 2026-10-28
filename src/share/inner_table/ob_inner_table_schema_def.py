@@ -2494,6 +2494,35 @@ all_ai_column_def = dict(
 def_table_schema(**all_ai_column_def)
 def_table_schema(**gen_history_table_def(1136, all_ai_column_def))
 
+all_ai_column_task_def = dict(
+    owner = 'database-competition',
+    table_name = '__all_ai_column_task',
+    table_id = '1137',
+    table_type = 'SYSTEM_TABLE',
+    gm_columns = ['gmt_create', 'gmt_modified'],
+    rowkey_columns = [
+      ('task_id', 'int')
+    ],
+    is_cluster_private = False,
+    meta_record_in_sys = False,
+    normal_columns = [
+      ('table_id', 'int', 'false'),
+      ('column_id', 'int', 'false'),
+      ('request_id', 'varchar:64', 'false'),
+      ('rowkey_predicate', 'varchar:4096', 'false'),
+      ('state', 'int', 'false', 0),
+      ('retry_count', 'int', 'false', 0),
+      ('eligible_ts', 'timestamp:6', 'false'),
+      ('lease_owner', 'varchar:128', 'false', ''),
+      ('lease_expire_ts', 'timestamp:6', 'true'),
+      ('definition_version', 'int', 'false', 1),
+      ('input_payload', 'longtext', 'false'),
+      ('last_error', 'varchar:4096', 'false', '')
+    ]
+)
+def_table_schema(**all_ai_column_task_def)
+def_table_schema(**gen_history_table_def(1138, all_ai_column_task_def))
+
 
 # Reserved position (placeholder before this line)
 # Placeholder suggestion for this section: Use actual table names for placeholders
