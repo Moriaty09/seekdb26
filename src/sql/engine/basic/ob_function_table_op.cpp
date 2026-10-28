@@ -73,6 +73,8 @@ int ObFunctionTableOp::inner_open()
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && MY_SPEC.file_header_ && OB_FAIL(csv_reader_.next(file_fields_))) {
     } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ && OB_FAIL(jsonl_reader_.open(MY_SPEC.file_path_))) {
     } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(parquet_reader_.open(MY_SPEC.file_path_))) {
+    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ &&
+               OB_FAIL(parquet_reader_.set_projection(MY_SPEC.column_names_, MY_SPEC.file_column_names_))) {
     } else {
       next_row_func_ = &ObFunctionTableOp::inner_get_next_row_file;
     }

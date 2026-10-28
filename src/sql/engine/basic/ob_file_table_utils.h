@@ -68,11 +68,15 @@ public:
   int open(const common::ObString &path);
   int close();
   int rewind();
+  int set_projection(const common::ObIArray<common::ObString> &projected_names,
+                     const common::ObIArray<common::ObString> &all_names);
   int next(std::vector<std::string> &fields, std::vector<bool> &is_null);
 private:
   int load_page(int64_t column_idx);
   std::string path_;
   Impl *impl_;
+  bool projection_set_;
+  std::vector<int64_t> projected_columns_;
   DISALLOW_COPY_AND_ASSIGN(ObFileTableParquetReader);
 };
 

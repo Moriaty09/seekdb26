@@ -5545,14 +5545,24 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
       if (OB_FAIL(mark_expr_self_produced(op.get_output_exprs().at(i)))) {
       }
     }
+    ObSEArray<ObRawExpr *, 8> filter_columns;
+    OZ (ObRawExprUtils::extract_column_exprs(op.get_filter_exprs(), filter_columns));
     for (int64_t i = 0; OB_SUCC(ret) && i < op.get_stmt()->get_column_size(); ++i) {
       ObExpr *rt_expr = nullptr;
       const ColumnItem *col_item = op.get_stmt()->get_column_item(i);
       CK (OB_NOT_NULL(col_item));
       CK (OB_NOT_NULL(col_item->expr_));
+      bool is_required = false;
+      for (int64_t j = 0; !is_required && j < op.get_output_exprs().count(); ++j) {
+        is_required = op.get_output_exprs().at(j) == col_item->expr_;
+      }
+      for (int64_t j = 0; !is_required && j < filter_columns.count(); ++j) {
+        is_required = filter_columns.at(j) == col_item->expr_;
+      }
       if (OB_SUCC(ret)
           && col_item->table_id_ == op.get_table_id()
-          && col_item->expr_->is_explicited_reference()) {
+          && col_item->expr_->is_explicited_reference()
+          && is_required) {
         OZ (mark_expr_self_produced(col_item->expr_));
         OZ (generate_rt_expr(*col_item->expr_, rt_expr));
         OZ (spec.column_exprs_.push_back(rt_expr));

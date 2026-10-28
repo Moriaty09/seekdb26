@@ -268,12 +268,13 @@ struct ObFileTableParquetReader::Impl
     int64_t codec_;
   };
   struct Column {
-    Column() : physical_type_(-1), type_length_(-1), converted_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
+    Column() : physical_type_(-1), type_length_(-1), converted_type_(-1), optional_(false), active_(true), chunk_idx_(0), next_offset_(0), chunk_end_(0),
                chunk_remaining_(0), page_value_idx_(0), page_physical_idx_(0) {}
     int64_t physical_type_;
     int64_t type_length_;
     int64_t converted_type_;
     bool optional_;
+    bool active_;
     std::vector<Chunk> chunks_;
     size_t chunk_idx_;
     int64_t next_offset_;
@@ -479,7 +480,8 @@ int parse_parquet_row_group(CompactReader &reader,
 }
 } // namespace
 
-ObFileTableParquetReader::ObFileTableParquetReader() : path_(), impl_(nullptr) {}
+ObFileTableParquetReader::ObFileTableParquetReader()
+  : path_(), impl_(nullptr), projection_set_(false), projected_columns_() {}
 ObFileTableParquetReader::~ObFileTableParquetReader() { close(); }
 
 int ObFileTableParquetReader::open(const ObString &path)
@@ -551,6 +553,13 @@ int ObFileTableParquetReader::open(const ObString &path)
       }
     }
     if (OB_SUCC(ret) && rows_sum != impl_->remaining_rows_) ret = OB_INVALID_DATA;
+    if (OB_SUCC(ret) && projection_set_) {
+      for (Impl::Column &column : impl_->columns_) column.active_ = false;
+      for (int64_t index : projected_columns_) {
+        if (index < 0 || index >= static_cast<int64_t>(impl_->columns_.size())) ret = OB_INVALID_ARGUMENT;
+        else impl_->columns_.at(index).active_ = true;
+      }
+    }
   }
   if (OB_FAIL(ret)) close();
   return ret;
@@ -572,6 +581,30 @@ int ObFileTableParquetReader::rewind()
   const std::string saved_path = path_;
   int ret = close();
   if (OB_SUCC(ret)) ret = open(ObString(static_cast<int32_t>(saved_path.size()), saved_path.data()));
+  return ret;
+}
+
+int ObFileTableParquetReader::set_projection(const ObIArray<ObString> &projected_names,
+                                             const ObIArray<ObString> &all_names)
+{
+  int ret = OB_SUCCESS;
+  projected_columns_.clear();
+  projection_set_ = true;
+  for (int64_t i = 0; OB_SUCC(ret) && i < projected_names.count(); ++i) {
+    int64_t index = -1;
+    for (int64_t j = 0; j < all_names.count() && index < 0; ++j) {
+      if (0 == projected_names.at(i).case_compare(all_names.at(j))) index = j;
+    }
+    if (index < 0) ret = OB_ERR_BAD_FIELD_ERROR;
+    else projected_columns_.push_back(index);
+  }
+  if (OB_SUCC(ret) && OB_NOT_NULL(impl_)) {
+    for (Impl::Column &column : impl_->columns_) column.active_ = false;
+    for (int64_t index : projected_columns_) {
+      if (index >= static_cast<int64_t>(impl_->columns_.size())) ret = OB_INVALID_ARGUMENT;
+      else impl_->columns_.at(index).active_ = true;
+    }
+  }
   return ret;
 }
 
@@ -777,8 +810,14 @@ int ObFileTableParquetReader::next(std::vector<std::string> &fields, std::vector
     is_null.assign(impl_->columns_.size(), false);
     for (int64_t i = 0; OB_SUCC(ret) && i < static_cast<int64_t>(impl_->columns_.size()); ++i) {
       Impl::Column &column = impl_->columns_.at(i);
-      while (OB_SUCC(ret) && column.page_value_idx_ >= static_cast<int64_t>(column.page_nulls_.size())) OZ (load_page(i));
-      if (OB_SUCC(ret)) {
+      if (!column.active_) {
+        // Preserve the physical column slot for the operator's projection
+        // map without touching this column's pages.
+        is_null.at(i) = true;
+      } else {
+        while (OB_SUCC(ret) && column.page_value_idx_ >= static_cast<int64_t>(column.page_nulls_.size())) OZ (load_page(i));
+      }
+      if (OB_SUCC(ret) && column.active_) {
         is_null.at(i) = column.page_nulls_.at(column.page_value_idx_++);
         if (!is_null.at(i)) {
           if (column.page_physical_idx_ >= static_cast<int64_t>(column.page_values_.size())) ret = OB_INVALID_DATA;
