@@ -65,12 +65,17 @@ int ObFunctionTableOp::inner_open()
         next_row_func_ = &ObFunctionTableOp::inner_get_next_row_glob;
       }
       ::globfree(&matches);
-    } else if (FILE_TABLE_CSV != MY_SPEC.file_format_ && FILE_TABLE_JSONL != MY_SPEC.file_format_) {
+    } else if (FILE_TABLE_CSV != MY_SPEC.file_format_ && FILE_TABLE_JSONL != MY_SPEC.file_format_ &&
+               FILE_TABLE_PARQUET != MY_SPEC.file_format_) {
       ret = OB_NOT_SUPPORTED;
     } else if (OB_FAIL(ObFileTableUtils::validate_unchanged(def))) {
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.open(MY_SPEC.file_path_))) {
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && MY_SPEC.file_header_ && OB_FAIL(csv_reader_.next(file_fields_))) {
     } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ && OB_FAIL(jsonl_reader_.open(MY_SPEC.file_path_))) {
+    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && MY_SPEC.column_exprs_.count() > 1) {
+      ret = OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED, "streaming Parquet scan currently supports one projected column");
+    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(parquet_reader_.open(MY_SPEC.file_path_))) {
     } else {
       next_row_func_ = &ObFunctionTableOp::inner_get_next_row_file;
     }
@@ -97,6 +102,8 @@ int ObFunctionTableOp::inner_rescan()
       }
     } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_) {
       OZ (jsonl_reader_.rewind());
+    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_) {
+      OZ (parquet_reader_.rewind());
     } else if (FILE_TABLE_GLOB == MY_SPEC.file_format_) {
       glob_idx_ = 0;
     }
@@ -119,6 +126,7 @@ int ObFunctionTableOp::inner_close()
   value_table_ = NULL;
   OZ (csv_reader_.close());
   OZ (jsonl_reader_.close());
+  OZ (parquet_reader_.close());
   glob_paths_.clear();
   glob_idx_ = 0;
   return ret;
@@ -166,6 +174,7 @@ int ObFunctionTableOp::inner_get_next_row_file()
   } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.next(file_fields_))) {
   } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ &&
              OB_FAIL(jsonl_reader_.next(MY_SPEC.column_names_, file_fields_, file_nulls_))) {
+  } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(read_next_parquet())) {
   } else if (OB_UNLIKELY(file_fields_.size() != static_cast<size_t>(MY_SPEC.column_exprs_.count()))) {
     ret = OB_ERR_COLUMN_SIZE;
     LOG_WARN("CSV row has a different column count", K(ret), K(csv_reader_.line_no()),
@@ -177,7 +186,7 @@ int ObFunctionTableOp::inner_get_next_row_file()
       if (OB_SUCC(ret)) {
         ObDatum &datum = expr->locate_datum_for_write(eval_ctx_);
         const std::string &field = file_fields_.at(i);
-        if ((FILE_TABLE_JSONL == MY_SPEC.file_format_ && file_nulls_.at(i)) ||
+        if (((FILE_TABLE_JSONL == MY_SPEC.file_format_ || FILE_TABLE_PARQUET == MY_SPEC.file_format_) && file_nulls_.at(i)) ||
             (FILE_TABLE_CSV == MY_SPEC.file_format_ && field.empty())) {
           datum.set_null();
         } else if (ObTinyIntType == expr->datum_meta_.type_) {
@@ -221,6 +230,22 @@ int ObFunctionTableOp::inner_get_next_row_file()
         expr->set_evaluated_projected(eval_ctx_);
       }
     }
+  }
+  return ret;
+}
+
+int ObFunctionTableOp::read_next_parquet()
+{
+  int ret = OB_SUCCESS;
+  std::string value;
+  bool is_null = false;
+  if (OB_FAIL(parquet_reader_.next(value, is_null))) {
+  } else if (MY_SPEC.column_exprs_.empty()) {
+    file_fields_.clear();
+    file_nulls_.clear();
+  } else {
+    file_fields_.assign(1, value);
+    file_nulls_.assign(1, is_null);
   }
   return ret;
 }

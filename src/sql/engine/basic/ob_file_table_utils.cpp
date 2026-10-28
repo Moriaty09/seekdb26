@@ -141,6 +141,7 @@ public:
     } else ret = OB_INVALID_DATA;
     return ret;
   }
+  size_t position() const { return pos_; }
 private:
   const uint8_t *data_;
   size_t size_;
@@ -169,6 +170,50 @@ int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &el
   }
   return ret;
 }
+
+int snappy_decompress(const uint8_t *src, size_t src_len, std::vector<uint8_t> &dst)
+{
+  int ret = OB_SUCCESS;
+  CompactReader length_reader(src, src_len);
+  uint64_t expected = 0;
+  OZ (length_reader.uvar(expected));
+  if (OB_SUCC(ret) && expected > FILE_SQL_MAX_RECORD_BYTES) ret = OB_SIZE_OVERFLOW;
+  size_t pos = length_reader.position();
+  if (OB_SUCC(ret)) dst.reserve(expected);
+  while (OB_SUCC(ret) && pos < src_len && dst.size() < expected) {
+    const uint8_t tag = src[pos++];
+    const uint8_t kind = tag & 0x03;
+    if (0 == kind) {
+      uint64_t len = tag >> 2;
+      if (len < 60) ++len;
+      else {
+        const uint8_t bytes = static_cast<uint8_t>(len - 59); len = 0;
+        if (bytes > 4 || pos + bytes > src_len) { ret = OB_INVALID_DATA; break; }
+        for (uint8_t i = 0; i < bytes; ++i) len |= static_cast<uint64_t>(src[pos++]) << (8 * i);
+        ++len;
+      }
+      if (len > src_len - pos || len > expected - dst.size()) ret = OB_INVALID_DATA;
+      else { dst.insert(dst.end(), src + pos, src + pos + len); pos += len; }
+    } else {
+      uint64_t len = 0, offset = 0;
+      if (1 == kind) {
+        len = 4 + ((tag >> 2) & 0x7); if (pos >= src_len) { ret = OB_INVALID_DATA; break; }
+        offset = ((tag & 0xe0) << 3) | src[pos++];
+      } else if (2 == kind) {
+        len = 1 + (tag >> 2); if (pos + 2 > src_len) { ret = OB_INVALID_DATA; break; }
+        offset = src[pos] | (static_cast<uint64_t>(src[pos + 1]) << 8); pos += 2;
+      } else {
+        len = 1 + (tag >> 2); if (pos + 4 > src_len) { ret = OB_INVALID_DATA; break; }
+        offset = src[pos] | (static_cast<uint64_t>(src[pos + 1]) << 8) |
+                 (static_cast<uint64_t>(src[pos + 2]) << 16) | (static_cast<uint64_t>(src[pos + 3]) << 24); pos += 4;
+      }
+      if (0 == offset || offset > dst.size() || len > expected - dst.size()) ret = OB_INVALID_DATA;
+      for (uint64_t i = 0; OB_SUCC(ret) && i < len; ++i) dst.push_back(dst.at(dst.size() - offset));
+    }
+  }
+  if (OB_SUCC(ret) && dst.size() != expected) ret = OB_INVALID_DATA;
+  return ret;
+}
 } // namespace
 
 ObFileTableCsvReader::ObFileTableCsvReader() : file_(nullptr), path_(), line_no_(0) {}
@@ -183,6 +228,180 @@ ObFileTableJsonlReader::~ObFileTableJsonlReader()
     ::free(line_buf_);
     line_buf_ = nullptr;
   }
+}
+
+ObFileTableParquetReader::ObFileTableParquetReader()
+  : file_(nullptr), path_(), footer_offset_(0), next_page_offset_(4), remaining_rows_(0),
+    page_value_idx_(0), page_physical_idx_(0), physical_type_(-1), page_nulls_(), page_values_() {}
+ObFileTableParquetReader::~ObFileTableParquetReader() { close(); }
+
+int ObFileTableParquetReader::open(const ObString &path)
+{
+  int ret = OB_SUCCESS;
+  path_.assign(path.ptr(), path.length());
+  struct stat st;
+  uint8_t trailer[8] = {0};
+  std::vector<uint8_t> footer;
+  if (OB_NOT_NULL(file_)) ret = OB_INIT_TWICE;
+  else if (OB_ISNULL(file_ = ::fopen(path_.c_str(), "rb"))) ret = OB_FILE_NOT_EXIST;
+  else if (0 != ::stat(path_.c_str(), &st) || st.st_size < 12) ret = OB_INVALID_DATA;
+  else if (0 != ::fseek(file_, st.st_size - 8, SEEK_SET) || 8 != ::fread(trailer, 1, 8, file_)) ret = OB_IO_ERROR;
+  else if (0 != MEMCMP(trailer + 4, "PAR1", 4)) ret = OB_INVALID_DATA;
+  else {
+    const uint32_t len = trailer[0] | (trailer[1] << 8) | (trailer[2] << 16) | (trailer[3] << 24);
+    footer_offset_ = st.st_size - 8 - len;
+    if (len > FILE_SQL_MAX_RECORD_BYTES || footer_offset_ < 4) ret = OB_SIZE_OVERFLOW;
+    else { footer.resize(len); if (0 != ::fseek(file_, footer_offset_, SEEK_SET) || len != ::fread(footer.data(), 1, len, file_)) ret = OB_IO_ERROR; }
+  }
+  std::vector<ParquetSchemaElement> schema;
+  if (OB_SUCC(ret)) {
+    CompactReader reader(footer.data(), footer.size());
+    int16_t last = 0, id = 0; uint8_t type = 0;
+    while (OB_SUCC(ret)) {
+      OZ (reader.field(last, id, type)); if (OB_FAIL(ret) || 0 == type) break;
+      if (2 == id && 9 == type) {
+        uint8_t elem_type = 0; uint64_t count = 0; OZ (reader.list(elem_type, count));
+        for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) { ParquetSchemaElement e; OZ (parse_parquet_schema_element(reader, e)); if (OB_SUCC(ret)) schema.push_back(e); }
+      } else if (3 == id && (4 == type || 5 == type || 6 == type)) {
+        OZ (reader.sint(remaining_rows_));
+      } else OZ (reader.skip(type));
+    }
+  }
+  if (OB_SUCC(ret) && (2 != schema.size() || !schema.at(1).has_type_)) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "streaming Parquet scan currently requires one flat column");
+  } else if (OB_SUCC(ret)) {
+    physical_type_ = schema.at(1).type_;
+    next_page_offset_ = 4;
+    page_value_idx_ = page_physical_idx_ = 0;
+    page_nulls_.clear(); page_values_.clear();
+  }
+  if (OB_FAIL(ret)) close();
+  return ret;
+}
+
+int ObFileTableParquetReader::close()
+{
+  int ret = OB_SUCCESS;
+  if (OB_NOT_NULL(file_)) { if (0 != ::fclose(file_)) ret = OB_IO_ERROR; file_ = nullptr; }
+  page_nulls_.clear(); page_values_.clear();
+  return ret;
+}
+
+int ObFileTableParquetReader::rewind()
+{
+  const std::string saved_path = path_;
+  int ret = close();
+  if (OB_SUCC(ret)) ret = open(ObString(static_cast<int32_t>(saved_path.size()), saved_path.data()));
+  return ret;
+}
+
+int ObFileTableParquetReader::load_page()
+{
+  int ret = OB_SUCCESS;
+  if (next_page_offset_ >= footer_offset_) ret = OB_ITER_END;
+  std::vector<uint8_t> header_buf;
+  const int64_t available = footer_offset_ - next_page_offset_;
+  const size_t probe = static_cast<size_t>(std::min<int64_t>(available, 64 * 1024));
+  header_buf.resize(probe);
+  if (OB_SUCC(ret) && (0 != ::fseek(file_, next_page_offset_, SEEK_SET) || probe != ::fread(header_buf.data(), 1, probe, file_))) ret = OB_IO_ERROR;
+  int64_t page_type = -1, uncompressed = -1, compressed = -1, num_values = -1;
+  int64_t encoding = -1, def_len = 0, rep_len = 0;
+  bool values_compressed = true;
+  size_t header_len = 0;
+  if (OB_SUCC(ret)) {
+    CompactReader reader(header_buf.data(), header_buf.size());
+    int16_t last = 0, id = 0; uint8_t type = 0;
+    while (OB_SUCC(ret)) {
+      OZ (reader.field(last, id, type)); if (OB_FAIL(ret) || 0 == type) break;
+      if ((1 == id || 2 == id || 3 == id) && (4 == type || 5 == type || 6 == type)) {
+        int64_t value = 0; OZ (reader.sint(value)); if (1 == id) page_type = value; else if (2 == id) uncompressed = value; else compressed = value;
+      } else if (8 == id && 12 == type) {
+        int16_t nested_last = 0, nested_id = 0; uint8_t nested_type = 0;
+        while (OB_SUCC(ret)) {
+          OZ (reader.field(nested_last, nested_id, nested_type)); if (OB_FAIL(ret) || 0 == nested_type) break;
+          if ((nested_id >= 1 && nested_id <= 6) && (4 == nested_type || 5 == nested_type || 6 == nested_type)) {
+            int64_t value = 0; OZ (reader.sint(value));
+            if (1 == nested_id) num_values = value; else if (4 == nested_id) encoding = value;
+            else if (5 == nested_id) def_len = value; else if (6 == nested_id) rep_len = value;
+          } else if (7 == nested_id && (1 == nested_type || 2 == nested_type)) values_compressed = 1 == nested_type;
+          else OZ (reader.skip(nested_type));
+        }
+      } else OZ (reader.skip(type));
+    }
+    header_len = reader.position();
+  }
+  if (OB_SUCC(ret) && (3 != page_type || num_values < 0 || 0 != encoding || compressed < 0 || uncompressed < 0 ||
+                       compressed > static_cast<int64_t>(FILE_SQL_MAX_RECORD_BYTES) || rep_len != 0 || def_len < 0 || def_len > compressed)) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "unsupported Parquet page encoding");
+  }
+  std::vector<uint8_t> body;
+  if (OB_SUCC(ret)) {
+    body.resize(compressed);
+    if (0 != ::fseek(file_, next_page_offset_ + header_len, SEEK_SET) || compressed != static_cast<int64_t>(::fread(body.data(), 1, compressed, file_))) ret = OB_IO_ERROR;
+    next_page_offset_ += header_len + compressed;
+  }
+  page_nulls_.clear(); page_values_.clear(); page_value_idx_ = page_physical_idx_ = 0;
+  if (OB_SUCC(ret)) {
+    // Decode the RLE/bit-packed definition levels (bit width one for flat optional columns).
+    if (0 == def_len) page_nulls_.assign(num_values, false);
+    else {
+      size_t p = rep_len, end = rep_len + def_len;
+      while (OB_SUCC(ret) && p < end && page_nulls_.size() < static_cast<size_t>(num_values)) {
+        uint64_t run = 0; uint32_t shift = 0; uint8_t b = 0;
+        do { if (p >= end || shift >= 64) { ret = OB_INVALID_DATA; break; } b = body[p++]; run |= static_cast<uint64_t>(b & 0x7f) << shift; shift += 7; } while (b & 0x80);
+        if (OB_FAIL(ret)) break;
+        if (0 == (run & 1)) { const uint64_t count = run >> 1; if (p >= end) { ret = OB_INVALID_DATA; break; } const bool present = 0 != body[p++]; for (uint64_t i = 0; i < count && page_nulls_.size() < static_cast<size_t>(num_values); ++i) page_nulls_.push_back(!present); }
+        else { const uint64_t groups = run >> 1; for (uint64_t g = 0; OB_SUCC(ret) && g < groups; ++g) { if (p >= end) { ret = OB_INVALID_DATA; break; } const uint8_t bits = body[p++]; for (int bit = 0; bit < 8 && page_nulls_.size() < static_cast<size_t>(num_values); ++bit) page_nulls_.push_back(0 == (bits & (1 << bit))); } }
+      }
+      if (OB_SUCC(ret) && page_nulls_.size() != static_cast<size_t>(num_values)) ret = OB_INVALID_DATA;
+    }
+  }
+  std::vector<uint8_t> values;
+  if (OB_SUCC(ret)) {
+    const size_t value_off = rep_len + def_len;
+    if (values_compressed) OZ (snappy_decompress(body.data() + value_off, body.size() - value_off, values));
+    else values.assign(body.begin() + value_off, body.end());
+  }
+  if (OB_SUCC(ret)) {
+    size_t p = 0; int64_t non_null = 0; for (bool is_null : page_nulls_) if (!is_null) ++non_null;
+    for (int64_t i = 0; OB_SUCC(ret) && i < non_null; ++i) {
+      std::string value;
+      if (0 == physical_type_) {
+        if (p / 8 >= values.size()) ret = OB_INVALID_DATA; else { value = (values[p / 8] & (1 << (p % 8))) ? "true" : "false"; ++p; }
+      } else if (1 == physical_type_) {
+        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { int32_t v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
+      } else if (2 == physical_type_) {
+        if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { int64_t v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
+      } else if (4 == physical_type_) {
+        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { float v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
+      } else if (5 == physical_type_) {
+        if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { double v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
+      } else if (6 == physical_type_) {
+        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { uint32_t len; MEMCPY(&len, values.data() + p, 4); p += 4; if (len > values.size() - p) ret = OB_INVALID_DATA; else { value.assign(reinterpret_cast<char *>(values.data() + p), len); p += len; } }
+      } else ret = OB_NOT_SUPPORTED;
+      if (OB_SUCC(ret)) page_values_.push_back(value);
+    }
+  }
+  return ret;
+}
+
+int ObFileTableParquetReader::next(std::string &field, bool &is_null)
+{
+  int ret = OB_SUCCESS;
+  if (remaining_rows_ <= 0) ret = OB_ITER_END;
+  while (OB_SUCC(ret) && page_value_idx_ >= static_cast<int64_t>(page_nulls_.size())) OZ (load_page());
+  if (OB_SUCC(ret)) {
+    is_null = page_nulls_.at(page_value_idx_++);
+    field.clear();
+    if (!is_null) {
+      if (page_physical_idx_ >= static_cast<int64_t>(page_values_.size())) ret = OB_INVALID_DATA;
+      else field = page_values_.at(page_physical_idx_++);
+    }
+    --remaining_rows_;
+  }
+  return ret;
 }
 
 int ObFileTableJsonlReader::open(const ObString &path)

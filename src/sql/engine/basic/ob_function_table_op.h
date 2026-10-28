@@ -63,6 +63,7 @@ public:
     value_table_(NULL),
     csv_reader_(),
     jsonl_reader_(),
+    parquet_reader_(),
     file_fields_(),
     file_nulls_(),
     glob_paths_(),
@@ -79,6 +80,7 @@ private:
   int inner_get_next_row_udf();
   int inner_get_next_row_sys_func();
   int inner_get_next_row_file();
+  int read_next_parquet();
   int inner_get_next_row_glob();
   int get_current_result(common::ObObj &result);
   int64_t node_idx_;
@@ -89,6 +91,7 @@ private:
   pl::ObPLCollection *value_table_;
   ObFileTableCsvReader csv_reader_;
   ObFileTableJsonlReader jsonl_reader_;
+  ObFileTableParquetReader parquet_reader_;
   std::vector<std::string> file_fields_;
   std::vector<bool> file_nulls_;
   std::vector<std::string> glob_paths_;

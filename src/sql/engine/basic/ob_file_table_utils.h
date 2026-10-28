@@ -57,6 +57,32 @@ private:
   DISALLOW_COPY_AND_ASSIGN(ObFileTableJsonlReader);
 };
 
+// Streaming reader for the flat, single-column Parquet path.  Pages are
+// decoded one at a time; unsupported encodings are rejected explicitly.
+class ObFileTableParquetReader
+{
+public:
+  ObFileTableParquetReader();
+  ~ObFileTableParquetReader();
+  int open(const common::ObString &path);
+  int close();
+  int rewind();
+  int next(std::string &field, bool &is_null);
+private:
+  int load_page();
+  FILE *file_;
+  std::string path_;
+  int64_t footer_offset_;
+  int64_t next_page_offset_;
+  int64_t remaining_rows_;
+  int64_t page_value_idx_;
+  int64_t page_physical_idx_;
+  int32_t physical_type_;
+  std::vector<bool> page_nulls_;
+  std::vector<std::string> page_values_;
+  DISALLOW_COPY_AND_ASSIGN(ObFileTableParquetReader);
+};
+
 class ObFileTableUtils
 {
 public:
