@@ -328,6 +328,25 @@ std::string format_parquet_timestamp(const int64_t value, const int64_t units_pe
   return len > 0 ? std::string(buf, len) : std::string();
 }
 
+std::string format_parquet_int96(const uint32_t julian_day, const uint64_t nanos_of_day)
+{
+  static const uint64_t NANOS_PER_SECOND = 1000000000ULL;
+  static const uint64_t NANOS_PER_DAY = 86400ULL * NANOS_PER_SECOND;
+  std::string result;
+  if (nanos_of_day < NANOS_PER_DAY) {
+    const int64_t days = static_cast<int64_t>(julian_day) - 2440588;
+    const uint64_t seconds = nanos_of_day / NANOS_PER_SECOND;
+    const uint64_t micros = nanos_of_day % NANOS_PER_SECOND / 1000;
+    int64_t year = 0; unsigned month = 0, day = 0; char buf[64];
+    parquet_civil_from_days(days, year, month, day);
+    const int len = ::snprintf(buf, sizeof(buf), "%04ld-%02u-%02u %02lu:%02lu:%02lu.%06lu",
+                               year, month, day, seconds / 3600,
+                               seconds / 60 % 60, seconds % 60, micros);
+    if (len > 0) result.assign(buf, len);
+  }
+  return result;
+}
+
 int decode_parquet_plain_values(const int64_t physical_type,
                                 const int64_t converted_type,
                                 const uint8_t *data,
@@ -354,6 +373,14 @@ int decode_parquet_plain_values(const int64_t physical_type,
       else { int64_t v; MEMCPY(&v, data + p, 8); p += 8;
         value = 9 == converted_type ? format_parquet_timestamp(v, 1000) :
                 10 == converted_type ? format_parquet_timestamp(v, 1000000) : std::to_string(v); }
+    } else if (3 == physical_type) {
+      if (p + 12 > size) ret = OB_INVALID_DATA;
+      else {
+        uint64_t nanos = 0; uint32_t julian_day = 0;
+        MEMCPY(&nanos, data + p, 8); MEMCPY(&julian_day, data + p + 8, 4); p += 12;
+        value = format_parquet_int96(julian_day, nanos);
+        if (value.empty()) ret = OB_INVALID_DATA;
+      }
     } else if (4 == physical_type) {
       if (p + 4 > size) ret = OB_INVALID_DATA;
       else { float v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
