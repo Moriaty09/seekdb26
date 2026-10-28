@@ -541,8 +541,10 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
   fields.clear();
   std::string field;
   bool quoted = false;
+  bool just_closed_quote = false;
   bool at_field_start = true;
   bool saw_any = false;
+  size_t record_bytes = 0;
   while (OB_SUCC(ret)) {
     const int ch = ::fgetc(file_);
     if (EOF == ch) {
@@ -559,7 +561,7 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       break;
     }
     saw_any = true;
-    if (field.size() >= FILE_SQL_MAX_RECORD_BYTES) {
+    if (++record_bytes > FILE_SQL_MAX_RECORD_BYTES) {
       ret = OB_SIZE_OVERFLOW;
       LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
       break;
@@ -568,9 +570,15 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       if ('"' == ch) {
         const int next_ch = ::fgetc(file_);
         if ('"' == next_ch) {
+          if (++record_bytes > FILE_SQL_MAX_RECORD_BYTES) {
+            ret = OB_SIZE_OVERFLOW;
+            LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
+            break;
+          }
           field.push_back('"');
         } else {
           quoted = false;
+          just_closed_quote = true;
           if (EOF != next_ch) {
             ::ungetc(next_ch, file_);
           }
@@ -583,11 +591,13 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       }
     } else if (at_field_start && '"' == ch) {
       quoted = true;
+      just_closed_quote = false;
       at_field_start = false;
     } else if (',' == ch) {
       fields.push_back(field);
       field.clear();
       at_field_start = true;
+      just_closed_quote = false;
     } else if ('\n' == ch || '\r' == ch) {
       if ('\r' == ch) {
         const int next_ch = ::fgetc(file_);
@@ -598,6 +608,9 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       ++line_no_;
       fields.push_back(field);
       break;
+    } else if (just_closed_quote) {
+      ret = OB_INVALID_DATA;
+      LOG_USER_ERROR(OB_INVALID_DATA, "unexpected character after closing CSV quote");
     } else {
       field.push_back(static_cast<char>(ch));
       at_field_start = false;
