@@ -3391,6 +3391,41 @@ int ObAlterTableResolver::process_timestamp_column(ObColumnResolveStat &stat,
   return ret;
 }
 
+int ObAlterTableResolver::collect_ai_dependency_column_ids(
+    const ParseNode &expr, ObIArray<uint64_t> &column_ids) const
+{
+  int ret = OB_SUCCESS;
+  if (T_COLUMN_REF == expr.type_ && expr.num_child_ > COLUMN_NAME_NODE
+      && OB_NOT_NULL(expr.children_[COLUMN_NAME_NODE])) {
+    const ParseNode *name_node = expr.children_[COLUMN_NAME_NODE];
+    const ObString name(static_cast<int32_t>(name_node->str_len_), name_node->str_value_);
+    const ObColumnSchemaV2 *column = OB_ISNULL(table_schema_) ? NULL
+                                                              : table_schema_->get_column_schema(name);
+    ObSqlString state_name;
+    if (OB_ISNULL(column)) {
+      ret = OB_ERR_BAD_FIELD_ERROR;
+      LOG_USER_ERROR(OB_ERR_BAD_FIELD_ERROR, name.length(), name.ptr(),
+                     table_name_.length(), table_name_.ptr());
+    } else if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state", name.length(), name.ptr()))) {
+    } else if (OB_NOT_NULL(table_schema_->get_column_schema(state_name.string()))) {
+      ret = OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED, "AI COLUMN cannot depend on another AI COLUMN");
+    } else {
+      bool found = false;
+      for (int64_t i = 0; !found && i < column_ids.count(); ++i) {
+        found = column_ids.at(i) == column->get_column_id();
+      }
+      if (!found) { OZ (column_ids.push_back(column->get_column_id())); }
+    }
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < expr.num_child_; ++i) {
+    if (OB_NOT_NULL(expr.children_[i])) {
+      OZ (SMART_CALL(collect_ai_dependency_column_ids(*expr.children_[i], column_ids)));
+    }
+  }
+  return ret;
+}
+
 int ObAlterTableResolver::resolve_add_column(const ParseNode &node, ObColumnNameSet &add_column_names_set)
 {
   int ret = OB_SUCCESS;
@@ -3473,6 +3508,17 @@ int ObAlterTableResolver::resolve_add_column(const ParseNode &node, ObColumnName
                 OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
               } else {
                 ai_def.normalized_expr_ = raw_expr;
+              }
+              ObSEArray<uint64_t, 4> dependency_ids;
+              OZ (collect_ai_dependency_column_ids(*expr, dependency_ids));
+              if (OB_SUCC(ret) && !dependency_ids.empty()) {
+                ObSqlString dependency_text;
+                for (int64_t dep_idx = 0; OB_SUCC(ret) && dep_idx < dependency_ids.count(); ++dep_idx) {
+                  if (dep_idx > 0) { OZ (dependency_text.append(",")); }
+                  OZ (dependency_text.append_fmt("%lu", dependency_ids.at(dep_idx)));
+                }
+                OZ (ob_write_string(*allocator_, dependency_text.string(),
+                                    ai_def.dependency_column_ids_));
               }
               // Validation already guarantees a small option tree.  Preserve the
               // configured retry count for the durable definition.

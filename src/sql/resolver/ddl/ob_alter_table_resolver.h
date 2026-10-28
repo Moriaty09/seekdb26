@@ -95,6 +95,8 @@ public:
   int resolve_modify_all_trigger(const ParseNode &node);
 
 private:
+  int collect_ai_dependency_column_ids(const ParseNode &expr,
+                                       common::ObIArray<uint64_t> &column_ids) const;
   int check_dup_foreign_keys_exist(
       share::schema::ObSchemaGetterGuard *schema_guard,
       const obcall::ObCreateForeignKeyArg &foreign_key_arg);
