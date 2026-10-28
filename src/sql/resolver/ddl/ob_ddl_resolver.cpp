@@ -1909,6 +1909,9 @@ int ObDDLResolver::resolve_column_definition(ObColumnSchemaV2 &column,
       }
     }
   }
+  if (OB_SUCC(ret) && AI_COLUMN_DEFINITION_NUM_CHILD == node->num_child_) {
+    OZ (validate_ai_column_definition(*node, column));
+  }
   if (OB_SUCC(ret)) {
     ParseNode *attrs_node = node->children_[2];
     if (attrs_node != NULL) {
@@ -1966,6 +1969,91 @@ int ObDDLResolver::resolve_column_definition(ObColumnSchemaV2 &column,
             column.del_column_flag(INVISIBLE_COLUMN_FLAG);
           }
         }
+      }
+    }
+  }
+  return ret;
+}
+
+int ObDDLResolver::validate_ai_column_definition(const ParseNode &node,
+                                                  const ObColumnSchemaV2 &column)
+{
+  int ret = OB_SUCCESS;
+  const ParseNode *expr = node.children_[3];
+  const ParseNode *options = node.children_[4];
+  bool is_complete = false;
+  bool is_embed = false;
+  if (OB_ISNULL(expr)) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    is_complete = T_FUN_SYS_AI_COMPLETE == expr->type_;
+    is_embed = T_FUN_SYS_AI_EMBED == expr->type_;
+    if (T_FUN_SYS == expr->type_ && 2 == expr->num_child_
+        && OB_NOT_NULL(expr->children_[0])) {
+      const ParseNode *func_name_node = expr->children_[0];
+      const ObString func_name(static_cast<int32_t>(func_name_node->str_len_),
+                               func_name_node->str_value_);
+      is_complete = 0 == func_name.case_compare("AI_COMPLETE");
+      is_embed = 0 == func_name.case_compare("AI_EMBED");
+    }
+  }
+  if (OB_SUCC(ret) && !is_complete && !is_embed) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED,
+                   "AI COLUMN expression must be AI_COMPLETE or AI_EMBED");
+  } else if (OB_SUCC(ret) && is_embed && !column.is_collection()) {
+    ret = OB_ERR_INVALID_DATATYPE;
+    LOG_USER_ERROR(OB_ERR_INVALID_DATATYPE);
+  } else if (OB_SUCC(ret) && is_complete && column.is_collection()) {
+    ret = OB_ERR_INVALID_DATATYPE;
+    LOG_USER_ERROR(OB_ERR_INVALID_DATATYPE);
+  }
+
+  // Options are represented as a left-deep T_LINK_NODE tree.  Keep the
+  // accepted surface deliberately small so misspellings cannot silently alter
+  // asynchronous execution semantics.
+  ObSEArray<const ParseNode *, 4> pending;
+  bool seen_sync_mode = false;
+  bool seen_max_retries = false;
+  if (OB_SUCC(ret) && OB_NOT_NULL(options)) {
+    OZ (pending.push_back(options));
+  }
+  while (OB_SUCC(ret) && !pending.empty()) {
+    const ParseNode *option = pending.at(pending.count() - 1);
+    pending.pop_back();
+    if (OB_ISNULL(option)) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (T_LINK_NODE == option->type_ && 2 == option->num_child_
+               && OB_NOT_NULL(option->children_[0])
+               && T_LINK_NODE == option->children_[0]->type_) {
+      OZ (pending.push_back(option->children_[0]));
+      OZ (pending.push_back(option->children_[1]));
+    } else if (T_LINK_NODE != option->type_ || 2 != option->num_child_
+               || OB_ISNULL(option->children_[0]) || OB_ISNULL(option->children_[1])) {
+      ret = OB_ERR_UNEXPECTED;
+    } else {
+      const ParseNode *name_node = option->children_[0];
+      const ParseNode *value_node = option->children_[1];
+      const ObString name(static_cast<int32_t>(name_node->str_len_), name_node->str_value_);
+      if (0 == name.case_compare("sync_mode")) {
+        const ObString value(static_cast<int32_t>(value_node->str_len_), value_node->str_value_);
+        if (seen_sync_mode || 0 != value.case_compare("async")) {
+          ret = OB_INVALID_ARGUMENT;
+          LOG_USER_ERROR(OB_INVALID_ARGUMENT, "sync_mode must be 'async' and specified once");
+        } else {
+          seen_sync_mode = true;
+        }
+      } else if (0 == name.case_compare("max_retries")) {
+        if (seen_max_retries || T_INT != value_node->type_
+            || value_node->value_ < 0 || value_node->value_ > 100) {
+          ret = OB_INVALID_ARGUMENT;
+          LOG_USER_ERROR(OB_INVALID_ARGUMENT, "max_retries must be an integer from 0 to 100");
+        } else {
+          seen_max_retries = true;
+        }
+      } else {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "unknown AI COLUMN option");
       }
     }
   }

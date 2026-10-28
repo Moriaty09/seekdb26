@@ -551,6 +551,8 @@ protected:
   int resolve_column_skip_index(
       const ParseNode &skip_index_node,
       share::schema::ObColumnSchemaV2 &column_schema);
+  int validate_ai_column_definition(const ParseNode &node,
+                                    const share::schema::ObColumnSchemaV2 &column);
   int check_skip_index(share::schema::ObTableSchema &table_schema);
   int resolve_lob_inrow_threshold(const ParseNode *option_node, const bool is_index_option);
 
