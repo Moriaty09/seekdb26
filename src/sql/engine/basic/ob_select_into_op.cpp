@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <memory>
+#include <unistd.h>
 
 #include "ob_select_into_op.h"
 #include "sql/engine/cmd/ob_variable_set_executor.h"
@@ -38,7 +39,7 @@ OB_SERIALIZE_MEMBER(ObSelectIntoOpInput, task_id_, sqc_id_);
 OB_SERIALIZE_MEMBER((ObSelectIntoSpec, ObOpSpec), into_type_, user_vars_, outfile_name_,
     field_str_, line_str_, closed_cht_, is_optional_, select_exprs_, is_single_, max_file_size_,
     escaped_cht_, cs_type_, parallel_, buffer_size_, is_overwrite_,
-    external_properties_);
+    external_properties_, is_file_sql_copy_, output_header_, null_string_, column_names_);
 
 
 int ObSelectIntoOp::inner_open()
@@ -199,6 +200,8 @@ int ObSelectIntoOp::inner_get_next_row()
   if (OB_SUCC(ret) && ObExternalFileFormat::FormatType::CSV_FORMAT == format_type_
       && T_INTO_VARIABLES != into_type
       && OB_FAIL(create_the_only_data_writer(data_writer))) {
+  } else if (OB_SUCC(ret) && MY_SPEC.is_file_sql_copy_ && MY_SPEC.output_header_ &&
+             OB_FAIL(write_copy_header(data_writer))) {
   }
   while (OB_SUCC(ret) && row_count < top_limit_cnt_) {
     clear_evaluated_flag();
@@ -253,6 +256,8 @@ int ObSelectIntoOp::inner_get_next_batch(const int64_t max_row_cnt)
     if (OB_FAIL(create_the_only_data_writer(data_writer))) {
     } else if (OB_ISNULL(data_writer)) {
       ret = OB_ERR_UNEXPECTED;
+    } else if (MY_SPEC.is_file_sql_copy_ && MY_SPEC.output_header_ &&
+               OB_FAIL(write_copy_header(data_writer))) {
     }
   }
 
@@ -326,6 +331,12 @@ int ObSelectIntoOp::inner_close()
 {
   int ret = OB_SUCCESS;
   if (OB_NOT_NULL(data_writer_) && OB_FAIL(data_writer_->close_data_writer())) {
+  }
+  if (MY_SPEC.is_file_sql_copy_ && copy_target_created_ &&
+      (!need_commit_ || OB_FAIL(ret)) && !basic_url_.empty()) {
+    // COPY is atomic from the caller's perspective: never leave a partial target
+    // behind when expression evaluation, formatting, or file I/O fails.
+    (void)::unlink(basic_url_.ptr());
   }
   return ret;
 }
@@ -929,7 +940,11 @@ int ObSelectIntoOp::print_field(const ObObj &obj, ObCsvFileWriter &data_writer)
   if (need_enclose) {
     OZ(write_single_char_to_file(&char_enclose_, data_writer));
   }
-  if (!has_escape_) {
+  if (obj.is_null() && MY_SPEC.is_file_sql_copy_) {
+    ObObj null_obj;
+    null_obj.set_varchar(MY_SPEC.null_string_);
+    OZ(write_obj_to_file(null_obj, data_writer, false));
+  } else if (!has_escape_) {
     OZ(write_obj_to_file(obj, data_writer, false));
   } else if (obj.is_null()) {
     OZ(write_single_char_to_file(&char_escape_, data_writer));
@@ -939,6 +954,30 @@ int ObSelectIntoOp::print_field(const ObObj &obj, ObCsvFileWriter &data_writer)
   }
   if (need_enclose) {
     OZ(write_single_char_to_file(&char_enclose_, data_writer));
+  }
+  return ret;
+}
+
+int ObSelectIntoOp::write_copy_header(ObExternalFileWriter *data_writer)
+{
+  int ret = OB_SUCCESS;
+  ObCsvFileWriter *writer = static_cast<ObCsvFileWriter *>(data_writer);
+  if (copy_header_written_) {
+  } else if (OB_ISNULL(writer) || MY_SPEC.column_names_.count() != MY_SPEC.select_exprs_.count()) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    for (int64_t i = 0; OB_SUCC(ret) && i < MY_SPEC.column_names_.count(); ++i) {
+      ObObj name;
+      name.set_varchar(MY_SPEC.column_names_.at(i));
+      name.set_collation_type(cs_type_);
+      OZ (print_field(name, *writer));
+      if (OB_SUCC(ret) && i + 1 < MY_SPEC.column_names_.count()) {
+        OZ (write_obj_to_file(field_str_, *writer));
+      }
+    }
+    OZ (write_obj_to_file(line_str_, *writer));
+    OZ (writer->flush_shared_buf(shared_buf_));
+    if (OB_SUCC(ret)) copy_header_written_ = true;
   }
   return ret;
 }
@@ -1241,6 +1280,7 @@ int ObSelectIntoOp::create_the_only_data_writer(ObExternalFileWriter *&data_writ
   if (OB_FAIL(ret)) {
   } else if (T_INTO_OUTFILE == MY_SPEC.into_type_ && MY_SPEC.is_single_
              && OB_FAIL(data_writer->open_file())) {
+  } else if (OB_FALSE_IT(copy_target_created_ = MY_SPEC.is_file_sql_copy_)) {
   } else if (ObExternalFileFormat::FormatType::CSV_FORMAT == format_type_ && MY_SPEC.buffer_size_ > 0) {
     csv_data_writer = static_cast<ObCsvFileWriter*>(data_writer);
     if (OB_FAIL(csv_data_writer->alloc_buf(ctx_.get_allocator(), MY_SPEC.buffer_size_))) {

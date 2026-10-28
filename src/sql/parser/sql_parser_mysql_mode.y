@@ -372,7 +372,7 @@ END_P SET_VAR DELIMITER
         ORGANIZATION
 //-----------------------------non_reserved keyword end---------------------------------------------
 %type <node> sql_stmt stmt_list stmt opt_end_p
-%type <node> select_stmt update_stmt delete_stmt
+%type <node> select_stmt copy_stmt update_stmt delete_stmt
 %type <node> insert_stmt single_table_insert values_clause dml_table_name
 %type <node> create_table_stmt create_table_like_stmt fork_table_stmt fork_database_stmt diff_table_stmt merge_table_stmt opt_table_option_list table_option_list table_option table_option_list_space_seperated parallel_option lob_storage_clause lob_storage_parameter lob_storage_parameters lob_chunk_size
 %type <node> index_or_heap
@@ -556,6 +556,7 @@ opt_end_p:
 /* only preparable statement will set question mark size */
 stmt:
     select_stmt             { $$ = $1; question_mark_issue($$, result); }
+  | copy_stmt               { $$ = $1; question_mark_issue($$, result); }
   | insert_stmt             { $$ = $1; question_mark_issue($$, result); }
   | create_table_stmt       {
     $$ = $1;
@@ -8450,6 +8451,31 @@ select_no_parens opt_when
 | with_select
 {
   $$ = $1;
+}
+;
+
+// DuckDB-compatible local CSV export used by File SQL.  The option spelling
+// is intentionally strict so unsupported COPY variants fail in the parser.
+copy_stmt:
+COPY '(' select_no_parens ')' TO STRING_VALUE
+  '(' FORMAT column_name ',' column_name ',' column_name STRING_VALUE ')'
+{
+  (void)($9);
+  (void)($11);
+  (void)($13);
+  ParseNode *marker = NULL;
+  ParseNode *into = NULL;
+  malloc_terminal_node(marker, result->malloc_pool_, T_INT);
+  marker->value_ = 1;
+  malloc_non_terminal_node(into, result->malloc_pool_, T_INTO_OUTFILE,
+                           7, $6, NULL, NULL, NULL, NULL, marker, $14);
+  $$ = $3;
+  if (NULL != $$->children_[PARSE_SELECT_INTO]) {
+    yyerror(&@1, result, "COPY query already has an INTO clause");
+    YYERROR;
+  } else {
+    $$->children_[PARSE_SELECT_INTO_EXTRA] = into;
+  }
 }
 ;
 

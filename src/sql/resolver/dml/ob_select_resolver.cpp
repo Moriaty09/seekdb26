@@ -3107,6 +3107,29 @@ int ObSelectResolver::resolve_into_clause(const ParseNode *node)
       if (T_INTO_OUTFILE == node->type_) { // into outfile
         if (is_in_set_query()) {
           ret = OB_INAPPROPRIATE_INTO;
+        } else if (7 == node->num_child_ && OB_NOT_NULL(node->children_[5]) &&
+                   1 == node->children_[5]->value_) {
+          bool enabled = false;
+          ObObj null_obj;
+          if (OB_FAIL(session_info_->get_sys_variable(SYS_VAR_ENABLE_FILE_SQL, enabled))) {
+          } else if (!enabled) {
+            ret = OB_NOT_SUPPORTED;
+            LOG_USER_ERROR(OB_NOT_SUPPORTED, "File SQL is disabled; set session enable_file_sql = ON");
+          } else if (OB_FAIL(resolve_into_const_node(node->children_[0], into_item->outfile_name_))) {
+          } else if (OB_FAIL(resolve_into_const_node(node->children_[6], null_obj))) {
+          } else if (!null_obj.is_string_type()) {
+            ret = OB_INVALID_ARGUMENT;
+          } else if (OB_FAIL(ob_write_string(*allocator_, null_obj.get_string(), into_item->null_string_))) {
+          } else {
+            static const char quote = '"';
+            into_item->is_file_sql_copy_ = true;
+            into_item->output_header_ = true;
+            into_item->field_str_.set_varchar(ObString::make_string(","));
+            into_item->line_str_.set_varchar(ObString::make_string("\n"));
+            into_item->closed_cht_.set_char_value(&quote, 1);
+            into_item->escaped_cht_.set_char_value(&quote, 1);
+            into_item->is_optional_ = true;
+          }
         } else if (node->num_child_ == 3 && NULL != node->children_[1]
             && T_EXTERNAL_FILE_FORMAT == node->children_[1]->type_) { // Handle with `FORMAT`
           if (OB_FAIL(resolve_into_outfile_with_format(node, *into_item))) {
