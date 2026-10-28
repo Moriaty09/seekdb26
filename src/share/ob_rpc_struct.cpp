@@ -326,6 +326,7 @@ int ObCreateTableArg::assign(const ObCreateTableArg &other)
   OZ(error_info_.assign(other.error_info_));
   OX(is_alter_view_ = other.is_alter_view_);
   OZ(dep_infos_.assign(other.dep_infos_));
+  OZ(ai_column_defs_.assign(other.ai_column_defs_));
 
   return ret;
 }
@@ -344,7 +345,8 @@ DEF_TO_STRING(ObCreateTableArg)
        K_(is_inner),
        K_(error_info),
        K_(is_alter_view),
-       K_(dep_infos));
+       K_(dep_infos),
+       K_(ai_column_defs));
   J_OBJ_END();
   return pos;
 }
@@ -360,7 +362,18 @@ OB_SERIALIZE_MEMBER((ObCreateTableArg, ObDDLArg),
                     is_inner_,
                     error_info_,
                     is_alter_view_,
-                    dep_infos_);
+                    dep_infos_,
+                    ai_column_defs_);
+
+OB_SERIALIZE_MEMBER(ObAIColumnDef,
+                    column_name_,
+                    normalized_expr_,
+                    dependency_column_ids_,
+                    column_id_,
+                    state_column_id_,
+                    request_column_id_,
+                    result_spec_column_id_,
+                    max_retries_);
 
 OB_SERIALIZE_MEMBER(ObCreateTableRes, table_id_, schema_version_, task_id_, do_nothing_);
 

@@ -570,6 +570,88 @@ int ObCreateTableResolver::validate_ai_column_dependencies(const ParseNode &tabl
   return ret;
 }
 
+int ObCreateTableResolver::resolve_ai_column_max_retries(const ParseNode *options,
+                                                          int64_t &max_retries) const
+{
+  int ret = OB_SUCCESS;
+  max_retries = 0;
+  if (OB_ISNULL(options)) {
+  } else if (T_LINK_NODE != options->type_ || 2 != options->num_child_) {
+    ret = OB_ERR_UNEXPECTED;
+  } else if (OB_NOT_NULL(options->children_[0])
+             && T_LINK_NODE == options->children_[0]->type_) {
+    OZ (SMART_CALL(resolve_ai_column_max_retries(options->children_[0], max_retries)));
+    if (OB_SUCC(ret) && OB_NOT_NULL(options->children_[1])) {
+      int64_t right_value = 0;
+      OZ (SMART_CALL(resolve_ai_column_max_retries(options->children_[1], right_value)));
+      if (right_value != 0) {
+        max_retries = right_value;
+      }
+    }
+  } else if (OB_ISNULL(options->children_[0]) || OB_ISNULL(options->children_[1])) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    const ParseNode *name_node = options->children_[0];
+    const ObString name(static_cast<int32_t>(name_node->str_len_), name_node->str_value_);
+    if (0 == name.case_compare("max_retries")) {
+      max_retries = options->children_[1]->value_;
+    }
+  }
+  return ret;
+}
+
+int ObCreateTableResolver::add_ai_column_physical_metadata(
+    const ParseNode &definition,
+    const ObColumnSchemaV2 &result_column,
+    ObTableSchema &table_schema,
+    ObCreateTableArg &create_arg)
+{
+  int ret = OB_SUCCESS;
+  ObAIColumnDef ai_def;
+  ai_def.column_name_ = result_column.get_column_name_str();
+  ai_def.column_id_ = result_column.get_column_id();
+  const ParseNode *expr = definition.children_[3];
+  if (OB_ISNULL(expr) || OB_ISNULL(expr->str_value_)) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    ai_def.normalized_expr_.assign_ptr(expr->str_value_, static_cast<int32_t>(expr->str_len_));
+    OZ (resolve_ai_column_max_retries(definition.children_[4], ai_def.max_retries_));
+  }
+
+  const char *suffixes[] = {"state", "request", "result_spec"};
+  uint64_t *ids[] = {&ai_def.state_column_id_, &ai_def.request_column_id_,
+                     &ai_def.result_spec_column_id_};
+  for (int64_t i = 0; OB_SUCC(ret) && i < 3; ++i) {
+    ObColumnSchemaV2 hidden;
+    ObSqlString hidden_name;
+    hidden.set_column_id(gen_column_id());
+    hidden.set_rowkey_position(0);
+    hidden.set_index_position(0);
+    hidden.set_tbl_part_key_pos(0);
+    hidden.set_is_hidden(true);
+    hidden.set_nullable(true);
+    hidden.set_charset_type(CHARSET_UTF8MB4);
+    hidden.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
+    if (0 == i) {
+      hidden.set_data_type(ObIntType);
+      hidden.set_data_length(static_cast<int32_t>(sizeof(int64_t)));
+    } else {
+      hidden.set_data_type(ObVarcharType);
+      hidden.set_data_length(0 == i ? 8 : (1 == i ? 64 : 1024));
+    }
+    OZ (hidden_name.append_fmt("__ai_%.*s_%s",
+                               result_column.get_column_name_str().length(),
+                               result_column.get_column_name_str().ptr(), suffixes[i]));
+    OZ (hidden.set_column_name(hidden_name.string()));
+    OZ (table_schema.add_column(hidden));
+    if (OB_SUCC(ret)) {
+      *ids[i] = hidden.get_column_id();
+    }
+  }
+  OZ (create_arg.ai_column_defs_.push_back(ai_def));
+  return ret;
+}
+
 int ObCreateTableResolver::resolve_primary_key_node(const ParseNode &pk_node,
                                                     ObArray<ObColumnResolveStat> &stats)
 {
@@ -730,6 +812,8 @@ int ObCreateTableResolver::resolve_table_elements(const ParseNode *node,
     }
 
     int64_t resolved_cols_count = resolved_cols.count();
+    ObSEArray<const ParseNode *, 4> pending_ai_definitions;
+    ObSEArray<ObColumnSchemaV2, 4> pending_ai_result_columns;
     // Second pass traversal, use resolved_cols to parse out all column schema and save to table_schema
     // And parse index etc
     for (int32_t i = 0, ele_pos = 0; OB_SUCC(ret) && i < node->num_child_; ++i) {
@@ -894,6 +978,11 @@ int ObCreateTableResolver::resolve_table_elements(const ParseNode *node,
             }
           }
 
+          if (OB_SUCC(ret) && AI_COLUMN_DEFINITION_NUM_CHILD == element->num_child_) {
+            OZ (pending_ai_definitions.push_back(element));
+            OZ (pending_ai_result_columns.push_back(column));
+          }
+
           if (OB_SUCC(ret) && !column.is_invisible_column()) {
             has_visible_col = true;
           }
@@ -942,6 +1031,17 @@ int ObCreateTableResolver::resolve_table_elements(const ParseNode *node,
         ret = OB_ERR_UNEXPECTED;
         SQL_RESV_LOG(WARN, "unexpected branch", K(ret));
       }
+    }
+
+    // Append AI bookkeeping columns only after every user-visible result
+    // column.  Column ids are allocated during the first pass, so inserting a
+    // hidden column earlier would make the physical column array non-monotonic
+    // when more than one AI column is declared.
+    for (int64_t i = 0; OB_SUCC(ret) && i < pending_ai_definitions.count(); ++i) {
+      OZ (add_ai_column_physical_metadata(*pending_ai_definitions.at(i),
+                                          pending_ai_result_columns.at(i),
+                                          table_schema,
+                                          create_table_stmt->get_create_table_arg()));
     }
 
     if (OB_SUCC(ret)) {

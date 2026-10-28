@@ -84,6 +84,7 @@ private:
   int lock_objects_by_name_();
   int lock_objects_by_id_();
   int post_lock_objects_by_id_();
+  int create_ai_column_metadata_();
   int check_ddl_conflict_();
 
   int prefetch_schemas_();

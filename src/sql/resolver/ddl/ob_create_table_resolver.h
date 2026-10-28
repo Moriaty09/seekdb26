@@ -80,6 +80,11 @@ private:
   int find_ai_column_dependency(const ParseNode &expr,
                                 const common::ObIArray<common::ObString> &ai_column_names,
                                 common::ObString &dependency_name) const;
+  int add_ai_column_physical_metadata(const ParseNode &definition,
+                                      const share::schema::ObColumnSchemaV2 &result_column,
+                                      share::schema::ObTableSchema &table_schema,
+                                      obcall::ObCreateTableArg &create_arg);
+  int resolve_ai_column_max_retries(const ParseNode *options, int64_t &max_retries) const;
   int resolve_primary_key_node(const ParseNode &pk_node, common::ObArray<ObColumnResolveStat> &stats);
   int resolve_table_elements(const ParseNode *node,
                              common::ObArray<int> &idx_index_node,

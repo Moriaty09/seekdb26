@@ -25,6 +25,8 @@
 #include "share/schema/ob_table_sql_service.h"
 #include "query/vector/ob_vector_index_util.h"
 #include "sql/resolver/ob_resolver_utils.h"
+#include "share/ob_dml_sql_splicer.h"
+#include "share/inner_table/ob_inner_table_schema_constants.h"
 #include "sql/resolver/ddl/ob_fts_index_builder_util.h"
 
 using namespace oceanbase::lib;
@@ -858,11 +860,59 @@ int ObCreateTableHelper::get_mock_fk_parent_table_info_(
 
 
 
+int ObCreateTableHelper::create_ai_column_metadata_()
+{
+  int ret = OB_SUCCESS;
+  if (arg_.ai_column_defs_.empty()) {
+  } else if (new_tables_.empty()) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    const ObTableSchema &table_schema = new_tables_.at(0);
+    for (int64_t i = 0; OB_SUCC(ret) && i < arg_.ai_column_defs_.count(); ++i) {
+      const ObAIColumnDef &def = arg_.ai_column_defs_.at(i);
+      ObDMLSqlSplicer dml;
+      ObSqlString sql;
+      int64_t affected_rows = 0;
+      OZ (dml.add_pk_column("table_id", table_schema.get_table_id()));
+      OZ (dml.add_pk_column("column_id", def.column_id_));
+      OZ (dml.add_column("column_name", ObHexEscapeSqlStr(def.column_name_)));
+      OZ (dml.add_column("normalized_expr", ObHexEscapeSqlStr(def.normalized_expr_)));
+      if (def.dependency_column_ids_.empty()) {
+        OZ (dml.add_column("dependency_column_ids", ""));
+      } else {
+        OZ (dml.add_column("dependency_column_ids", ObHexEscapeSqlStr(def.dependency_column_ids_)));
+      }
+      OZ (dml.add_column("sync_mode", "async"));
+      OZ (dml.add_column("max_retries", def.max_retries_));
+      OZ (dml.add_column("state_column_id", def.state_column_id_));
+      OZ (dml.add_column("request_column_id", def.request_column_id_));
+      OZ (dml.add_column("result_spec_column_id", def.result_spec_column_id_));
+      OZ (dml.add_column("definition_version", 1));
+      OZ (dml.splice_insert_sql(OB_ALL_AI_COLUMN_TNAME, sql));
+      if (OB_SUCC(ret) && OB_FAIL(get_trans_().write(sql.ptr(), affected_rows))) {
+        LOG_WARN("failed to insert AI column metadata", K(ret), K(sql));
+      }
+      CK (is_single_row(affected_rows));
+
+      OZ (dml.add_pk_column("schema_version", table_schema.get_schema_version()));
+      OZ (dml.add_column("is_deleted", 0));
+      OX (sql.reuse());
+      OZ (dml.splice_insert_sql(OB_ALL_AI_COLUMN_HISTORY_TNAME, sql));
+      if (OB_SUCC(ret) && OB_FAIL(get_trans_().write(sql.ptr(), affected_rows))) {
+        LOG_WARN("failed to insert AI column history metadata", K(ret), K(sql));
+      }
+      CK (is_single_row(affected_rows));
+    }
+  }
+  return ret;
+}
+
 int ObCreateTableHelper::operate_schemas_() {
   int ret = OB_SUCCESS;
   if (OB_FAIL(check_inner_stat_())) {
   } else if (OB_FAIL(inner_create_table_(&arg_.ddl_stmt_str_,
                                          replace_mock_fk_parent_table_id_))) {
+  } else if (OB_FAIL(create_ai_column_metadata_())) {
   }
   return ret;
 }

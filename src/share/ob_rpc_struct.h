@@ -1919,6 +1919,30 @@ public:
   TO_STRING_KV(K_(purge_num), K_(expire_time), K_(auto_purge));
 };
 
+struct ObAIColumnDef
+{
+  OB_UNIS_VERSION(1);
+public:
+  ObAIColumnDef()
+    : column_id_(common::OB_INVALID_ID),
+      state_column_id_(common::OB_INVALID_ID),
+      request_column_id_(common::OB_INVALID_ID),
+      result_spec_column_id_(common::OB_INVALID_ID),
+      max_retries_(0)
+  {}
+  common::ObString column_name_;
+  common::ObString normalized_expr_;
+  common::ObString dependency_column_ids_;
+  uint64_t column_id_;
+  uint64_t state_column_id_;
+  uint64_t request_column_id_;
+  uint64_t result_spec_column_id_;
+  int64_t max_retries_;
+  TO_STRING_KV(K_(column_name), K_(normalized_expr), K_(dependency_column_ids),
+               K_(column_id), K_(state_column_id), K_(request_column_id),
+               K_(result_spec_column_id), K_(max_retries));
+};
+
 struct ObCreateTableArg : ObDDLArg
 {
   OB_UNIS_VERSION(1);
@@ -1931,7 +1955,8 @@ public:
       is_inner_(false),
       error_info_(),
       is_alter_view_(false),
-      dep_infos_()
+      dep_infos_(),
+      ai_column_defs_()
   {}
   bool is_valid() const;
   int assign(const ObCreateTableArg &other);
@@ -1948,6 +1973,7 @@ public:
   share::schema::ObErrorInfo error_info_;
   bool is_alter_view_;
   common::ObSArray<oceanbase::share::schema::ObDependencyInfo> dep_infos_;
+  common::ObSArray<ObAIColumnDef> ai_column_defs_;
 };
 
 
