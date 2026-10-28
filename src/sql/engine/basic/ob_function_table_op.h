@@ -34,13 +34,14 @@ class ObFunctionTableSpec : public ObOpSpec
 OB_UNIS_VERSION_V(1);
 public:
   ObFunctionTableSpec(common::ObIAllocator &alloc, const ObPhyOperatorType type)
-    : ObOpSpec(alloc, type), value_expr_(nullptr), column_exprs_(alloc), column_names_(alloc), has_correlated_expr_(false),
+    : ObOpSpec(alloc, type), value_expr_(nullptr), column_exprs_(alloc), column_names_(alloc), file_column_names_(alloc), has_correlated_expr_(false),
       file_format_(FILE_TABLE_INVALID), file_path_(), file_header_(true), file_size_(0),
       file_mtime_ns_(0), file_device_(0), file_inode_(0)
   {}
   ObExpr *value_expr_;
   common::ObFixedArray<ObExpr*, common::ObIAllocator> column_exprs_;
   common::ObFixedArray<common::ObString, common::ObIAllocator> column_names_;
+  common::ObFixedArray<common::ObString, common::ObIAllocator> file_column_names_;
   bool has_correlated_expr_;
   ObFileTableFormat file_format_;
   common::ObString file_path_;
@@ -81,6 +82,7 @@ private:
   int inner_get_next_row_sys_func();
   int inner_get_next_row_file();
   int read_next_parquet();
+  int project_file_fields();
   int inner_get_next_row_glob();
   int get_current_result(common::ObObj &result);
   int64_t node_idx_;

@@ -5516,6 +5516,7 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
     ret = OB_ERR_UNEXPECTED;
   } else if (OB_FAIL(spec.column_exprs_.init(op.get_stmt()->get_column_size()))) {
   } else if (OB_FAIL(spec.column_names_.init(op.get_stmt()->get_column_size()))) {
+  } else if (OB_FAIL(spec.file_column_names_.init(op.get_stmt()->get_column_size()))) {
   } else if (OB_UNLIKELY(op.get_num_of_child() > 1)) {
     ret = OB_ERR_UNEXPECTED;
   } else if (OB_ISNULL(value_raw_expr = op.get_value_expr())) {
@@ -5534,6 +5535,11 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
       spec.file_device_ = def.file_device_;
       spec.file_inode_ = def.file_inode_;
       OZ (ob_write_string(alloc, def.path_, spec.file_path_));
+      for (int64_t i = 0; OB_SUCC(ret) && i < def.columns_.count(); ++i) {
+        ObString column_name;
+        OZ (ob_write_string(alloc, def.columns_.at(i).name_, column_name));
+        OZ (spec.file_column_names_.push_back(column_name));
+      }
     }
     for (int64_t i = 0; OB_SUCC(ret) && i < op.get_output_exprs().count(); ++i) {
       if (OB_FAIL(mark_expr_self_produced(op.get_output_exprs().at(i)))) {

@@ -33,7 +33,7 @@ using namespace common;
 namespace sql
 {
 
-OB_SERIALIZE_MEMBER((ObFunctionTableSpec, ObOpSpec), value_expr_, column_exprs_, column_names_, has_correlated_expr_,
+OB_SERIALIZE_MEMBER((ObFunctionTableSpec, ObOpSpec), value_expr_, column_exprs_, column_names_, file_column_names_, has_correlated_expr_,
                     file_format_, file_path_, file_header_, file_size_, file_mtime_ns_,
                     file_device_, file_inode_);
 
@@ -182,6 +182,8 @@ int ObFunctionTableOp::inner_get_next_row_file()
   } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ &&
              OB_FAIL(jsonl_reader_.next(MY_SPEC.column_names_, file_fields_, file_nulls_))) {
   } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(read_next_parquet())) {
+  } else if ((FILE_TABLE_CSV == MY_SPEC.file_format_ || FILE_TABLE_PARQUET == MY_SPEC.file_format_) &&
+             OB_FAIL(project_file_fields())) {
   } else if (OB_UNLIKELY(file_fields_.size() != static_cast<size_t>(MY_SPEC.column_exprs_.count()))) {
     ret = OB_ERR_COLUMN_SIZE;
     LOG_WARN("CSV row has a different column count", K(ret), K(csv_reader_.line_no()),
@@ -256,10 +258,36 @@ int ObFunctionTableOp::inner_get_next_row_file()
 
 int ObFunctionTableOp::read_next_parquet()
 {
-  int ret = parquet_reader_.next(file_fields_, file_nulls_);
-  if (OB_SUCC(ret) && MY_SPEC.column_exprs_.empty()) {
-    file_fields_.clear();
-    file_nulls_.clear();
+  return parquet_reader_.next(file_fields_, file_nulls_);
+}
+
+int ObFunctionTableOp::project_file_fields()
+{
+  int ret = OB_SUCCESS;
+  if (file_fields_.size() != static_cast<size_t>(MY_SPEC.file_column_names_.count()) ||
+      ((!file_nulls_.empty()) && file_nulls_.size() != file_fields_.size())) {
+    ret = OB_ERR_COLUMN_SIZE;
+  } else {
+    std::vector<std::string> projected_fields;
+    std::vector<bool> projected_nulls;
+    projected_fields.reserve(MY_SPEC.column_names_.count());
+    projected_nulls.reserve(MY_SPEC.column_names_.count());
+    for (int64_t i = 0; OB_SUCC(ret) && i < MY_SPEC.column_names_.count(); ++i) {
+      int64_t source_idx = -1;
+      for (int64_t j = 0; j < MY_SPEC.file_column_names_.count() && source_idx < 0; ++j) {
+        if (0 == MY_SPEC.column_names_.at(i).case_compare(MY_SPEC.file_column_names_.at(j))) source_idx = j;
+      }
+      if (source_idx < 0) {
+        ret = OB_ERR_BAD_FIELD_ERROR;
+      } else {
+        projected_fields.push_back(file_fields_.at(source_idx));
+        if (!file_nulls_.empty()) projected_nulls.push_back(file_nulls_.at(source_idx));
+      }
+    }
+    if (OB_SUCC(ret)) {
+      file_fields_.swap(projected_fields);
+      if (!file_nulls_.empty()) file_nulls_.swap(projected_nulls);
+    }
   }
   return ret;
 }
