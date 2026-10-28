@@ -172,12 +172,13 @@ private:
 
 struct ParquetSchemaElement
 {
-  ParquetSchemaElement() : has_type_(false), type_(-1), repetition_(-1), name_(), children_(0) {}
+  ParquetSchemaElement() : has_type_(false), type_(-1), repetition_(-1), name_(), children_(0), converted_type_(-1) {}
   bool has_type_;
   int64_t type_;
   int64_t repetition_;
   std::string name_;
   int64_t children_;
+  int64_t converted_type_;
 };
 
 int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &elem)
@@ -190,6 +191,7 @@ int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &el
     else if (3 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.repetition_));
     else if (4 == id && 8 == type) OZ (reader.binary(elem.name_));
     else if (5 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.children_));
+    else if (6 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.converted_type_));
     else OZ (reader.skip(type));
   }
   return ret;
@@ -264,9 +266,10 @@ struct ObFileTableParquetReader::Impl
     int64_t codec_;
   };
   struct Column {
-    Column() : physical_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
+    Column() : physical_type_(-1), converted_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
                chunk_remaining_(0), page_value_idx_(0), page_physical_idx_(0) {}
     int64_t physical_type_;
+    int64_t converted_type_;
     bool optional_;
     std::vector<Chunk> chunks_;
     size_t chunk_idx_;
@@ -287,7 +290,46 @@ struct ObFileTableParquetReader::Impl
 
 namespace
 {
+void parquet_civil_from_days(int64_t days, int64_t &year, unsigned &month, unsigned &day)
+{
+  days += 719468;
+  const int64_t era = (days >= 0 ? days : days - 146096) / 146097;
+  const unsigned doe = static_cast<unsigned>(days - era * 146097);
+  const unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+  year = static_cast<int64_t>(yoe) + era * 400;
+  const unsigned doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+  const unsigned mp = (5 * doy + 2) / 153;
+  day = doy - (153 * mp + 2) / 5 + 1;
+  month = mp + (mp < 10 ? 3 : -9);
+  year += month <= 2;
+}
+
+std::string format_parquet_date(const int64_t days)
+{
+  int64_t year = 0; unsigned month = 0, day = 0; char buf[32];
+  parquet_civil_from_days(days, year, month, day);
+  const int len = ::snprintf(buf, sizeof(buf), "%04ld-%02u-%02u", year, month, day);
+  return len > 0 ? std::string(buf, len) : std::string();
+}
+
+std::string format_parquet_timestamp(const int64_t value, const int64_t units_per_second)
+{
+  int64_t seconds = value / units_per_second;
+  int64_t fraction = value % units_per_second;
+  if (fraction < 0) { fraction += units_per_second; --seconds; }
+  int64_t days = seconds / 86400; int64_t day_seconds = seconds % 86400;
+  if (day_seconds < 0) { day_seconds += 86400; --days; }
+  int64_t year = 0; unsigned month = 0, day = 0; char buf[64];
+  parquet_civil_from_days(days, year, month, day);
+  const int width = 1000 == units_per_second ? 3 : 6;
+  const int len = ::snprintf(buf, sizeof(buf), "%04ld-%02u-%02u %02ld:%02ld:%02ld.%0*ld",
+                             year, month, day, day_seconds / 3600,
+                             day_seconds / 60 % 60, day_seconds % 60, width, fraction);
+  return len > 0 ? std::string(buf, len) : std::string();
+}
+
 int decode_parquet_plain_values(const int64_t physical_type,
+                                const int64_t converted_type,
                                 const uint8_t *data,
                                 const size_t size,
                                 const int64_t count,
@@ -306,10 +348,12 @@ int decode_parquet_plain_values(const int64_t physical_type,
       else { value = (data[p / 8] & (1 << (p % 8))) ? "true" : "false"; ++p; }
     } else if (1 == physical_type) {
       if (p + 4 > size) ret = OB_INVALID_DATA;
-      else { int32_t v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
+      else { int32_t v; MEMCPY(&v, data + p, 4); p += 4; value = 6 == converted_type ? format_parquet_date(v) : std::to_string(v); }
     } else if (2 == physical_type) {
       if (p + 8 > size) ret = OB_INVALID_DATA;
-      else { int64_t v; MEMCPY(&v, data + p, 8); p += 8; value = std::to_string(v); }
+      else { int64_t v; MEMCPY(&v, data + p, 8); p += 8;
+        value = 9 == converted_type ? format_parquet_timestamp(v, 1000) :
+                10 == converted_type ? format_parquet_timestamp(v, 1000000) : std::to_string(v); }
     } else if (4 == physical_type) {
       if (p + 4 > size) ret = OB_INVALID_DATA;
       else { float v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
@@ -463,6 +507,7 @@ int ObFileTableParquetReader::open(const ObString &path)
             row_groups.at(g).at(c).value_count_ != row_group_rows.at(g)) ret = OB_NOT_SUPPORTED;
         else {
           impl_->columns_.at(c).physical_type_ = schema.at(c + 1).type_;
+          impl_->columns_.at(c).converted_type_ = schema.at(c + 1).converted_type_;
           impl_->columns_.at(c).optional_ = 0 != schema.at(c + 1).repetition_;
           impl_->columns_.at(c).chunks_.push_back(row_groups.at(g).at(c));
         }
@@ -610,7 +655,7 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     else ret = OB_NOT_SUPPORTED;
     if (OB_SUCC(ret) && decoded.size() != static_cast<size_t>(uncompressed)) ret = OB_INVALID_DATA;
     if (OB_SUCC(ret)) {
-      OZ (decode_parquet_plain_values(column.physical_type_, decoded.data(), decoded.size(),
+      OZ (decode_parquet_plain_values(column.physical_type_, column.converted_type_, decoded.data(), decoded.size(),
                                       num_values, column.dictionary_values_));
     }
     // Dictionary pages do not represent rows.  Continue until a data page is loaded.
@@ -641,7 +686,7 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
   }
   if (OB_SUCC(ret) && 0 == encoding) {
     int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
-    OZ (decode_parquet_plain_values(column.physical_type_, values.data(), values.size(),
+    OZ (decode_parquet_plain_values(column.physical_type_, column.converted_type_, values.data(), values.size(),
                                     non_null, column.page_values_));
   } else if (OB_SUCC(ret)) {
     int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
@@ -1274,6 +1319,10 @@ int ObFileTableUtils::infer_parquet_schema(ObIAllocator &allocator, ObFileTableD
       if (OB_FAIL(ret)) {
       } else if (0 == src.type_) {
         col.meta_.set_tinyint(); col.accuracy_.set_precision(1); col.accuracy_.set_scale(0);
+      } else if (1 == src.type_ && 6 == src.converted_type_) {
+        col.meta_.set_date();
+      } else if (2 == src.type_ && (9 == src.converted_type_ || 10 == src.converted_type_)) {
+        col.meta_.set_datetime(); col.accuracy_.set_scale(9 == src.converted_type_ ? 3 : 6);
       } else if (1 == src.type_ || 2 == src.type_) {
         col.meta_.set_int(); col.accuracy_.set_precision(20); col.accuracy_.set_scale(0);
       } else if (4 == src.type_ || 5 == src.type_) {
