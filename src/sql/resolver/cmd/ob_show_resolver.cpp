@@ -395,8 +395,15 @@ int ObShowResolver::resolve(const ParseNode &parse_tree)
                */
               bool is_full = (1 == ((parse_tree.children_[0]->value_)&1));
               bool is_extended = (1 == (((parse_tree.children_[0]->value_)>>1)&1));
-              if (OB_UNLIKELY(((parse_tree.children_[0]->value_)>>2) != 0)) {
+              bool is_ai = (1 == (((parse_tree.children_[0]->value_)>>2)&1));
+              if (OB_UNLIKELY(((parse_tree.children_[0]->value_)>>3) != 0)) {
                 ret = OB_ERR_UNEXPECTED;
+              } else if (is_ai) {
+                GEN_SQL_STEP_1(ObShowSqlSet::SHOW_AI_COLUMNS);
+                GEN_SQL_STEP_2(ObShowSqlSet::SHOW_AI_COLUMNS,
+                               OB_SYS_DATABASE_NAME,
+                               OB_ALL_AI_COLUMN_TNAME,
+                               show_table_id);
               } else if (is_full) {
                 if (is_extended) {
                   GEN_SQL_STEP_1(ObShowSqlSet::SHOW_EXTENDED_FULL_COLUMNS);
@@ -2376,6 +2383,14 @@ DEFINE_SHOW_CLAUSE_SET(SHOW_COLUMNS,
                         R"(SELECT "FIELD" AS "FIELD", "TYPE" AS "TYPE", "NULL" AS "NULL", "KEY" AS "KEY", "DEFAULT" AS "DEFAULT", "EXTRA" AS "EXTRA" )"
                         R"(FROM %s.%s  WHERE TABLE_ID = %ld AND IS_HIDDEN = 0)",
                        "Field");
+DEFINE_SHOW_CLAUSE_SET(SHOW_AI_COLUMNS,
+                       NULL,
+                       "SELECT column_name AS `Column`, normalized_expr AS `Expression`, "
+                       "sync_mode AS `Sync Mode`, max_retries AS `Max Retries`, "
+                       "definition_version AS `Definition Version` "
+                       "FROM %s.%s WHERE table_id = %ld ORDER BY column_id",
+                       NULL,
+                       "Column");
 DEFINE_SHOW_CLAUSE_SET(SHOW_FULL_COLUMNS,
                        NULL,
                        "SELECT field AS `Field`, type AS `Type`, collation AS `Collation`, `NULL` AS `Null`, `KEY` AS `Key`, `DEFAULT` AS `Default`, extra AS `Extra`, `PRIVILEGES` AS `Privileges`, `COMMENT` AS `Comment` \

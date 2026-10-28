@@ -12765,6 +12765,16 @@ SHOW opt_extended_or_full TABLES opt_from_or_in_database_clause opt_show_conditi
   $$->value_ = $2[0];
   malloc_non_terminal_node($$, result->malloc_pool_, T_SHOW_COLUMNS, 4, $$, $5, $6, $7);
 }
+| SHOW AI columns_or_fields from_or_in relation_factor opt_from_or_in_database_clause opt_show_condition
+{
+  (void)$3;
+  (void)$4;
+  malloc_terminal_node($$, result->malloc_pool_, T_INT);
+  /* Bit 2 distinguishes AI definitions from ordinary SHOW COLUMNS while
+   * retaining the mature table/database/privilege resolution path. */
+  $$->value_ = 4;
+  malloc_non_terminal_node($$, result->malloc_pool_, T_SHOW_COLUMNS, 4, $$, $5, $6, $7);
+}
 | SHOW TABLE STATUS opt_from_or_in_database_clause opt_show_condition
 { malloc_non_terminal_node($$, result->malloc_pool_, T_SHOW_TABLE_STATUS, 2, $4, $5); }
 | SHOW PROCEDURE STATUS opt_from_or_in_database_clause opt_show_condition
