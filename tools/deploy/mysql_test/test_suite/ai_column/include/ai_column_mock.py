@@ -138,15 +138,22 @@ def serve(port):
                 if not isinstance(values, list):
                     values = [values]
 
+                requested_dimension = body.get(
+                    "dimensions", body.get("dimension", 4)
+                )
+                if not isinstance(requested_dimension, int) or requested_dimension <= 0:
+                    requested_dimension = 4
+
                 def vector(value, index):
                     text = str(value)
                     if "vec-zero" in text:
-                        return [0.0, 0.0, 0.0, 0.0]
+                        return [0.0] * requested_dimension
                     if "vec-ten" in text:
-                        return [10.0, 0.0, 0.0, 0.0]
+                        return [10.0] + [0.0] * (requested_dimension - 1)
                     if "vec-twenty" in text:
-                        return [20.0, 0.0, 0.0, 0.0]
-                    return [float(index + 1), 0.25, 0.5, 0.75]
+                        return [20.0] + [0.0] * (requested_dimension - 1)
+                    seed = [float(index + 1), 0.25, 0.5, 0.75]
+                    return (seed + [0.0] * requested_dimension)[:requested_dimension]
 
                 status = 200
                 embeddings = [vector(value, index) for index, value in enumerate(values)]
