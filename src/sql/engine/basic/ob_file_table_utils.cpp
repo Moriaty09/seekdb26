@@ -264,9 +264,10 @@ struct ObFileTableParquetReader::Impl
     int64_t codec_;
   };
   struct Column {
-    Column() : physical_type_(-1), chunk_idx_(0), next_offset_(0), chunk_end_(0),
+    Column() : physical_type_(-1), optional_(false), chunk_idx_(0), next_offset_(0), chunk_end_(0),
                chunk_remaining_(0), page_value_idx_(0), page_physical_idx_(0) {}
     int64_t physical_type_;
+    bool optional_;
     std::vector<Chunk> chunks_;
     size_t chunk_idx_;
     int64_t next_offset_;
@@ -417,6 +418,7 @@ int ObFileTableParquetReader::open(const ObString &path)
             row_groups.at(g).at(c).value_count_ != row_group_rows.at(g)) ret = OB_NOT_SUPPORTED;
         else {
           impl_->columns_.at(c).physical_type_ = schema.at(c + 1).type_;
+          impl_->columns_.at(c).optional_ = 0 != schema.at(c + 1).repetition_;
           impl_->columns_.at(c).chunks_.push_back(row_groups.at(g).at(c));
         }
       }
@@ -463,6 +465,7 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
   if (OB_SUCC(ret) && (0 != ::fseek(impl_->file_, column.next_offset_, SEEK_SET) || probe != ::fread(header_buf.data(), 1, probe, impl_->file_))) ret = OB_IO_ERROR;
   int64_t page_type = -1, uncompressed = -1, compressed = -1, num_values = -1;
   int64_t encoding = -1, def_len = 0, rep_len = 0;
+  int64_t definition_encoding = -1, repetition_encoding = -1;
   bool values_compressed = true;
   size_t header_len = 0;
   if (OB_SUCC(ret)) {
@@ -472,6 +475,18 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
       OZ (reader.field(last, id, type)); if (OB_FAIL(ret) || 0 == type) break;
       if ((1 == id || 2 == id || 3 == id) && (4 == type || 5 == type || 6 == type)) {
         int64_t value = 0; OZ (reader.sint(value)); if (1 == id) page_type = value; else if (2 == id) uncompressed = value; else compressed = value;
+      } else if (5 == id && 12 == type) {
+        int16_t nested_last = 0, nested_id = 0; uint8_t nested_type = 0;
+        while (OB_SUCC(ret)) {
+          OZ (reader.field(nested_last, nested_id, nested_type)); if (OB_FAIL(ret) || 0 == nested_type) break;
+          if (nested_id >= 1 && nested_id <= 4 && (4 == nested_type || 5 == nested_type || 6 == nested_type)) {
+            int64_t value = 0; OZ (reader.sint(value));
+            if (1 == nested_id) num_values = value;
+            else if (2 == nested_id) encoding = value;
+            else if (3 == nested_id) definition_encoding = value;
+            else repetition_encoding = value;
+          } else OZ (reader.skip(nested_type));
+        }
       } else if (8 == id && 12 == type) {
         int16_t nested_last = 0, nested_id = 0; uint8_t nested_type = 0;
         while (OB_SUCC(ret)) {
@@ -487,8 +502,12 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     }
     header_len = reader.position();
   }
-  if (OB_SUCC(ret) && (3 != page_type || num_values < 0 || num_values > column.chunk_remaining_ || 0 != encoding || compressed < 0 || uncompressed < 0 ||
-                       compressed > static_cast<int64_t>(FILE_SQL_MAX_RECORD_BYTES) || rep_len != 0 || def_len < 0 || def_len > compressed)) {
+  if (OB_SUCC(ret) && ((0 != page_type && 3 != page_type) || num_values < 0 ||
+                       num_values > column.chunk_remaining_ || 0 != encoding || compressed < 0 ||
+                       uncompressed < 0 || compressed > static_cast<int64_t>(FILE_SQL_MAX_RECORD_BYTES) ||
+                       (3 == page_type && (rep_len != 0 || def_len < 0 || def_len > compressed)) ||
+                       (0 == page_type && ((column.optional_ && 3 != definition_encoding) ||
+                                           3 != repetition_encoding)))) {
     ret = OB_NOT_SUPPORTED;
     LOG_USER_ERROR(OB_NOT_SUPPORTED, "unsupported Parquet page encoding");
   }
@@ -500,6 +519,27 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     column.next_offset_ += header_len + compressed;
   }
   column.page_nulls_.clear(); column.page_values_.clear(); column.page_value_idx_ = column.page_physical_idx_ = 0;
+  if (OB_SUCC(ret) && 0 == page_type) {
+    std::vector<uint8_t> decoded;
+    const Impl::Chunk &chunk = column.chunks_.at(column.chunk_idx_ - 1);
+    if (1 == chunk.codec_) OZ (snappy_decompress(body.data(), body.size(), decoded));
+    else if (0 == chunk.codec_) decoded.swap(body);
+    else ret = OB_NOT_SUPPORTED;
+    if (OB_SUCC(ret)) {
+      body.swap(decoded);
+      if (column.optional_) {
+        if (body.size() < 4) ret = OB_INVALID_DATA;
+        else {
+          uint32_t level_bytes = 0; MEMCPY(&level_bytes, body.data(), 4);
+          if (level_bytes > body.size() - 4) ret = OB_INVALID_DATA;
+          else { rep_len = 4; def_len = level_bytes; }
+        }
+      } else {
+        rep_len = def_len = 0;
+      }
+      values_compressed = false;
+    }
+  }
   if (OB_SUCC(ret)) {
     // Decode the RLE/bit-packed definition levels (bit width one for flat optional columns).
     if (0 == def_len) column.page_nulls_.assign(num_values, false);
