@@ -2008,6 +2008,28 @@ int ObDDLResolver::validate_ai_column_definition(const ParseNode &node,
     ret = OB_ERR_INVALID_DATATYPE;
     LOG_USER_ERROR(OB_ERR_INVALID_DATATYPE);
   }
+  if (OB_SUCC(ret) && is_embed) {
+    int64_t target_dim = 0;
+    const ParseNode *params = (T_FUN_SYS == expr->type_ && 2 == expr->num_child_)
+                              ? expr->children_[1] : NULL;
+    if (OB_FAIL(ObVectorIndexUtil::get_vector_dim_from_extend_type_info(
+            column.get_extended_type_info(), target_dim))) {
+    } else if (OB_NOT_NULL(params) && T_EXPR_LIST == params->type_
+               && params->num_child_ >= 3) {
+      const ParseNode *dimension = params->children_[2];
+      if (OB_ISNULL(dimension) || T_INT != dimension->type_
+          || dimension->value_ <= 0) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                       "AI_EMBED dimension must be a positive integer literal");
+      } else if (target_dim != dimension->value_) {
+        ret = OB_ERR_INVALID_VECTOR_DIM;
+        LOG_USER_ERROR(OB_ERR_INVALID_VECTOR_DIM,
+                       static_cast<uint32_t>(target_dim),
+                       static_cast<uint32_t>(dimension->value_));
+      }
+    }
+  }
 
   // Options are represented as a left-deep T_LINK_NODE tree.  Keep the
   // accepted surface deliberately small so misspellings cannot silently alter
