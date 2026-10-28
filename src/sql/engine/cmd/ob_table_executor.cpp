@@ -70,9 +70,66 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
   const ObRowkeyInfo &rowkey_info = table_schema.get_rowkey_info();
   ObSqlString use_sql;
   ObSqlString trigger_sql;
+  ObSqlString update_trigger_sql;
+  ObSqlString delete_trigger_sql;
   common::sqlclient::ObISQLConnection *conn = NULL;
   common::sqlclient::ObISQLConnectionGuard conn_guard;
   int64_t affected_rows = 0;
+  auto append_rowkey_predicate = [&](ObSqlString &sql, const char *row_alias) -> int {
+    int tmp_ret = sql.append("CONCAT(");
+    for (int64_t j = 0; OB_SUCCESS == tmp_ret && j < rowkey_info.get_size(); ++j) {
+      uint64_t column_id = OB_INVALID_ID;
+      const ObColumnSchemaV2 *column_schema = NULL;
+      ObSqlString prefix;
+      if (OB_SUCCESS != (tmp_ret = rowkey_info.get_column_id(j, column_id))) {
+      } else if (OB_ISNULL(column_schema = table_schema.get_column_schema(column_id))) {
+        tmp_ret = OB_ERR_UNEXPECTED;
+      } else if (j > 0 && OB_SUCCESS != (tmp_ret = sql.append(","))) {
+      } else if (OB_SUCCESS != (tmp_ret = prefix.append(j > 0 ? " AND " : ""))) {
+      } else if (OB_SUCCESS != (tmp_ret = ObResolverUtils::append_escaped_identifier(
+                                  prefix, column_schema->get_column_name_str()))) {
+      } else if (OB_SUCCESS != (tmp_ret = prefix.append(" = "))) {
+      } else if (OB_SUCCESS != (tmp_ret = sql_append_hex_escape_str(prefix.string(), sql))) {
+      } else if (OB_SUCCESS != (tmp_ret = sql.append(","))) {
+      } else {
+        const ObObjTypeClass type_class = column_schema->get_data_type_class();
+        const bool numeric = ObIntTC == type_class || ObUIntTC == type_class
+                             || ObFloatTC == type_class || ObDoubleTC == type_class
+                             || ObNumberTC == type_class || ObDecimalIntTC == type_class
+                             || ObBitTC == type_class;
+        if (!numeric && OB_SUCCESS != (tmp_ret = sql.append("QUOTE("))) {
+        } else if (OB_SUCCESS != (tmp_ret = sql.append(row_alias))) {
+        } else if (OB_SUCCESS != (tmp_ret = sql.append("."))) {
+        } else if (OB_SUCCESS != (tmp_ret = ObResolverUtils::append_escaped_identifier(
+                                    sql, column_schema->get_column_name_str()))) {
+        } else if (!numeric && OB_SUCCESS != (tmp_ret = sql.append(")"))) {
+        }
+      }
+    }
+    if (OB_SUCCESS == tmp_ret) {
+      tmp_ret = sql.append(")");
+    }
+    return tmp_ret;
+  };
+  auto append_task_insert = [&](ObSqlString &sql,
+                                const obcall::ObAIColumnDef &def,
+                                const char *row_alias) -> int {
+    int tmp_ret = sql.append(
+        "INSERT INTO `oceanbase`.`__all_ai_column_task`"
+        "(`task_id`,`table_id`,`column_id`,`request_id`,`rowkey_predicate`,"
+        "`state`,`retry_count`,`eligible_ts`,`lease_owner`,`lease_expire_ts`,"
+        "`definition_version`,`input_payload`,`last_error`) VALUES(UUID_SHORT(),");
+    if (OB_SUCCESS == tmp_ret) {
+      tmp_ret = sql.append_fmt("%lu,%lu,@__ai_request_id,", table_id, def.column_id_);
+    }
+    if (OB_SUCCESS == tmp_ret) {
+      tmp_ret = append_rowkey_predicate(sql, row_alias);
+    }
+    if (OB_SUCCESS == tmp_ret) {
+      tmp_ret = sql.append(",0,0,NOW(6),'',NULL,1,'{}',''); ");
+    }
+    return tmp_ret;
+  };
 
   if (OB_ISNULL(session) || OB_UNLIKELY(OB_INVALID_ID == table_id)) {
     ret = OB_INVALID_ARGUMENT;
@@ -138,6 +195,93 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
     }
   }
   if (OB_SUCC(ret) && OB_FAIL(trigger_sql.append("END"))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append_fmt(
+               "CREATE TRIGGER `__ai_%lu_upd` BEFORE UPDATE ON ", table_id))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(ObResolverUtils::append_escaped_identifier(
+               update_trigger_sql, table_schema.get_table_name_str()))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append(
+               " FOR EACH ROW BEGIN SET @__ai_request_id = UUID(); "))) {
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < create_table_arg.ai_column_defs_.count(); ++i) {
+    const obcall::ObAIColumnDef &def = create_table_arg.ai_column_defs_.at(i);
+    bool has_condition = false;
+    if (OB_FAIL(update_trigger_sql.append("IF "))) {
+    }
+    // Primary-key changes must move the task to the new row identity.
+    for (int64_t j = 0; OB_SUCC(ret) && j < rowkey_info.get_size(); ++j) {
+      uint64_t id = OB_INVALID_ID;
+      const ObColumnSchemaV2 *column = NULL;
+      if (OB_FAIL(rowkey_info.get_column_id(j, id))) {
+      } else if (OB_ISNULL(column = table_schema.get_column_schema(id))) {
+        ret = OB_ERR_UNEXPECTED;
+      } else if (has_condition && OB_FAIL(update_trigger_sql.append(" OR "))) {
+      } else if (OB_FAIL(update_trigger_sql.append("NOT (OLD."))) {
+      } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                           update_trigger_sql, column->get_column_name_str()))) {
+      } else if (OB_FAIL(update_trigger_sql.append(" <=> NEW."))) {
+      } else if (OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                           update_trigger_sql, column->get_column_name_str()))) {
+      } else if (OB_FAIL(update_trigger_sql.append(")"))) {
+      } else {
+        has_condition = true;
+      }
+    }
+    // Dependency ids are persisted as a comma-separated list by the resolver.
+    for (int64_t pos = 0; OB_SUCC(ret) && pos < def.dependency_column_ids_.length();) {
+      uint64_t id = 0;
+      bool found_digit = false;
+      while (pos < def.dependency_column_ids_.length()
+             && (def.dependency_column_ids_.ptr()[pos] < '0'
+                 || def.dependency_column_ids_.ptr()[pos] > '9')) {
+        ++pos;
+      }
+      while (pos < def.dependency_column_ids_.length()
+             && def.dependency_column_ids_.ptr()[pos] >= '0'
+             && def.dependency_column_ids_.ptr()[pos] <= '9') {
+        found_digit = true;
+        id = id * 10 + static_cast<uint64_t>(def.dependency_column_ids_.ptr()[pos] - '0');
+        ++pos;
+      }
+      const ObColumnSchemaV2 *column = found_digit ? table_schema.get_column_schema(id) : NULL;
+      if (found_digit && OB_ISNULL(column)) {
+        ret = OB_ERR_UNEXPECTED;
+      } else if (found_digit && has_condition && OB_FAIL(update_trigger_sql.append(" OR "))) {
+      } else if (found_digit && OB_FAIL(update_trigger_sql.append("NOT (OLD."))) {
+      } else if (found_digit && OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                                         update_trigger_sql, column->get_column_name_str()))) {
+      } else if (found_digit && OB_FAIL(update_trigger_sql.append(" <=> NEW."))) {
+      } else if (found_digit && OB_FAIL(ObResolverUtils::append_escaped_identifier(
+                                         update_trigger_sql, column->get_column_name_str()))) {
+      } else if (found_digit && OB_FAIL(update_trigger_sql.append(")"))) {
+      } else if (found_digit) {
+        has_condition = true;
+      }
+    }
+    if (OB_SUCC(ret) && !has_condition) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append(" THEN SET NEW."))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(ObResolverUtils::append_escaped_identifier(
+               update_trigger_sql, def.column_name_))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append(
+               " = NULL; DELETE FROM `oceanbase`.`__all_ai_column_task` WHERE `table_id`="))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append_fmt(
+               "%lu AND `column_id`=%lu AND `rowkey_predicate`=", table_id, def.column_id_))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(append_rowkey_predicate(update_trigger_sql, "OLD"))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append("; "))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(append_task_insert(update_trigger_sql, def, "NEW"))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append("END IF; "))) {
+    }
+  }
+  if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append("END"))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(delete_trigger_sql.append_fmt(
+               "CREATE TRIGGER `__ai_%lu_del` BEFORE DELETE ON ", table_id))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(ObResolverUtils::append_escaped_identifier(
+               delete_trigger_sql, table_schema.get_table_name_str()))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(delete_trigger_sql.append(
+               " FOR EACH ROW BEGIN DELETE FROM `oceanbase`.`__all_ai_column_task` WHERE `table_id`="))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(delete_trigger_sql.append_fmt("%lu AND `rowkey_predicate`=", table_id))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(append_rowkey_predicate(delete_trigger_sql, "OLD"))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(delete_trigger_sql.append("; END"))) {
   } else if (OB_SUCC(ret) && OB_FAIL(
                query::ObInnerSQLConnectionAccess::create_connection_with_external_session(
                    session, conn_guard))) {
@@ -145,10 +289,12 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
     ret = OB_INNER_STAT_ERROR;
   } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(use_sql.ptr(), affected_rows, true))) {
   } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(trigger_sql.ptr(), affected_rows, true))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(update_trigger_sql.ptr(), affected_rows, true))) {
+  } else if (OB_SUCC(ret) && OB_FAIL(conn->execute_write(delete_trigger_sql.ptr(), affected_rows, true))) {
   }
   if (OB_FAIL(ret)) {
     LOG_WARN("failed to create AI column DML trigger", K(ret), K(table_id),
-             K(use_sql), K(trigger_sql));
+             K(use_sql), K(trigger_sql), K(update_trigger_sql), K(delete_trigger_sql));
   }
   return ret;
 }
