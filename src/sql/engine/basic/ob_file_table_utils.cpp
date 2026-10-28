@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <strings.h>
 #include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace oceanbase
 {
@@ -75,6 +77,26 @@ CsvInferType widen_csv_type(CsvInferType lhs, CsvInferType rhs)
     result = CSV_DOUBLE;
   } else {
     result = CSV_STRING;
+  }
+  return result;
+}
+
+std::string json_scalar_to_string(const rapidjson::Value &value)
+{
+  std::string result;
+  if (value.IsString()) {
+    result.assign(value.GetString(), value.GetStringLength());
+  } else if (value.IsBool()) {
+    result = value.GetBool() ? "true" : "false";
+  } else {
+    // RapidJSON's writer uses a round-trip-safe representation.  In contrast,
+    // std::to_string(double) keeps only six fractional digits and silently
+    // changes File SQL values before they reach the SQL conversion layer.
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    if (value.Accept(writer)) {
+      result.assign(buffer.GetString(), buffer.GetSize());
+    }
   }
   return result;
 }
@@ -478,11 +500,9 @@ int ObFileTableJsonlReader::next(const ObIArray<ObString> &column_names,
           }
           if (idx >= 0 && !it->value.IsNull()) {
             is_null.at(idx) = false;
-            if (it->value.IsString()) fields.at(idx).assign(it->value.GetString(), it->value.GetStringLength());
-            else if (it->value.IsBool()) fields.at(idx) = it->value.GetBool() ? "true" : "false";
-            else if (it->value.IsInt64()) fields.at(idx) = std::to_string(it->value.GetInt64());
-            else if (it->value.IsUint64()) fields.at(idx) = std::to_string(it->value.GetUint64());
-            else if (it->value.IsNumber()) fields.at(idx) = std::to_string(it->value.GetDouble());
+            if (it->value.IsString() || it->value.IsBool() || it->value.IsNumber()) {
+              fields.at(idx) = json_scalar_to_string(it->value);
+            }
             else ret = OB_NOT_SUPPORTED;
           }
         }
@@ -857,7 +877,10 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
               CsvInferType type = CSV_STRING;
               if (it->value.IsNull()) type = CSV_NULL;
               else if (it->value.IsBool()) type = CSV_BOOL;
-              else if (it->value.IsInt64() || it->value.IsUint64()) type = CSV_INT;
+              else if (it->value.IsInt64() ||
+                       (it->value.IsUint64() &&
+                        it->value.GetUint64() <= static_cast<uint64_t>(INT64_MAX))) type = CSV_INT;
+              else if (it->value.IsUint64()) type = CSV_STRING;
               else if (it->value.IsNumber()) type = CSV_DOUBLE;
               else if (it->value.IsString()) type = classify_csv_value(
                   std::string(it->value.GetString(), it->value.GetStringLength()));
