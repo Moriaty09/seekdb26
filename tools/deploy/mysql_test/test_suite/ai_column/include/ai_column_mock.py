@@ -109,12 +109,14 @@ def serve(port):
                     system_text = str(message.get("content", ""))
                 elif message.get("role") == "user":
                     user_text = str(message.get("content", ""))
-            if parsed.path.endswith("/embeddings"):
+            if parsed.path.endswith("/embeddings") or parsed.path.endswith("/api/embed"):
                 input_value = body.get("input", "")
                 if isinstance(input_value, list):
                     user_text = "|".join(str(value) for value in input_value)
                 else:
                     user_text = str(input_value)
+            elif parsed.path.endswith("/rerank"):
+                user_text = "|".join(str(value) for value in body.get("documents", []))
             key = parsed.path + "|" + user_text
             with lock:
                 attempts[key] = attempts.get(key, 0) + 1
@@ -131,7 +133,7 @@ def serve(port):
             if fail:
                 status = 400
                 response = {"error": {"message": "injected failure"}}
-            elif parsed.path.endswith("/embeddings"):
+            elif parsed.path.endswith("/embeddings") or parsed.path.endswith("/api/embed"):
                 values = body.get("input", [])
                 if not isinstance(values, list):
                     values = [values]
@@ -147,11 +149,34 @@ def serve(port):
                     return [float(index + 1), 0.25, 0.5, 0.75]
 
                 status = 200
+                embeddings = [vector(value, index) for index, value in enumerate(values)]
+                if parsed.path.endswith("/api/embed"):
+                    response = {"embeddings": embeddings}
+                else:
+                    data = [
+                            {"index": index, "embedding": embedding}
+                            for index, embedding in enumerate(embeddings)
+                        ]
+                    if any("reverse-order" in str(value) for value in values):
+                        data.reverse()
+                    response = {"data": data}
+            elif parsed.path.endswith("/api/generate"):
+                status = 200
+                response = {"response": "mock:" + str(body.get("prompt", ""))}
+            elif parsed.path.endswith("/rerank"):
+                documents = body.get("documents", [])
+                status = 200
                 response = {
-                    "data": [
-                        {"index": index, "embedding": vector(value, index)}
-                        for index, value in enumerate(values)
-                    ]
+                    "results": sorted(
+                        [
+                            {
+                                "index": index,
+                                "relevance_score": float(len(str(document)) % 3),
+                            }
+                            for index, document in enumerate(documents)
+                        ],
+                        key=lambda item: (-item["relevance_score"], item["index"]),
+                    )
                 }
             else:
                 if "base-10 integer" in system_text:
