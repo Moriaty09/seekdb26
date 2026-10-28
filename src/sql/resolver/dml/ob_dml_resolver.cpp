@@ -4201,6 +4201,8 @@ int ObDMLResolver::resolve_file_table_item(const ParseNode &parse_tree,
       OZ (ObFileTableUtils::infer_csv_schema(*allocator_, *def));
     } else if (FILE_TABLE_JSONL == def->format_) {
       OZ (ObFileTableUtils::infer_jsonl_schema(*allocator_, *def));
+    } else if (FILE_TABLE_PARQUET == def->format_) {
+      OZ (ObFileTableUtils::infer_parquet_schema(*allocator_, *def));
     } else if (FILE_TABLE_GLOB == def->format_) {
       ObFileTableColumnDef col;
       OZ (ob_write_string(*allocator_, ObString("file"), col.name_));

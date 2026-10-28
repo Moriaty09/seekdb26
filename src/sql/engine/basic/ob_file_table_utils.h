@@ -70,6 +70,7 @@ public:
                                          common::ObString &canonical_pattern);
   static int infer_csv_schema(common::ObIAllocator &allocator, ObFileTableDef &def);
   static int infer_jsonl_schema(common::ObIAllocator &allocator, ObFileTableDef &def);
+  static int infer_parquet_schema(common::ObIAllocator &allocator, ObFileTableDef &def);
   static int validate_unchanged(const ObFileTableDef &def);
 private:
   static int make_column_name(common::ObIAllocator &allocator,

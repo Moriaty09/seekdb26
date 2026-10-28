@@ -24,6 +24,7 @@ namespace sql
 
 namespace
 {
+static const size_t FILE_SQL_MAX_RECORD_BYTES = 64L * 1024L * 1024L;
 enum CsvInferType { CSV_NULL, CSV_BOOL, CSV_INT, CSV_DOUBLE, CSV_DATE, CSV_DATETIME, CSV_STRING };
 
 CsvInferType classify_csv_value(const std::string &value)
@@ -76,6 +77,97 @@ CsvInferType widen_csv_type(CsvInferType lhs, CsvInferType rhs)
     result = CSV_STRING;
   }
   return result;
+}
+
+// Parquet metadata uses Thrift's compact protocol.  Keeping this tiny reader
+// in-tree avoids pulling a query engine into File SQL; it is only used for the
+// footer schema and deliberately rejects malformed or deeply nested input.
+class CompactReader
+{
+public:
+  CompactReader(const uint8_t *data, size_t size) : data_(data), size_(size), pos_(0) {}
+  int byte(uint8_t &v) { return pos_ < size_ ? (v = data_[pos_++], OB_SUCCESS) : OB_BUF_NOT_ENOUGH; }
+  int uvar(uint64_t &v)
+  {
+    int ret = OB_SUCCESS; v = 0; uint32_t shift = 0; uint8_t b = 0;
+    do {
+      if (shift >= 64) { ret = OB_INVALID_DATA; break; }
+      if (OB_FAIL(byte(b))) break;
+      v |= static_cast<uint64_t>(b & 0x7f) << shift; shift += 7;
+    } while (b & 0x80);
+    return ret;
+  }
+  int sint(int64_t &v) { uint64_t n = 0; int ret = uvar(n); if (OB_SUCC(ret)) v = static_cast<int64_t>((n >> 1) ^ (~(n & 1) + 1)); return ret; }
+  int binary(std::string &v)
+  {
+    uint64_t n = 0; int ret = uvar(n);
+    if (OB_SUCC(ret) && (n > size_ - pos_ || n > FILE_SQL_MAX_RECORD_BYTES)) ret = OB_SIZE_OVERFLOW;
+    if (OB_SUCC(ret)) { v.assign(reinterpret_cast<const char *>(data_ + pos_), n); pos_ += n; }
+    return ret;
+  }
+  int field(int16_t &last, int16_t &id, uint8_t &type)
+  {
+    uint8_t h = 0; int ret = byte(h); type = h & 0x0f; const uint8_t delta = h >> 4;
+    if (OB_SUCC(ret) && 0 != type) {
+      if (0 != delta) id = last + delta;
+      else { int64_t value = 0; if (OB_FAIL(sint(value))) {} else id = static_cast<int16_t>(value); }
+      if (OB_SUCC(ret)) last = id;
+    }
+    return ret;
+  }
+  int list(uint8_t &type, uint64_t &count)
+  {
+    uint8_t h = 0; int ret = byte(h); type = h & 0x0f; count = h >> 4;
+    if (OB_SUCC(ret) && 15 == count) ret = uvar(count);
+    return ret;
+  }
+  int skip(uint8_t type, int depth = 0)
+  {
+    int ret = depth > 32 ? OB_SIZE_OVERFLOW : OB_SUCCESS;
+    if (OB_FAIL(ret) || 0 == type || 1 == type || 2 == type) {
+    } else if (3 == type) { uint8_t v; ret = byte(v); }
+    else if (4 == type || 5 == type || 6 == type) { int64_t v; ret = sint(v); }
+    else if (7 == type) { if (size_ - pos_ < 8) ret = OB_BUF_NOT_ENOUGH; else pos_ += 8; }
+    else if (8 == type) { std::string v; ret = binary(v); }
+    else if (9 == type || 10 == type) {
+      uint8_t elem = 0; uint64_t count = 0; OZ (list(elem, count));
+      for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) OZ (skip(elem, depth + 1));
+    } else if (11 == type) {
+      uint64_t count = 0; OZ (uvar(count));
+      if (OB_SUCC(ret) && count > 0) { uint8_t types = 0; OZ (byte(types)); for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) { OZ (skip(types >> 4, depth + 1)); OZ (skip(types & 0xf, depth + 1)); } }
+    } else if (12 == type) {
+      int16_t last = 0, id = 0; uint8_t field_type = 0;
+      while (OB_SUCC(ret)) { OZ (field(last, id, field_type)); if (OB_FAIL(ret) || 0 == field_type) break; OZ (skip(field_type, depth + 1)); }
+    } else ret = OB_INVALID_DATA;
+    return ret;
+  }
+private:
+  const uint8_t *data_;
+  size_t size_;
+  size_t pos_;
+};
+
+struct ParquetSchemaElement
+{
+  ParquetSchemaElement() : has_type_(false), type_(-1), name_(), children_(0) {}
+  bool has_type_;
+  int64_t type_;
+  std::string name_;
+  int64_t children_;
+};
+
+int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &elem)
+{
+  int ret = OB_SUCCESS; int16_t last = 0, id = 0; uint8_t type = 0;
+  while (OB_SUCC(ret)) {
+    OZ (reader.field(last, id, type));
+    if (OB_FAIL(ret) || 0 == type) break;
+    if (1 == id && (4 == type || 5 == type || 6 == type)) { elem.has_type_ = true; OZ (reader.sint(elem.type_)); }
+    else if (4 == id && 8 == type) OZ (reader.binary(elem.name_));
+    else if (5 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.children_));
+    else OZ (reader.skip(type));
+  }
+  return ret;
 }
 } // namespace
 
@@ -145,8 +237,14 @@ int ObFileTableJsonlReader::next(const ObIArray<ObString> &column_names,
   } else {
     while (len > 0 && ('\n' == line_buf_[len - 1] || '\r' == line_buf_[len - 1])) --len;
     rapidjson::Document doc;
-    doc.Parse(line_buf_, static_cast<size_t>(len));
-    if (doc.HasParseError() || !doc.IsObject()) {
+    if (static_cast<size_t>(len) > FILE_SQL_MAX_RECORD_BYTES) {
+      ret = OB_SIZE_OVERFLOW;
+      LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
+    } else {
+      doc.Parse(line_buf_, static_cast<size_t>(len));
+    }
+    if (OB_FAIL(ret)) {
+    } else if (doc.HasParseError() || !doc.IsObject()) {
       ret = OB_ERR_INVALID_JSON_TEXT;
     } else {
       for (rapidjson::Value::ConstMemberIterator it = doc.MemberBegin(); OB_SUCC(ret) && it != doc.MemberEnd(); ++it) {
@@ -242,6 +340,11 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       break;
     }
     saw_any = true;
+    if (field.size() >= FILE_SQL_MAX_RECORD_BYTES) {
+      ret = OB_SIZE_OVERFLOW;
+      LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
+      break;
+    }
     if (quoted) {
       if ('"' == ch) {
         const int next_ch = ::fgetc(file_);
@@ -487,8 +590,14 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
       while (len > 0 && ('\n' == line[len - 1] || '\r' == line[len - 1])) --len;
       if (0 == len) continue;
       rapidjson::Document doc;
-      doc.Parse(line, static_cast<size_t>(len));
-      if (doc.HasParseError() || !doc.IsObject()) {
+      if (static_cast<size_t>(len) > FILE_SQL_MAX_RECORD_BYTES) {
+        ret = OB_SIZE_OVERFLOW;
+        LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
+      } else {
+        doc.Parse(line, static_cast<size_t>(len));
+      }
+      if (OB_FAIL(ret)) {
+      } else if (doc.HasParseError() || !doc.IsObject()) {
         ret = OB_ERR_INVALID_JSON_TEXT;
       } else {
         for (rapidjson::Value::ConstMemberIterator it = doc.MemberBegin(); OB_SUCC(ret) && it != doc.MemberEnd(); ++it) {
@@ -538,6 +647,102 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
     }
   }
   if (OB_NOT_NULL(line)) ::free(line);
+  if (OB_NOT_NULL(file)) ::fclose(file);
+  return ret;
+}
+
+int ObFileTableUtils::infer_parquet_schema(ObIAllocator &allocator, ObFileTableDef &def)
+{
+  int ret = OB_SUCCESS;
+  FILE *file = nullptr;
+  struct stat st;
+  const std::string path(def.path_.ptr(), def.path_.length());
+  uint8_t trailer[8] = {0};
+  std::vector<uint8_t> footer;
+  if (OB_ISNULL(file = ::fopen(path.c_str(), "rb"))) {
+    ret = OB_FILE_NOT_EXIST;
+  } else if (0 != ::stat(path.c_str(), &st) || st.st_size < 12) {
+    ret = OB_INVALID_DATA;
+  } else if (0 != ::fseek(file, st.st_size - 8, SEEK_SET) ||
+             8 != ::fread(trailer, 1, sizeof(trailer), file)) {
+    ret = OB_IO_ERROR;
+  } else if (0 != MEMCMP(trailer + 4, "PAR1", 4)) {
+    ret = OB_INVALID_DATA;
+  } else {
+    const uint32_t footer_len = static_cast<uint32_t>(trailer[0]) |
+                                (static_cast<uint32_t>(trailer[1]) << 8) |
+                                (static_cast<uint32_t>(trailer[2]) << 16) |
+                                (static_cast<uint32_t>(trailer[3]) << 24);
+    if (footer_len > FILE_SQL_MAX_RECORD_BYTES || footer_len > static_cast<uint64_t>(st.st_size - 8)) {
+      ret = OB_SIZE_OVERFLOW;
+    } else {
+      footer.resize(footer_len);
+      if (0 != ::fseek(file, st.st_size - 8 - footer_len, SEEK_SET) ||
+          footer_len != ::fread(footer.data(), 1, footer_len, file)) {
+        ret = OB_IO_ERROR;
+      }
+    }
+  }
+  std::vector<ParquetSchemaElement> schema;
+  if (OB_SUCC(ret)) {
+    CompactReader reader(footer.data(), footer.size());
+    int16_t last = 0, id = 0; uint8_t type = 0;
+    while (OB_SUCC(ret)) {
+      OZ (reader.field(last, id, type));
+      if (OB_FAIL(ret) || 0 == type) break;
+      if (2 == id && 9 == type) {
+        uint8_t elem_type = 0; uint64_t count = 0;
+        OZ (reader.list(elem_type, count));
+        if (OB_SUCC(ret) && (12 != elem_type || count > 10000)) ret = OB_INVALID_DATA;
+        for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) {
+          ParquetSchemaElement elem;
+          OZ (parse_parquet_schema_element(reader, elem));
+          if (OB_SUCC(ret)) schema.push_back(elem);
+        }
+      } else {
+        OZ (reader.skip(type));
+      }
+    }
+  }
+  if (OB_SUCC(ret) && (schema.size() < 2 || schema.at(0).children_ != static_cast<int64_t>(schema.size() - 1))) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "only flat Parquet schemas are supported");
+  }
+  for (size_t i = 1; OB_SUCC(ret) && i < schema.size(); ++i) {
+    const ParquetSchemaElement &src = schema.at(i);
+    ObFileTableColumnDef col;
+    if (!src.has_type_ || src.name_.empty() || src.children_ != 0) {
+      ret = OB_NOT_SUPPORTED;
+    } else {
+      OZ (make_column_name(allocator, src.name_, i - 1, def.columns_, col.name_));
+      if (OB_FAIL(ret)) {
+      } else if (0 == src.type_) {
+        col.meta_.set_tinyint(); col.accuracy_.set_precision(1); col.accuracy_.set_scale(0);
+      } else if (1 == src.type_ || 2 == src.type_) {
+        col.meta_.set_int(); col.accuracy_.set_precision(20); col.accuracy_.set_scale(0);
+      } else if (4 == src.type_ || 5 == src.type_) {
+        col.meta_.set_double(); col.accuracy_.set_precision(PRECISION_UNKNOWN_YET); col.accuracy_.set_scale(SCALE_UNKNOWN_YET);
+      } else if (6 == src.type_ || 7 == src.type_) {
+        col.meta_.set_varchar(); col.meta_.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
+        col.meta_.set_collation_level(CS_LEVEL_IMPLICIT); col.accuracy_.set_length(OB_MAX_VARCHAR_LENGTH);
+      } else if (3 == src.type_) {
+        col.meta_.set_datetime(); col.accuracy_.set_scale(6);
+      } else {
+        ret = OB_NOT_SUPPORTED;
+      }
+      OZ (def.columns_.push_back(col));
+    }
+  }
+  if (OB_SUCC(ret)) {
+    def.file_size_ = st.st_size;
+#if defined(__APPLE__)
+    def.file_mtime_ns_ = st.st_mtimespec.tv_sec * 1000000000L + st.st_mtimespec.tv_nsec;
+#else
+    def.file_mtime_ns_ = st.st_mtim.tv_sec * 1000000000L + st.st_mtim.tv_nsec;
+#endif
+    def.file_device_ = st.st_dev;
+    def.file_inode_ = st.st_ino;
+  }
   if (OB_NOT_NULL(file)) ::fclose(file);
   return ret;
 }
