@@ -10919,6 +10919,19 @@
     "background_cn": "",
     "ref_url": ""
   },
+  "enable_file_sql": {
+    "id": 10749,
+    "name": "enable_file_sql",
+    "default_value": "0",
+    "base_value": "0",
+    "data_type": "bool",
+    "info": "Enable SQL table functions that read local files.",
+    "flags": "SESSION | INFLUENCE_PLAN",
+    "publish_version": "1.4.0.0",
+    "info_cn": "控制是否允许通过 SQL 表函数读取本地文件",
+    "background_cn": "本地文件查询默认关闭，开启后仍受 secure_file_priv 限制",
+    "ref_url": ""
+  },
   "ob_enable_ps_parameter_anonymous_block": {
     "id": 10750,
     "placeholder": true,

@@ -5503,6 +5503,7 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
   if (OB_ISNULL(op.get_stmt())) {
     ret = OB_ERR_UNEXPECTED;
   } else if (OB_FAIL(spec.column_exprs_.init(op.get_stmt()->get_column_size()))) {
+  } else if (OB_FAIL(spec.column_names_.init(op.get_stmt()->get_column_size()))) {
   } else if (OB_UNLIKELY(op.get_num_of_child() > 1)) {
     ret = OB_ERR_UNEXPECTED;
   } else if (OB_ISNULL(value_raw_expr = op.get_value_expr())) {
@@ -5511,6 +5512,17 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
   } else {
     spec.has_correlated_expr_ = value_raw_expr->has_flag(CNT_DYNAMIC_PARAM);
     spec.value_expr_ = value_expr;
+    const TableItem *table_item = op.get_stmt()->get_table_item_by_id(op.get_table_id());
+    if (OB_NOT_NULL(table_item) && OB_NOT_NULL(table_item->file_table_def_)) {
+      const ObFileTableDef &def = *table_item->file_table_def_;
+      spec.file_format_ = def.format_;
+      spec.file_header_ = def.header_;
+      spec.file_size_ = def.file_size_;
+      spec.file_mtime_ns_ = def.file_mtime_ns_;
+      spec.file_device_ = def.file_device_;
+      spec.file_inode_ = def.file_inode_;
+      OZ (ob_write_string(alloc, def.path_, spec.file_path_));
+    }
     for (int64_t i = 0; OB_SUCC(ret) && i < op.get_output_exprs().count(); ++i) {
       if (OB_FAIL(mark_expr_self_produced(op.get_output_exprs().at(i)))) {
       }
@@ -5526,6 +5538,7 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
         OZ (mark_expr_self_produced(col_item->expr_));
         OZ (generate_rt_expr(*col_item->expr_, rt_expr));
         OZ (spec.column_exprs_.push_back(rt_expr));
+        OZ (spec.column_names_.push_back(col_item->column_name_));
       }
     }
   }

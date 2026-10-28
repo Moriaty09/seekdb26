@@ -121,6 +121,12 @@ int ObResolverUtils::get_all_function_table_column_names(const TableItem &table_
                                                          ObIArray<ObString> &column_names)
 {
   int ret = OB_SUCCESS;
+  if (OB_NOT_NULL(table_item.file_table_def_)) {
+    for (int64_t i = 0; OB_SUCC(ret) && i < table_item.file_table_def_->columns_.count(); ++i) {
+      OZ (column_names.push_back(table_item.file_table_def_->columns_.at(i).name_));
+    }
+    return ret;
+  }
   ObRawExpr *table_expr = NULL;
   ObPLPackageGuard *package_guard = nullptr;
   const ObUserDefinedType *user_type = NULL;

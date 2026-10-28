@@ -19,6 +19,11 @@
 #include "sql/engine/basic/ob_function_table_op.h"
 #include "sql/engine/ob_exec_context.h"
 #include "sql/engine/expr/ob_expr_lob_utils.h"
+#include <cerrno>
+#include <cstdlib>
+#include <strings.h>
+#include <glob.h>
+#include <algorithm>
 
 
 namespace oceanbase
@@ -27,14 +32,48 @@ using namespace common;
 namespace sql
 {
 
-OB_SERIALIZE_MEMBER((ObFunctionTableSpec, ObOpSpec), value_expr_, column_exprs_, has_correlated_expr_);
+OB_SERIALIZE_MEMBER((ObFunctionTableSpec, ObOpSpec), value_expr_, column_exprs_, column_names_, has_correlated_expr_,
+                    file_format_, file_path_, file_header_, file_size_, file_mtime_ns_,
+                    file_device_, file_inode_);
 
 int ObFunctionTableOp::inner_open()
 {
   int ret = OB_SUCCESS;
   node_idx_ = 0;
   already_calc_ = false;
-  if (OB_ISNULL(MY_SPEC.value_expr_)) {
+  if (FILE_TABLE_INVALID != MY_SPEC.file_format_) {
+    ObFileTableDef def;
+    def.path_ = MY_SPEC.file_path_;
+    def.file_size_ = MY_SPEC.file_size_;
+    def.file_mtime_ns_ = MY_SPEC.file_mtime_ns_;
+    def.file_device_ = MY_SPEC.file_device_;
+    def.file_inode_ = MY_SPEC.file_inode_;
+    if (FILE_TABLE_GLOB == MY_SPEC.file_format_) {
+      glob_t matches;
+      MEMSET(&matches, 0, sizeof(matches));
+      const std::string pattern(MY_SPEC.file_path_.ptr(), MY_SPEC.file_path_.length());
+      const int glob_ret = ::glob(pattern.c_str(), GLOB_NOSORT, nullptr, &matches);
+      if (0 != glob_ret && GLOB_NOMATCH != glob_ret) {
+        ret = OB_IO_ERROR;
+      } else {
+        for (size_t i = 0; i < matches.gl_pathc; ++i) {
+          glob_paths_.push_back(matches.gl_pathv[i]);
+        }
+        std::sort(glob_paths_.begin(), glob_paths_.end());
+        glob_idx_ = 0;
+        next_row_func_ = &ObFunctionTableOp::inner_get_next_row_glob;
+      }
+      ::globfree(&matches);
+    } else if (FILE_TABLE_CSV != MY_SPEC.file_format_ && FILE_TABLE_JSONL != MY_SPEC.file_format_) {
+      ret = OB_NOT_SUPPORTED;
+    } else if (OB_FAIL(ObFileTableUtils::validate_unchanged(def))) {
+    } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.open(MY_SPEC.file_path_))) {
+    } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && MY_SPEC.file_header_ && OB_FAIL(csv_reader_.next(file_fields_))) {
+    } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ && OB_FAIL(jsonl_reader_.open(MY_SPEC.file_path_))) {
+    } else {
+      next_row_func_ = &ObFunctionTableOp::inner_get_next_row_file;
+    }
+  } else if (OB_ISNULL(MY_SPEC.value_expr_)) {
     ret = OB_ERR_UNEXPECTED;
   } else if (ObExtendType == MY_SPEC.value_expr_->datum_meta_.type_) {
     next_row_func_ = &ObFunctionTableOp::inner_get_next_row_udf;
@@ -50,6 +89,16 @@ int ObFunctionTableOp::inner_rescan()
   if (OB_FAIL(ObOperator::inner_rescan())) {
   } else {
     node_idx_ = 0;
+    if (FILE_TABLE_CSV == MY_SPEC.file_format_) {
+      OZ (csv_reader_.rewind());
+      if (OB_SUCC(ret) && MY_SPEC.file_header_) {
+        OZ (csv_reader_.next(file_fields_));
+      }
+    } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_) {
+      OZ (jsonl_reader_.rewind());
+    } else if (FILE_TABLE_GLOB == MY_SPEC.file_format_) {
+      glob_idx_ = 0;
+    }
     if (MY_SPEC.has_correlated_expr_) {
       row_count_ = 0;
       col_count_ = 0;
@@ -67,6 +116,10 @@ int ObFunctionTableOp::inner_close()
   row_count_ = 0;
   col_count_ = 0;
   value_table_ = NULL;
+  OZ (csv_reader_.close());
+  OZ (jsonl_reader_.close());
+  glob_paths_.clear();
+  glob_idx_ = 0;
   return ret;
 }
 
@@ -102,6 +155,79 @@ int ObFunctionTableOp::get_current_result(ObObj &result)
 int ObFunctionTableOp::inner_get_next_row()
 {
   return (this->*next_row_func_)();
+}
+
+int ObFunctionTableOp::inner_get_next_row_file()
+{
+  int ret = OB_SUCCESS;
+  clear_evaluated_flag();
+  if (OB_FAIL(ctx_.check_status())) {
+  } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.next(file_fields_))) {
+  } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ &&
+             OB_FAIL(jsonl_reader_.next(MY_SPEC.column_names_, file_fields_, file_nulls_))) {
+  } else if (OB_UNLIKELY(file_fields_.size() != static_cast<size_t>(MY_SPEC.column_exprs_.count()))) {
+    ret = OB_ERR_COLUMN_SIZE;
+    LOG_WARN("CSV row has a different column count", K(ret), K(csv_reader_.line_no()),
+             "expected", MY_SPEC.column_exprs_.count(), "actual", file_fields_.size());
+  } else {
+    for (int64_t i = 0; OB_SUCC(ret) && i < MY_SPEC.column_exprs_.count(); ++i) {
+      ObExpr *expr = MY_SPEC.column_exprs_.at(i);
+      CK (OB_NOT_NULL(expr));
+      if (OB_SUCC(ret)) {
+        ObDatum &datum = expr->locate_datum_for_write(eval_ctx_);
+        const std::string &field = file_fields_.at(i);
+        if ((FILE_TABLE_JSONL == MY_SPEC.file_format_ && file_nulls_.at(i)) ||
+            (FILE_TABLE_CSV == MY_SPEC.file_format_ && field.empty())) {
+          datum.set_null();
+        } else if (ObTinyIntType == expr->datum_meta_.type_) {
+          datum.set_int(0 == strcasecmp(field.c_str(), "true") ? 1 : 0);
+        } else if (ObIntType == expr->datum_meta_.type_) {
+          char *end = nullptr;
+          errno = 0;
+          const int64_t value = ::strtoll(field.c_str(), &end, 10);
+          if (0 != errno || end != field.c_str() + field.size()) {
+            ret = OB_ERR_TRUNCATED_WRONG_VALUE;
+          } else {
+            datum.set_int(value);
+          }
+        } else if (ObDoubleType == expr->datum_meta_.type_) {
+          char *end = nullptr;
+          errno = 0;
+          const double value = ::strtod(field.c_str(), &end);
+          if (0 != errno || end != field.c_str() + field.size()) {
+            ret = OB_ERR_TRUNCATED_WRONG_VALUE;
+          } else {
+            datum.set_double(value);
+          }
+        } else {
+          datum.set_string(field.data(), field.size());
+        }
+        expr->set_evaluated_projected(eval_ctx_);
+      }
+    }
+  }
+  return ret;
+}
+
+int ObFunctionTableOp::inner_get_next_row_glob()
+{
+  int ret = OB_SUCCESS;
+  clear_evaluated_flag();
+  if (OB_FAIL(ctx_.check_status())) {
+  } else if (glob_idx_ >= static_cast<int64_t>(glob_paths_.size())) {
+    ret = OB_ITER_END;
+  } else if (OB_UNLIKELY(1 != MY_SPEC.column_exprs_.count())) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
+    ObExpr *expr = MY_SPEC.column_exprs_.at(0);
+    CK (OB_NOT_NULL(expr));
+    if (OB_SUCC(ret)) {
+      const std::string &path = glob_paths_.at(glob_idx_++);
+      expr->locate_datum_for_write(eval_ctx_).set_string(path.data(), path.size());
+      expr->set_evaluated_projected(eval_ctx_);
+    }
+  }
+  return ret;
 }
 
 int ObFunctionTableOp::inner_get_next_row_udf()

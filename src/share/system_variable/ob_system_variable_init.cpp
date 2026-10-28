@@ -73,6 +73,7 @@ const ObSysVarClassType ESSENTIAL_SYS_VARS[] = {
   SYS_VAR_RUNTIME_FILTER_TYPE,        // runtime_filter_type
   SYS_VAR_CARDINALITY_ESTIMATION_MODEL,        // cardinality_estimation_model
   SYS_VAR_DEFAULT_COLLATION_FOR_UTF8MB4,        // default_collation_for_utf8mb4
+  SYS_VAR_ENABLE_FILE_SQL,        // enable_file_sql
   SYS_VAR__PUSH_JOIN_PREDICATE,        // _push_join_predicate
 };
 
@@ -9869,46 +9870,59 @@ static struct VarsInit{
     }();
 
     [&] (){
-      ObSysVars[716].default_value_ = "1024" ;
-      ObSysVars[716].info_ = "The extra info size threshold filled into the hnsw index param, when not specified during hnsw index creation." ;
-      ObSysVars[716].name_ = "ob_hnsw_extra_info_max_size" ;
-      ObSysVars[716].data_type_ = ObUInt64Type ;
-      ObSysVars[716].min_val_ = "0" ;
-      ObSysVars[716].max_val_ = "16384" ;
-      ObSysVars[716].flags_ = ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::GLOBAL_SCOPE ;
-      ObSysVars[716].id_ = SYS_VAR_OB_HNSW_EXTRA_INFO_MAX_SIZE ;
+      ObSysVars[716].default_value_ = "0" ;
+      ObSysVars[716].info_ = "Enable SQL table functions that read local files." ;
+      ObSysVars[716].name_ = "enable_file_sql" ;
+      ObSysVars[716].data_type_ = ObIntType ;
+      ObSysVars[716].flags_ = ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::INFLUENCE_PLAN ;
+      ObSysVars[716].id_ = SYS_VAR_ENABLE_FILE_SQL ;
+      cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_ENABLE_FILE_SQL)) ;
+      ObSysVarsIdToArrayIdx[SYS_VAR_ENABLE_FILE_SQL] = 716 ;
+      ObSysVars[716].base_value_ = "0" ;
+    ObSysVars[716].alias_ = "OB_SV_ENABLE_FILE_SQL" ;
+    }();
+
+    [&] (){
+      ObSysVars[717].default_value_ = "1024" ;
+      ObSysVars[717].info_ = "The extra info size threshold filled into the hnsw index param, when not specified during hnsw index creation." ;
+      ObSysVars[717].name_ = "ob_hnsw_extra_info_max_size" ;
+      ObSysVars[717].data_type_ = ObUInt64Type ;
+      ObSysVars[717].min_val_ = "0" ;
+      ObSysVars[717].max_val_ = "16384" ;
+      ObSysVars[717].flags_ = ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::GLOBAL_SCOPE ;
+      ObSysVars[717].id_ = SYS_VAR_OB_HNSW_EXTRA_INFO_MAX_SIZE ;
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_OB_HNSW_EXTRA_INFO_MAX_SIZE)) ;
-      ObSysVarsIdToArrayIdx[SYS_VAR_OB_HNSW_EXTRA_INFO_MAX_SIZE] = 716 ;
-      ObSysVars[716].base_value_ = "1024" ;
-    ObSysVars[716].alias_ = "OB_SV_HNSW_EXTRA_INFO_MAX_SIZE" ;
+      ObSysVarsIdToArrayIdx[SYS_VAR_OB_HNSW_EXTRA_INFO_MAX_SIZE] = 717 ;
+      ObSysVars[717].base_value_ = "1024" ;
+    ObSysVars[717].alias_ = "OB_SV_HNSW_EXTRA_INFO_MAX_SIZE" ;
     }();
 
     [&] (){
-      ObSysVars[717].default_value_ = "1" ;
-      ObSysVars[717].info_ = "control whether the optimizer pushes down join predicates to view" ;
-      ObSysVars[717].name_ = "_push_join_predicate" ;
-      ObSysVars[717].data_type_ = ObIntType ;
-      ObSysVars[717].flags_ = ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::INVISIBLE | ObSysVarFlag::INFLUENCE_PLAN ;
-      ObSysVars[717].id_ = SYS_VAR__PUSH_JOIN_PREDICATE ;
+      ObSysVars[718].default_value_ = "1" ;
+      ObSysVars[718].info_ = "control whether the optimizer pushes down join predicates to view" ;
+      ObSysVars[718].name_ = "_push_join_predicate" ;
+      ObSysVars[718].data_type_ = ObIntType ;
+      ObSysVars[718].flags_ = ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::INVISIBLE | ObSysVarFlag::INFLUENCE_PLAN ;
+      ObSysVars[718].id_ = SYS_VAR__PUSH_JOIN_PREDICATE ;
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR__PUSH_JOIN_PREDICATE)) ;
-      ObSysVarsIdToArrayIdx[SYS_VAR__PUSH_JOIN_PREDICATE] = 717 ;
-      ObSysVars[717].base_value_ = "1" ;
-    ObSysVars[717].alias_ = "OB_SV__PUSH_JOIN_PREDICATE" ;
+      ObSysVarsIdToArrayIdx[SYS_VAR__PUSH_JOIN_PREDICATE] = 718 ;
+      ObSysVars[718].base_value_ = "1" ;
+    ObSysVars[718].alias_ = "OB_SV__PUSH_JOIN_PREDICATE" ;
     }();
 
     [&] (){
-      ObSysVars[718].default_value_ = "0" ;
-      ObSysVars[718].info_ = "set the smallest drop_ratio of values across all dimensions of the query vector to zero" ;
-      ObSysVars[718].name_ = "ob_sparse_drop_ratio_search" ;
-      ObSysVars[718].data_type_ = ObUInt64Type ;
-      ObSysVars[718].min_val_ = "0" ;
-      ObSysVars[718].max_val_ = "100" ;
-      ObSysVars[718].flags_ = ObSysVarFlag::SESSION_SCOPE ;
-      ObSysVars[718].id_ = SYS_VAR_OB_SPARSE_DROP_RATIO_SEARCH ;
+      ObSysVars[719].default_value_ = "0" ;
+      ObSysVars[719].info_ = "set the smallest drop_ratio of values across all dimensions of the query vector to zero" ;
+      ObSysVars[719].name_ = "ob_sparse_drop_ratio_search" ;
+      ObSysVars[719].data_type_ = ObUInt64Type ;
+      ObSysVars[719].min_val_ = "0" ;
+      ObSysVars[719].max_val_ = "100" ;
+      ObSysVars[719].flags_ = ObSysVarFlag::SESSION_SCOPE ;
+      ObSysVars[719].id_ = SYS_VAR_OB_SPARSE_DROP_RATIO_SEARCH ;
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_OB_SPARSE_DROP_RATIO_SEARCH)) ;
-      ObSysVarsIdToArrayIdx[SYS_VAR_OB_SPARSE_DROP_RATIO_SEARCH] = 718 ;
-      ObSysVars[718].base_value_ = "0" ;
-    ObSysVars[718].alias_ = "OB_SV_SPARSE_DROP_RATIO_SEARCH" ;
+      ObSysVarsIdToArrayIdx[SYS_VAR_OB_SPARSE_DROP_RATIO_SEARCH] = 719 ;
+      ObSysVars[719].base_value_ = "0" ;
+    ObSysVars[719].alias_ = "OB_SV_SPARSE_DROP_RATIO_SEARCH" ;
     }();
 
     if (cur_max_var_id >= ObSysVarMeta::OB_MAX_SYS_VAR_ID) {
@@ -9917,7 +9931,7 @@ static struct VarsInit{
   }
 }vars_init;
 
-static int64_t var_amount = 719;
+static int64_t var_amount = 720;
 
 int64_t ObSysVariables::get_all_sys_var_count(){ return ObSysVarMeta::ALL_SYS_VARS_COUNT;}
 ObSysVarClassType ObSysVariables::get_sys_var_id(int64_t i){ return ObSysVars[i].id_;}

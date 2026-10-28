@@ -190,6 +190,8 @@ int TableItem::deep_copy(ObIRawExprCopier &expr_copier,
       && OB_FAIL(deep_copy_json_table_def(*other.json_table_def_, expr_copier, allocator))) {
   } else if (OB_FAIL(expr_copier.copy(other.snapshot_query_expr_, snapshot_query_expr_))) {
   } else if (OB_FAIL(expr_copier.copy(other.function_table_expr_, function_table_expr_))) {
+  } else if (OB_NOT_NULL(other.file_table_def_) &&
+             OB_FAIL(deep_copy_file_table_def(*other.file_table_def_, allocator))) {
   } else if (OB_FAIL(part_ids_.assign(other.part_ids_))) {
   } else if (OB_FAIL(part_names_.assign(other.part_names_))) {
   } else if (is_values_table() &&
@@ -224,6 +226,38 @@ int TableItem::deep_copy(ObIRawExprCopier &expr_copier,
       } else if (OB_FAIL(expr_copier.copy(static_cast<ObExecParamRawExpr *>(new_expr)->get_ref_expr()))) {
       } else if (OB_FAIL(exec_params_.push_back(static_cast<ObExecParamRawExpr *>(new_expr)))) {
       }
+    }
+  }
+  return ret;
+}
+
+int TableItem::deep_copy_file_table_def(const ObFileTableDef &other, ObIAllocator *allocator)
+{
+  int ret = OB_SUCCESS;
+  ObFileTableDef *def = nullptr;
+  if (OB_ISNULL(allocator)) {
+    ret = OB_INVALID_ARGUMENT;
+  } else if (OB_ISNULL(def = static_cast<ObFileTableDef *>(allocator->alloc(sizeof(ObFileTableDef))))) {
+    ret = OB_ALLOCATE_MEMORY_FAILED;
+  } else {
+    def = new (def) ObFileTableDef();
+    def->format_ = other.format_;
+    def->header_ = other.header_;
+    def->sample_size_ = other.sample_size_;
+    def->file_size_ = other.file_size_;
+    def->file_mtime_ns_ = other.file_mtime_ns_;
+    def->file_device_ = other.file_device_;
+    def->file_inode_ = other.file_inode_;
+    if (OB_FAIL(ob_write_string(*allocator, other.path_, def->path_))) {
+    }
+    for (int64_t i = 0; OB_SUCC(ret) && i < other.columns_.count(); ++i) {
+      ObFileTableColumnDef col = other.columns_.at(i);
+      if (OB_FAIL(ob_write_string(*allocator, other.columns_.at(i).name_, col.name_))) {
+      } else if (OB_FAIL(def->columns_.push_back(col))) {
+      }
+    }
+    if (OB_SUCC(ret)) {
+      file_table_def_ = def;
     }
   }
   return ret;

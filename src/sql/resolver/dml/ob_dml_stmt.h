@@ -129,6 +129,39 @@ struct ObValuesTableDef {
                        K(access_type_), K(is_const_), K(column_types_));
 };
 
+enum ObFileTableFormat {
+  FILE_TABLE_INVALID = 0,
+  FILE_TABLE_CSV,
+  FILE_TABLE_JSONL,
+  FILE_TABLE_PARQUET,
+  FILE_TABLE_GLOB,
+};
+
+struct ObFileTableColumnDef {
+  ObFileTableColumnDef() : name_(), meta_(), accuracy_() {}
+  common::ObString name_;
+  common::ObObjMeta meta_;
+  common::ObAccuracy accuracy_;
+  TO_STRING_KV(K_(name), K_(meta), K_(accuracy));
+};
+
+struct ObFileTableDef {
+  ObFileTableDef()
+    : format_(FILE_TABLE_INVALID), path_(), columns_(), header_(true), sample_size_(-1),
+      file_size_(0), file_mtime_ns_(0), file_device_(0), file_inode_(0) {}
+  ObFileTableFormat format_;
+  common::ObString path_;
+  common::ObSEArray<ObFileTableColumnDef, 8, common::ModulePageAllocator, true> columns_;
+  bool header_;
+  int64_t sample_size_;
+  int64_t file_size_;
+  int64_t file_mtime_ns_;
+  uint64_t file_device_;
+  uint64_t file_inode_;
+  TO_STRING_KV(K_(format), K_(path), K_(columns), K_(header), K_(sample_size),
+               K_(file_size), K_(file_mtime_ns), K_(file_device), K_(file_inode));
+};
+
 struct TableItem
 {
   TableItem()
@@ -155,6 +188,7 @@ struct TableItem
     json_table_def_ = nullptr;
     table_type_ = MAX_TABLE_TYPE;
     values_table_def_ = NULL;
+    file_table_def_ = NULL;
     sample_info_ = nullptr;
   }
 
@@ -259,10 +293,12 @@ struct TableItem
   }
 
   ObJsonTableDef* get_json_table_def() { return json_table_def_; }
+  ObFileTableDef* get_file_table_def() { return file_table_def_; }
   int deep_copy_json_table_def(const ObJsonTableDef& jt_def, ObIRawExprCopier &expr_copier, ObIAllocator* allocator);
   int deep_copy_values_table_def(const ObValuesTableDef& table_def,
                                  ObIRawExprCopier &expr_copier,
                                  ObIAllocator* allocator);
+  int deep_copy_file_table_def(const ObFileTableDef &table_def, ObIAllocator *allocator);
   virtual bool has_for_update() const { return for_update_; }
   // if real table id, it is valid for all threads,
   // else if generated id, it is unique just during the thread session
@@ -303,6 +339,9 @@ struct TableItem
   ObJsonTableDef *json_table_def_;
   // values table
   ObValuesTableDef *values_table_def_;
+  // Local file scan metadata. File tables intentionally reuse FUNCTION_TABLE so
+  // the native optimizer can apply filters, joins, grouping and ordering.
+  ObFileTableDef *file_table_def_;
   // sample scan infos
   SampleInfo *sample_info_;
 };

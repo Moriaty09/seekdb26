@@ -10792,6 +10792,36 @@ tbl_name
 {
   $$ = $1;
 }
+| function_name '(' opt_expr_as_list ')' %prec LOWER_PARENS
+{
+  ParseNode *params = NULL;
+  ParseNode *func = NULL;
+  if (NULL != $3) {
+    merge_nodes(params, result, T_EXPR_LIST, $3);
+  }
+  malloc_non_terminal_node(func, result->malloc_pool_, T_FUN_SYS, 2, $1, params);
+  malloc_non_terminal_node($$, result->malloc_pool_, T_TABLE_COLLECTION_EXPRESSION, 2, func, NULL);
+}
+| function_name '(' opt_expr_as_list ')' relation_name
+{
+  ParseNode *params = NULL;
+  ParseNode *func = NULL;
+  if (NULL != $3) {
+    merge_nodes(params, result, T_EXPR_LIST, $3);
+  }
+  malloc_non_terminal_node(func, result->malloc_pool_, T_FUN_SYS, 2, $1, params);
+  malloc_non_terminal_node($$, result->malloc_pool_, T_TABLE_COLLECTION_EXPRESSION, 2, func, $5);
+}
+| function_name '(' opt_expr_as_list ')' AS relation_name
+{
+  ParseNode *params = NULL;
+  ParseNode *func = NULL;
+  if (NULL != $3) {
+    merge_nodes(params, result, T_EXPR_LIST, $3);
+  }
+  malloc_non_terminal_node(func, result->malloc_pool_, T_FUN_SYS, 2, $1, params);
+  malloc_non_terminal_node($$, result->malloc_pool_, T_TABLE_COLLECTION_EXPRESSION, 2, func, $6);
+}
 | table_subquery
 {
   $$ = $1;
