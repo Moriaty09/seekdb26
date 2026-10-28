@@ -164,12 +164,38 @@ int ObExprJsonLength::eval_json_length(const ObExpr &expr, ObEvalCtx &ctx, ObDat
   return ret;
 }
 
+int ObExprJsonLength::eval_json_length_batch(const ObExpr &expr,
+                                             ObEvalCtx &ctx,
+                                             const ObBitVector &skip,
+                                             int64_t batch_size)
+{
+  INIT_SUCC(ret);
+  ObDatumVector results = expr.locate_expr_datumvector(ctx);
+  ObBitVector &eval_flags = expr.get_evaluated_flags(ctx);
+  for (int64_t i = 0; OB_SUCC(ret) && i < expr.arg_cnt_; ++i) {
+    if (OB_FAIL(expr.args_[i]->eval_batch(ctx, skip, batch_size))) {
+    }
+  }
+  ObEvalCtx::BatchInfoScopeGuard guard(ctx);
+  for (int64_t row = 0; OB_SUCC(ret) && row < batch_size; ++row) {
+    if (!skip.at(row) && !eval_flags.at(row)) {
+      guard.set_batch_idx(row);
+      if (OB_FAIL(eval_json_length(expr, ctx, *results.at(row)))) {
+      } else {
+        eval_flags.set(row);
+      }
+    }
+  }
+  return ret;
+}
+
 int ObExprJsonLength::cg_expr(ObExprCGCtx &expr_cg_ctx, const ObRawExpr &raw_expr,
                               ObExpr &rt_expr) const
 {
   UNUSED(expr_cg_ctx);
   UNUSED(raw_expr);
   rt_expr.eval_func_ = eval_json_length;
+  rt_expr.eval_batch_func_ = eval_json_length_batch;
   return OB_SUCCESS;
 }
 
