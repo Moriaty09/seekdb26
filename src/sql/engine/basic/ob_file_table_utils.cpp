@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <limits>
 #include <strings.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -115,6 +116,17 @@ std::string json_scalar_to_string(const rapidjson::Value &value)
     }
   }
   return result;
+}
+
+template <typename T>
+std::string parquet_floating_to_string(T value)
+{
+  char buf[64];
+  const int len = ::snprintf(buf, sizeof(buf), "%.*g",
+                             std::numeric_limits<T>::max_digits10,
+                             static_cast<double>(value));
+  return len > 0 && len < static_cast<int>(sizeof(buf))
+      ? std::string(buf, static_cast<size_t>(len)) : std::string();
 }
 
 // Parquet metadata uses Thrift's compact protocol.  Keeping this tiny reader
@@ -405,10 +417,10 @@ int decode_parquet_plain_values(const int64_t physical_type,
       }
     } else if (4 == physical_type) {
       if (p + 4 > size) ret = OB_INVALID_DATA;
-      else { float v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
+      else { float v; MEMCPY(&v, data + p, 4); p += 4; value = parquet_floating_to_string(v); }
     } else if (5 == physical_type) {
       if (p + 8 > size) ret = OB_INVALID_DATA;
-      else { double v; MEMCPY(&v, data + p, 8); p += 8; value = std::to_string(v); }
+      else { double v; MEMCPY(&v, data + p, 8); p += 8; value = parquet_floating_to_string(v); }
     } else if (6 == physical_type) {
       if (p + 4 > size) ret = OB_INVALID_DATA;
       else {
