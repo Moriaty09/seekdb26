@@ -88,6 +88,7 @@ private:
   int add_table_to_tablet_autoinc_cleaner_(const ObTableSchema &table_schema);
   int construct_drop_table_sql_(const ObTableSchema &table_schema, const obcall::ObTableItem &table_item);
   int drop_table_(const ObTableSchema &table_schema, const ObString *ddl_stmt_str);
+  int cleanup_ai_column_metadata_(uint64_t table_id, int64_t schema_version);
   int drop_table_to_recyclebin_(const ObTableSchema &table_schema, const ObString *ddl_stmt_str);
   int drop_triggers_(const ObTableSchema &table_schema);
   int drop_trigger_(const ObTriggerInfo &trigger_info, const ObTableSchema &table_schema);

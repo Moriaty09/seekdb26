@@ -25,6 +25,7 @@
 #include "share/rc/ob_server_runtime.h"
 #include "share/schema/ob_schema_service.h"
 #include "share/schema/ob_table_sql_service.h"
+#include "share/inner_table/ob_inner_table_schema_constants.h"
 #include "storage/tablelock/ob_lock_inner_connection_util.h"
 
 using namespace oceanbase::rootserver;
@@ -1151,6 +1152,9 @@ int ObDropTableHelper::drop_table_(const ObTableSchema &table_schema, const ObSt
                        false/*is_force_drop_lonely_lob_aux_table*/,
                        NULL/*schema_guard*/,
                        &drop_table_ids_))) {
+    } else if (table_schema.is_user_table()
+               && OB_FAIL(cleanup_ai_column_metadata_(table_schema.get_table_id(),
+                                                      new_schema_version))) {
     } else if (OB_FAIL(ddl_operator.sync_version_for_cascade_table(table_schema.get_depend_table_ids(), get_trans_()))) {
     } else if (OB_FAIL(sync_version_for_cascade_mock_fk_parent_table_(table_schema.get_depend_mock_fk_parent_table_ids()))) {
     }
@@ -1185,6 +1189,44 @@ int ObDropTableHelper::drop_table_(const ObTableSchema &table_schema, const ObSt
     }
   }
 
+  return ret;
+}
+
+int ObDropTableHelper::cleanup_ai_column_metadata_(const uint64_t table_id,
+                                                   const int64_t schema_version)
+{
+  int ret = OB_SUCCESS;
+  int64_t affected_rows = 0;
+  ObSqlString sql;
+  // Preserve the terminal definition in history before removing the current
+  // row.  This executes in the same schema transaction as DROP TABLE, so a
+  // rollback restores both the table and its AI metadata/tasks.
+  OZ (sql.append_fmt(
+      "INSERT INTO %s "
+      "(table_id,column_id,schema_version,column_name,normalized_expr,"
+      "dependency_column_ids,sync_mode,max_retries,state_column_id,"
+      "request_column_id,result_spec_column_id,definition_version,is_deleted) "
+      "SELECT table_id,column_id,%ld,column_name,normalized_expr,"
+      "dependency_column_ids,sync_mode,max_retries,state_column_id,"
+      "request_column_id,result_spec_column_id,definition_version,1 "
+      "FROM %s WHERE table_id=%lu",
+      OB_ALL_AI_COLUMN_HISTORY_TNAME, schema_version,
+      OB_ALL_AI_COLUMN_TNAME, table_id));
+  if (OB_SUCC(ret) && OB_FAIL(get_trans_().write(sql.ptr(), affected_rows))) {
+    LOG_WARN("failed to preserve dropped AI column history", K(ret), K(table_id));
+  }
+  OX (sql.reuse());
+  OZ (sql.append_fmt("DELETE FROM %s WHERE table_id=%lu",
+                     OB_ALL_AI_COLUMN_TASK_TNAME, table_id));
+  if (OB_SUCC(ret) && OB_FAIL(get_trans_().write(sql.ptr(), affected_rows))) {
+    LOG_WARN("failed to delete AI column tasks", K(ret), K(table_id));
+  }
+  OX (sql.reuse());
+  OZ (sql.append_fmt("DELETE FROM %s WHERE table_id=%lu",
+                     OB_ALL_AI_COLUMN_TNAME, table_id));
+  if (OB_SUCC(ret) && OB_FAIL(get_trans_().write(sql.ptr(), affected_rows))) {
+    LOG_WARN("failed to delete AI column definitions", K(ret), K(table_id));
+  }
   return ret;
 }
 
