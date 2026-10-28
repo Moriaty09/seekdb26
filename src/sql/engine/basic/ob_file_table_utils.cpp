@@ -277,6 +277,7 @@ struct ObFileTableParquetReader::Impl
     int64_t page_physical_idx_;
     std::vector<bool> page_nulls_;
     std::vector<std::string> page_values_;
+    std::vector<std::string> dictionary_values_;
   };
   Impl() : file_(nullptr), remaining_rows_(0), columns_() {}
   FILE *file_;
@@ -286,6 +287,50 @@ struct ObFileTableParquetReader::Impl
 
 namespace
 {
+int decode_parquet_plain_values(const int64_t physical_type,
+                                const uint8_t *data,
+                                const size_t size,
+                                const int64_t count,
+                                std::vector<std::string> &output)
+{
+  int ret = OB_SUCCESS;
+  size_t p = 0;
+  output.clear();
+  if (OB_ISNULL(data) || count < 0) {
+    ret = OB_INVALID_ARGUMENT;
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < count; ++i) {
+    std::string value;
+    if (0 == physical_type) {
+      if (p / 8 >= size) ret = OB_INVALID_DATA;
+      else { value = (data[p / 8] & (1 << (p % 8))) ? "true" : "false"; ++p; }
+    } else if (1 == physical_type) {
+      if (p + 4 > size) ret = OB_INVALID_DATA;
+      else { int32_t v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
+    } else if (2 == physical_type) {
+      if (p + 8 > size) ret = OB_INVALID_DATA;
+      else { int64_t v; MEMCPY(&v, data + p, 8); p += 8; value = std::to_string(v); }
+    } else if (4 == physical_type) {
+      if (p + 4 > size) ret = OB_INVALID_DATA;
+      else { float v; MEMCPY(&v, data + p, 4); p += 4; value = std::to_string(v); }
+    } else if (5 == physical_type) {
+      if (p + 8 > size) ret = OB_INVALID_DATA;
+      else { double v; MEMCPY(&v, data + p, 8); p += 8; value = std::to_string(v); }
+    } else if (6 == physical_type) {
+      if (p + 4 > size) ret = OB_INVALID_DATA;
+      else {
+        uint32_t len; MEMCPY(&len, data + p, 4); p += 4;
+        if (len > size - p) ret = OB_INVALID_DATA;
+        else { value.assign(reinterpret_cast<const char *>(data + p), len); p += len; }
+      }
+    } else {
+      ret = OB_NOT_SUPPORTED;
+    }
+    if (OB_SUCC(ret)) output.push_back(value);
+  }
+  return ret;
+}
+
 int parse_parquet_column_metadata(CompactReader &reader,
                                   ObFileTableParquetReader::Impl::Chunk &chunk,
                                   int64_t &physical_type)
@@ -456,6 +501,10 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
   while (0 == column.chunk_remaining_ && column.chunk_idx_ < column.chunks_.size()) {
     const Impl::Chunk &chunk = column.chunks_.at(column.chunk_idx_++);
     column.next_offset_ = chunk.start_; column.chunk_end_ = chunk.end_; column.chunk_remaining_ = chunk.value_count_;
+    // Dictionaries are scoped to one column chunk (row group).  Do not let a
+    // malformed later chunk accidentally resolve indexes through an earlier
+    // row group's dictionary.
+    column.dictionary_values_.clear();
   }
   if (0 == column.chunk_remaining_ || column.next_offset_ >= column.chunk_end_) ret = OB_ITER_END;
   std::vector<uint8_t> header_buf;
@@ -487,6 +536,18 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
             else repetition_encoding = value;
           } else OZ (reader.skip(nested_type));
         }
+      } else if (7 == id && 12 == type) {
+        // DictionaryPageHeader: num_values, encoding, is_sorted.
+        int16_t nested_last = 0, nested_id = 0; uint8_t nested_type = 0;
+        while (OB_SUCC(ret)) {
+          OZ (reader.field(nested_last, nested_id, nested_type));
+          if (OB_FAIL(ret) || 0 == nested_type) break;
+          if ((1 == nested_id || 2 == nested_id) &&
+              (4 == nested_type || 5 == nested_type || 6 == nested_type)) {
+            int64_t value = 0; OZ (reader.sint(value));
+            if (1 == nested_id) num_values = value; else encoding = value;
+          } else OZ (reader.skip(nested_type));
+        }
       } else if (8 == id && 12 == type) {
         int16_t nested_last = 0, nested_id = 0; uint8_t nested_type = 0;
         while (OB_SUCC(ret)) {
@@ -502,8 +563,9 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     }
     header_len = reader.position();
   }
-  if (OB_SUCC(ret) && ((0 != page_type && 3 != page_type) || num_values < 0 ||
-                       num_values > column.chunk_remaining_ || 0 != encoding || compressed < 0 ||
+  if (OB_SUCC(ret) && ((0 != page_type && 2 != page_type && 3 != page_type) || num_values < 0 ||
+                       (2 != page_type && num_values > column.chunk_remaining_) ||
+                       (2 == page_type ? 0 != encoding : (0 != encoding && 2 != encoding && 8 != encoding)) || compressed < 0 ||
                        uncompressed < 0 || compressed > static_cast<int64_t>(FILE_SQL_MAX_RECORD_BYTES) ||
                        (3 == page_type && (rep_len != 0 || def_len < 0 || def_len > compressed)) ||
                        (0 == page_type && ((column.optional_ && 3 != definition_encoding) ||
@@ -540,6 +602,20 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
       values_compressed = false;
     }
   }
+  if (OB_SUCC(ret) && 2 == page_type) {
+    std::vector<uint8_t> decoded;
+    const Impl::Chunk &chunk = column.chunks_.at(column.chunk_idx_ - 1);
+    if (1 == chunk.codec_) OZ (snappy_decompress(body.data(), body.size(), decoded));
+    else if (0 == chunk.codec_) decoded.swap(body);
+    else ret = OB_NOT_SUPPORTED;
+    if (OB_SUCC(ret) && decoded.size() != static_cast<size_t>(uncompressed)) ret = OB_INVALID_DATA;
+    if (OB_SUCC(ret)) {
+      OZ (decode_parquet_plain_values(column.physical_type_, decoded.data(), decoded.size(),
+                                      num_values, column.dictionary_values_));
+    }
+    // Dictionary pages do not represent rows.  Continue until a data page is loaded.
+    if (OB_SUCC(ret)) return load_page(column_idx);
+  }
   if (OB_SUCC(ret)) {
     // Decode the RLE/bit-packed definition levels (bit width one for flat optional columns).
     if (0 == def_len) column.page_nulls_.assign(num_values, false);
@@ -563,25 +639,48 @@ int ObFileTableParquetReader::load_page(int64_t column_idx)
     else if (values_compressed && 0 != chunk.codec_) ret = OB_NOT_SUPPORTED;
     else values.assign(body.begin() + value_off, body.end());
   }
-  if (OB_SUCC(ret)) {
-    size_t p = 0; int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
-    for (int64_t i = 0; OB_SUCC(ret) && i < non_null; ++i) {
-      std::string value;
-      if (0 == column.physical_type_) {
-        if (p / 8 >= values.size()) ret = OB_INVALID_DATA; else { value = (values[p / 8] & (1 << (p % 8))) ? "true" : "false"; ++p; }
-      } else if (1 == column.physical_type_) {
-        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { int32_t v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
-      } else if (2 == column.physical_type_) {
-        if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { int64_t v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
-      } else if (4 == column.physical_type_) {
-        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { float v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
-      } else if (5 == column.physical_type_) {
-        if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { double v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
-      } else if (6 == column.physical_type_) {
-        if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { uint32_t len; MEMCPY(&len, values.data() + p, 4); p += 4; if (len > values.size() - p) ret = OB_INVALID_DATA; else { value.assign(reinterpret_cast<char *>(values.data() + p), len); p += len; } }
-      } else ret = OB_NOT_SUPPORTED;
-      if (OB_SUCC(ret)) column.page_values_.push_back(value);
+  if (OB_SUCC(ret) && 0 == encoding) {
+    int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
+    OZ (decode_parquet_plain_values(column.physical_type_, values.data(), values.size(),
+                                    non_null, column.page_values_));
+  } else if (OB_SUCC(ret)) {
+    int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
+    if (column.dictionary_values_.empty() || values.empty()) ret = OB_INVALID_DATA;
+    size_t p = 1;
+    const uint8_t bit_width = values.at(0);
+    if (bit_width > 32) ret = OB_INVALID_DATA;
+    while (OB_SUCC(ret) && column.page_values_.size() < static_cast<size_t>(non_null)) {
+      uint64_t run = 0; uint32_t shift = 0; uint8_t b = 0;
+      do {
+        if (p >= values.size() || shift >= 64) { ret = OB_INVALID_DATA; break; }
+        b = values[p++]; run |= static_cast<uint64_t>(b & 0x7f) << shift; shift += 7;
+      } while (b & 0x80);
+      if (OB_FAIL(ret) || 0 == run) break;
+      if (0 == (run & 1)) {
+        const uint64_t count = run >> 1;
+        const size_t width_bytes = (bit_width + 7) / 8;
+        if (p + width_bytes > values.size()) { ret = OB_INVALID_DATA; break; }
+        uint64_t index = 0; for (size_t j = 0; j < width_bytes; ++j) index |= static_cast<uint64_t>(values[p++]) << (8 * j);
+        if (index >= column.dictionary_values_.size()) { ret = OB_INVALID_DATA; break; }
+        for (uint64_t j = 0; j < count && column.page_values_.size() < static_cast<size_t>(non_null); ++j)
+          column.page_values_.push_back(column.dictionary_values_.at(index));
+      } else {
+        const uint64_t value_count = (run >> 1) * 8;
+        const size_t byte_count = static_cast<size_t>((value_count * bit_width + 7) / 8);
+        if (p + byte_count > values.size()) { ret = OB_INVALID_DATA; break; }
+        for (uint64_t j = 0; j < value_count && column.page_values_.size() < static_cast<size_t>(non_null); ++j) {
+          uint64_t index = 0;
+          for (uint8_t bit = 0; bit < bit_width; ++bit) {
+            const uint64_t bit_pos = j * bit_width + bit;
+            if (values[p + bit_pos / 8] & (1 << (bit_pos % 8))) index |= uint64_t(1) << bit;
+          }
+          if (index >= column.dictionary_values_.size()) { ret = OB_INVALID_DATA; break; }
+          column.page_values_.push_back(column.dictionary_values_.at(index));
+        }
+        p += byte_count;
+      }
     }
+    if (OB_SUCC(ret) && column.page_values_.size() != static_cast<size_t>(non_null)) ret = OB_INVALID_DATA;
   }
   return ret;
 }
