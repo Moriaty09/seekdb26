@@ -1106,6 +1106,30 @@ private:
    DISALLOW_COPY_AND_ASSIGN(ObSetCommentArg);
 };
 
+struct ObAIColumnDef
+{
+  OB_UNIS_VERSION(1);
+public:
+  ObAIColumnDef()
+    : column_id_(common::OB_INVALID_ID),
+      state_column_id_(common::OB_INVALID_ID),
+      request_column_id_(common::OB_INVALID_ID),
+      result_spec_column_id_(common::OB_INVALID_ID),
+      max_retries_(0)
+  {}
+  common::ObString column_name_;
+  common::ObString normalized_expr_;
+  common::ObString dependency_column_ids_;
+  uint64_t column_id_;
+  uint64_t state_column_id_;
+  uint64_t request_column_id_;
+  uint64_t result_spec_column_id_;
+  int64_t max_retries_;
+  TO_STRING_KV(K_(column_name), K_(normalized_expr), K_(dependency_column_ids),
+               K_(column_id), K_(state_column_id), K_(request_column_id),
+               K_(result_spec_column_id), K_(max_retries));
+};
+
 struct ObAlterTableArg : public ObDDLArg
 {
   OB_UNIS_VERSION(1);
@@ -1195,7 +1219,8 @@ public:
       lock_session_id_(0),
       lock_session_create_ts_(0),
       lock_priority_(transaction::tablelock::ObTableLockPriority::NORMAL),
-      data_version_(0)
+      data_version_(0),
+      ai_column_defs_()
   {
   }
   virtual ~ObAlterTableArg()
@@ -1268,7 +1293,8 @@ public:
                K_(lock_session_id),
                K_(lock_session_create_ts),
                K_(lock_priority),
-               K_(data_version));
+               K_(data_version),
+               K_(ai_column_defs));
 private:
   int alloc_index_arg(const ObIndexArg::IndexActionType index_action_type, ObIndexArg *&index_arg);
 public:
@@ -1302,6 +1328,7 @@ public:
   int64_t lock_session_create_ts_;
   transaction::tablelock::ObTableLockPriority lock_priority_;
   uint64_t data_version_;
+  common::ObSArray<ObAIColumnDef> ai_column_defs_;
   int serialize_index_args(char *buf, const int64_t data_len, int64_t &pos) const;
   int deserialize_index_args(const char *buf, const int64_t data_len, int64_t &pos);
   int64_t get_index_args_serialize_size() const;
@@ -1917,30 +1944,6 @@ public:
   int64_t expire_time_;
   bool auto_purge_;
   TO_STRING_KV(K_(purge_num), K_(expire_time), K_(auto_purge));
-};
-
-struct ObAIColumnDef
-{
-  OB_UNIS_VERSION(1);
-public:
-  ObAIColumnDef()
-    : column_id_(common::OB_INVALID_ID),
-      state_column_id_(common::OB_INVALID_ID),
-      request_column_id_(common::OB_INVALID_ID),
-      result_spec_column_id_(common::OB_INVALID_ID),
-      max_retries_(0)
-  {}
-  common::ObString column_name_;
-  common::ObString normalized_expr_;
-  common::ObString dependency_column_ids_;
-  uint64_t column_id_;
-  uint64_t state_column_id_;
-  uint64_t request_column_id_;
-  uint64_t result_spec_column_id_;
-  int64_t max_retries_;
-  TO_STRING_KV(K_(column_name), K_(normalized_expr), K_(dependency_column_ids),
-               K_(column_id), K_(state_column_id), K_(request_column_id),
-               K_(result_spec_column_id), K_(max_retries));
 };
 
 struct ObCreateTableArg : ObDDLArg

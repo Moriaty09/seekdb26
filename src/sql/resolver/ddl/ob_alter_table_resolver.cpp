@@ -3457,6 +3457,48 @@ int ObAlterTableResolver::resolve_add_column(const ParseNode &node, ObColumnName
         if (OB_SUCC(ret)) {
           if (OB_FAIL(alter_table_stmt->add_column(alter_column_schema))) {
           } else if (FALSE_IT(alter_table_stmt->set_sql_mode(session_info_->get_sql_mode()))) {
+          } else if (AI_COLUMN_DEFINITION_NUM_CHILD == node.children_[i]->num_child_) {
+            const ParseNode *definition = node.children_[i];
+            const ParseNode *expr = definition->children_[3];
+            ObAIColumnDef ai_def;
+            ai_def.column_name_ = alter_column_schema.get_column_name_str();
+            if (OB_ISNULL(expr) || OB_ISNULL(expr->str_value_)) {
+              ret = OB_ERR_UNEXPECTED;
+            } else {
+              const ObString raw_expr(static_cast<int32_t>(expr->str_len_), expr->str_value_);
+              if (alter_column_schema.is_json()) {
+                ObSqlString typed_expr;
+                OZ (typed_expr.append_fmt("%.*s /* Return exactly one valid JSON value */",
+                                          raw_expr.length(), raw_expr.ptr()));
+                OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
+              } else {
+                ai_def.normalized_expr_ = raw_expr;
+              }
+              // Validation already guarantees a small option tree.  Preserve the
+              // configured retry count for the durable definition.
+              const ParseNode *options = definition->children_[4];
+              ObSEArray<const ParseNode *, 4> pending;
+              if (OB_NOT_NULL(options)) { OZ (pending.push_back(options)); }
+              while (OB_SUCC(ret) && !pending.empty()) {
+                const ParseNode *option = pending.at(pending.count() - 1);
+                pending.pop_back();
+                if (T_LINK_NODE == option->type_ && 2 == option->num_child_
+                    && OB_NOT_NULL(option->children_[0])
+                    && T_LINK_NODE == option->children_[0]->type_) {
+                  for (int64_t j = 0; OB_SUCC(ret) && j < option->num_child_; ++j) {
+                    if (OB_NOT_NULL(option->children_[j])) { OZ (pending.push_back(option->children_[j])); }
+                  }
+                } else if (T_LINK_NODE == option->type_ && option->num_child_ == 2
+                           && OB_NOT_NULL(option->children_[0]) && OB_NOT_NULL(option->children_[1])) {
+                  const ParseNode *key = option->children_[0];
+                  const ObString key_name(static_cast<int32_t>(key->str_len_), key->str_value_);
+                  if (0 == key_name.case_compare("max_retries")) {
+                    ai_def.max_retries_ = option->children_[1]->value_;
+                  }
+                }
+              }
+              OZ (alter_table_stmt->get_alter_table_arg().ai_column_defs_.push_back(ai_def));
+            }
           }
         }
       }

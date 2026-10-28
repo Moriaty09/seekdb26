@@ -26,6 +26,7 @@
 #include "rootserver/ob_runtime_ddl_service.h"
 #include "query/session/ob_inner_sql_connection_access.h"
 #include "share/ob_ddl_common.h"
+#include "share/ob_dml_sql_splicer.h"
 #include "share/inner_table/ob_inner_table_schema_constants.h"
 #include "sql/printer/ob_schema_printer.h"
 #include "share/autoincrement/ob_i_tablet_autoincrement_admin.h"
@@ -10925,6 +10926,47 @@ int ObDDLService::alter_table_in_trans(obcall::ObAlterTableArg &alter_table_arg,
                 }
               }
             }
+          }
+        }
+        // Keep ALTER ADD AI COLUMN metadata atomic with the schema mutation.
+        for (int64_t i = 0; OB_SUCC(ret) && i < alter_table_arg.ai_column_defs_.count(); ++i) {
+          const ObAIColumnDef &input_def = alter_table_arg.ai_column_defs_.at(i);
+          const ObColumnSchemaV2 *result_col = new_table_schema.get_column_schema(input_def.column_name_);
+          ObDMLSqlSplicer dml;
+          ObSqlString sql;
+          int64_t affected_rows = 0;
+          if (OB_ISNULL(result_col)) {
+            ret = OB_ERR_UNEXPECTED;
+          } else {
+            OZ (dml.add_pk_column("table_id", new_table_schema.get_table_id()));
+            OZ (dml.add_pk_column("column_id", result_col->get_column_id()));
+            OZ (dml.add_column("column_name", ObHexEscapeSqlStr(input_def.column_name_)));
+            OZ (dml.add_column("normalized_expr", ObHexEscapeSqlStr(input_def.normalized_expr_)));
+            if (input_def.dependency_column_ids_.empty()) {
+              OZ (dml.add_column("dependency_column_ids", ""));
+            } else {
+              OZ (dml.add_column("dependency_column_ids",
+                                 ObHexEscapeSqlStr(input_def.dependency_column_ids_)));
+            }
+            OZ (dml.add_column("sync_mode", "async"));
+            OZ (dml.add_column("max_retries", input_def.max_retries_));
+            OZ (dml.add_column("state_column_id", input_def.state_column_id_));
+            OZ (dml.add_column("request_column_id", input_def.request_column_id_));
+            OZ (dml.add_column("result_spec_column_id", input_def.result_spec_column_id_));
+            OZ (dml.add_column("definition_version", 1));
+            OZ (dml.splice_insert_sql(OB_ALL_AI_COLUMN_TNAME, sql));
+            if (OB_SUCC(ret) && OB_FAIL(trans.write(sql.ptr(), affected_rows))) {
+              LOG_WARN("failed to insert altered AI column metadata", K(ret), K(sql));
+            }
+            CK (is_single_row(affected_rows));
+            OZ (dml.add_pk_column("schema_version", new_table_schema.get_schema_version()));
+            OZ (dml.add_column("is_deleted", 0));
+            OX (sql.reuse());
+            OZ (dml.splice_insert_sql(OB_ALL_AI_COLUMN_HISTORY_TNAME, sql));
+            if (OB_SUCC(ret) && OB_FAIL(trans.write(sql.ptr(), affected_rows))) {
+              LOG_WARN("failed to insert altered AI column history", K(ret), K(sql));
+            }
+            CK (is_single_row(affected_rows));
           }
         }
         const bool is_commit = OB_SUCC(ret);
