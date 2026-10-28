@@ -3391,6 +3391,26 @@ int ObAlterTableResolver::process_timestamp_column(ObColumnResolveStat &stat,
   return ret;
 }
 
+int ObAlterTableResolver::check_ai_column_alter_allowed(const ObString &column_name) const
+{
+  int ret = OB_SUCCESS;
+  ObSqlString state_name;
+  const ObColumnSchemaV2 *column = OB_ISNULL(table_schema_) ? NULL
+                                                            : table_schema_->get_column_schema(column_name);
+  if (OB_ISNULL(table_schema_)) {
+    ret = OB_ERR_UNEXPECTED;
+  } else if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state",
+                                            column_name.length(), column_name.ptr()))) {
+  } else if (OB_NOT_NULL(table_schema_->get_column_schema(state_name.string()))
+             || (OB_NOT_NULL(column) && column->is_hidden()
+                 && column_name.prefix_match("__ai_"))) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED,
+                   "altering an AI COLUMN or its internal state columns");
+  }
+  return ret;
+}
+
 int ObAlterTableResolver::collect_ai_dependency_column_ids(
     const ParseNode &expr, ObIArray<uint64_t> &column_ids) const
 {
@@ -3704,6 +3724,8 @@ int ObAlterTableResolver::resolve_alter_column(const ParseNode &node)
     } else if (OB_FAIL(resolve_column_definition_ref(alter_column_schema,
                                                     column_definition_ref_node,
                                                     true))) {
+    } else if (OB_FAIL(check_ai_column_alter_allowed(
+                           alter_column_schema.get_origin_column_name()))) {
     } else {
       alter_column_schema.alter_type_ = OB_DDL_ALTER_COLUMN;
     }
@@ -3977,6 +3999,7 @@ int ObAlterTableResolver::resolve_change_column(const ParseNode &node)
                        table_schema_->get_table_name_str().length(),
                        table_schema_->get_table_name_str().ptr());
       }
+    } else if (OB_FAIL(check_ai_column_alter_allowed(origin_column_name))) {
     }
     //resolve new column definition
     if (OB_SUCC(ret)) {
@@ -4144,6 +4167,7 @@ int ObAlterTableResolver::resolve_modify_column(const ParseNode &node,
                            table_schema_->get_table_name_str().length(),
                            table_schema_->get_table_name_str().ptr());
           }
+        } else if (OB_FAIL(check_ai_column_alter_allowed(column_name))) {
         } else {
           //alter column's generated column flag should be parsed by itself,
           // So need to clear the generated column flag that was previously copied
@@ -4479,6 +4503,7 @@ int ObAlterTableResolver::resolve_rename_column(const ParseNode &node)
                        table_schema_->get_table_name_str().ptr());
       }
       SQL_RESV_LOG(WARN, "fail to get origin column schema", K(ret));
+    } else if (OB_FAIL(check_ai_column_alter_allowed(origin_column_name))) {
     } else if (OB_FAIL(alter_column_schema.assign(*origin_col_schema))) {
     } else if (OB_FAIL(alter_column_schema.set_origin_column_name(origin_column_name))) {
     } else if (OB_FAIL(alter_column_schema.set_column_name(new_column_name))) {

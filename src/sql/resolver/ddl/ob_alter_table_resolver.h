@@ -95,6 +95,7 @@ public:
   int resolve_modify_all_trigger(const ParseNode &node);
 
 private:
+  int check_ai_column_alter_allowed(const common::ObString &column_name) const;
   int collect_ai_dependency_column_ids(const ParseNode &expr,
                                        common::ObIArray<uint64_t> &column_ids) const;
   int check_dup_foreign_keys_exist(
