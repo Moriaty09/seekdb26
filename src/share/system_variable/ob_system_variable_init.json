@@ -10988,5 +10988,18 @@
     "info_cn": "",
     "background_cn": "",
     "ref_url": ""
+  },
+  "ai_column_strict_read": {
+    "id": 10754,
+    "name": "ai_column_strict_read",
+    "default_value": "0",
+    "base_value": "0",
+    "data_type": "bool",
+    "info": "Raise an error when a statement references an AI column with rows whose generated result is not ready.",
+    "flags": "SESSION",
+    "publish_version": "1.4.0.0",
+    "info_cn": "引用尚未生成完成的 AI 列时是否报错",
+    "background_cn": "默认关闭；开启后由 AI 列执行检查实施列级严格读取语义",
+    "ref_url": ""
   }
 }
