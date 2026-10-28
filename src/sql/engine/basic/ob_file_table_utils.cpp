@@ -29,6 +29,22 @@ namespace
 static const size_t FILE_SQL_MAX_RECORD_BYTES = 64L * 1024L * 1024L;
 enum CsvInferType { CSV_NULL, CSV_BOOL, CSV_INT, CSV_DOUBLE, CSV_DATE, CSV_DATETIME, CSV_STRING };
 
+int position_after_utf8_bom(FILE *file, int64_t &data_offset)
+{
+  int ret = OB_SUCCESS;
+  unsigned char prefix[3] = {0};
+  data_offset = 0;
+  const size_t read_size = ::fread(prefix, 1, sizeof(prefix), file);
+  if (::ferror(file)) {
+    ret = OB_IO_ERROR;
+  } else {
+    data_offset = 3 == read_size && 0xEF == prefix[0] && 0xBB == prefix[1] && 0xBF == prefix[2] ? 3 : 0;
+    ::clearerr(file);
+    if (0 != ::fseek(file, data_offset, SEEK_SET)) ret = OB_IO_ERROR;
+  }
+  return ret;
+}
+
 CsvInferType classify_csv_value(const std::string &value)
 {
   CsvInferType type = CSV_STRING;
@@ -245,11 +261,11 @@ int snappy_decompress(const uint8_t *src, size_t src_len, std::vector<uint8_t> &
 } // namespace
 
 ObFileTableCsvReader::ObFileTableCsvReader()
-  : file_(nullptr), path_(), line_no_(0), delimiter_(','), quote_('"'), escape_('"'), null_str_() {}
+  : file_(nullptr), path_(), line_no_(0), data_offset_(0), delimiter_(','), quote_('"'), escape_('"'), null_str_() {}
 ObFileTableCsvReader::~ObFileTableCsvReader() { close(); }
 
 ObFileTableJsonlReader::ObFileTableJsonlReader()
-  : file_(nullptr), path_(), line_buf_(nullptr), line_cap_(0), line_no_(0) {}
+  : file_(nullptr), path_(), line_buf_(nullptr), line_cap_(0), line_no_(0), data_offset_(0) {}
 ObFileTableJsonlReader::~ObFileTableJsonlReader()
 {
   close();
@@ -841,6 +857,7 @@ int ObFileTableJsonlReader::open(const ObString &path)
     path_.assign(path.ptr(), path.length());
     if (OB_ISNULL(file_ = ::fopen(path_.c_str(), "rb"))) {
       ret = OB_FILE_NOT_EXIST;
+    } else if (OB_FAIL(position_after_utf8_bom(file_, data_offset_))) {
     } else {
       line_no_ = 0;
     }
@@ -862,7 +879,7 @@ int ObFileTableJsonlReader::rewind()
 {
   int ret = OB_SUCCESS;
   if (OB_ISNULL(file_)) ret = OB_NOT_INIT;
-  else if (0 != ::fseek(file_, 0, SEEK_SET)) ret = OB_IO_ERROR;
+  else if (0 != ::fseek(file_, data_offset_, SEEK_SET)) ret = OB_IO_ERROR;
   else { ::clearerr(file_); line_no_ = 0; }
   return ret;
 }
@@ -934,6 +951,7 @@ int ObFileTableCsvReader::open(const ObString &path, char delimiter, char quote,
     if (OB_ISNULL(file_ = ::fopen(path_.c_str(), "rb"))) {
       ret = OB_FILE_NOT_EXIST;
       LOG_WARN("failed to open file table", K(ret), K(path), K(errno));
+    } else if (OB_FAIL(position_after_utf8_bom(file_, data_offset_))) {
     } else {
       line_no_ = 0;
     }
@@ -958,7 +976,7 @@ int ObFileTableCsvReader::rewind()
   int ret = OB_SUCCESS;
   if (OB_ISNULL(file_)) {
     ret = OB_NOT_INIT;
-  } else if (0 != ::fseek(file_, 0, SEEK_SET)) {
+  } else if (0 != ::fseek(file_, data_offset_, SEEK_SET)) {
     ret = OB_IO_ERROR;
   } else {
     ::clearerr(file_);

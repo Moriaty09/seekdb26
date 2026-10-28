@@ -34,6 +34,7 @@ private:
   FILE *file_;
   std::string path_;
   int64_t line_no_;
+  int64_t data_offset_;
   char delimiter_;
   char quote_;
   char escape_;
@@ -59,6 +60,7 @@ private:
   char *line_buf_;
   size_t line_cap_;
   int64_t line_no_;
+  int64_t data_offset_;
   DISALLOW_COPY_AND_ASSIGN(ObFileTableJsonlReader);
 };
 
