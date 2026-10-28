@@ -19,6 +19,7 @@
 #include "sql/engine/basic/ob_function_table_op.h"
 #include "sql/engine/ob_exec_context.h"
 #include "sql/engine/expr/ob_expr_lob_utils.h"
+#include "common/timezone/ob_time_convert.h"
 #include <cerrno>
 #include <cstdlib>
 #include <strings.h>
@@ -198,6 +199,21 @@ int ObFunctionTableOp::inner_get_next_row_file()
             ret = OB_ERR_TRUNCATED_WRONG_VALUE;
           } else {
             datum.set_double(value);
+          }
+        } else if (ObDateType == expr->datum_meta_.type_) {
+          int32_t value = 0;
+          const ObString str(static_cast<int32_t>(field.size()), field.data());
+          if (OB_FAIL(ObTimeConverter::str_to_date(str, value))) {
+          } else {
+            datum.set_date(value);
+          }
+        } else if (ObDateTimeType == expr->datum_meta_.type_) {
+          int64_t value = 0;
+          ObTimeConvertCtx cvrt_ctx(nullptr, false);
+          const ObString str(static_cast<int32_t>(field.size()), field.data());
+          if (OB_FAIL(ObTimeConverter::str_to_datetime(str, cvrt_ctx, value))) {
+          } else {
+            datum.set_datetime(value);
           }
         } else {
           datum.set_string(field.data(), field.size());

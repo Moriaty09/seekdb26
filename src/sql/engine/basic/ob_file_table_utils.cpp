@@ -7,6 +7,7 @@
 #include "sql/resolver/ob_resolver_utils.h"
 #include "lib/charset/ob_charset.h"
 #include "lib/oblog/ob_log.h"
+#include "common/timezone/ob_time_convert.h"
 #include <errno.h>
 #include <limits.h>
 #include <sys/stat.h>
@@ -23,7 +24,7 @@ namespace sql
 
 namespace
 {
-enum CsvInferType { CSV_NULL, CSV_BOOL, CSV_INT, CSV_DOUBLE, CSV_STRING };
+enum CsvInferType { CSV_NULL, CSV_BOOL, CSV_INT, CSV_DOUBLE, CSV_DATE, CSV_DATETIME, CSV_STRING };
 
 CsvInferType classify_csv_value(const std::string &value)
 {
@@ -45,6 +46,17 @@ CsvInferType classify_csv_value(const std::string &value)
       (void)::strtod(value.c_str(), &end);
       if (0 == errno && end == value.c_str() + value.size()) {
         type = CSV_DOUBLE;
+      } else if (10 == value.size() && '-' == value[4] && '-' == value[7]) {
+        int32_t date = 0;
+        const ObString str(static_cast<int32_t>(value.size()), value.data());
+        type = OB_SUCCESS == ObTimeConverter::str_to_date(str, date) ? CSV_DATE : CSV_STRING;
+      } else if (value.size() >= 19 && '-' == value[4] && '-' == value[7] &&
+                 (' ' == value[10] || 'T' == value[10])) {
+        int64_t datetime = 0;
+        ObTimeConvertCtx cvrt_ctx(nullptr, false);
+        const ObString str(static_cast<int32_t>(value.size()), value.data());
+        type = OB_SUCCESS == ObTimeConverter::str_to_datetime(str, cvrt_ctx, datetime)
+                 ? CSV_DATETIME : CSV_STRING;
       }
     }
   }
@@ -429,6 +441,13 @@ int ObFileTableUtils::infer_csv_schema(ObIAllocator &allocator, ObFileTableDef &
           col.accuracy_.set_precision(PRECISION_UNKNOWN_YET);
           col.accuracy_.set_scale(SCALE_UNKNOWN_YET);
           break;
+        case CSV_DATE:
+          col.meta_.set_date();
+          break;
+        case CSV_DATETIME:
+          col.meta_.set_datetime();
+          col.accuracy_.set_scale(0);
+          break;
         case CSV_NULL:
         case CSV_STRING:
         default:
@@ -499,6 +518,8 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
               else if (it->value.IsBool()) type = CSV_BOOL;
               else if (it->value.IsInt64() || it->value.IsUint64()) type = CSV_INT;
               else if (it->value.IsNumber()) type = CSV_DOUBLE;
+              else if (it->value.IsString()) type = classify_csv_value(
+                  std::string(it->value.GetString(), it->value.GetStringLength()));
               inferred.at(idx) = widen_csv_type(inferred.at(idx), type);
             }
           }
@@ -512,6 +533,8 @@ int ObFileTableUtils::infer_jsonl_schema(ObIAllocator &allocator, ObFileTableDef
       if (CSV_BOOL == inferred.at(i)) { col.meta_.set_tinyint(); col.accuracy_.set_precision(1); col.accuracy_.set_scale(0); }
       else if (CSV_INT == inferred.at(i)) { col.meta_.set_int(); col.accuracy_.set_precision(20); col.accuracy_.set_scale(0); }
       else if (CSV_DOUBLE == inferred.at(i)) { col.meta_.set_double(); col.accuracy_.set_precision(PRECISION_UNKNOWN_YET); col.accuracy_.set_scale(SCALE_UNKNOWN_YET); }
+      else if (CSV_DATE == inferred.at(i)) { col.meta_.set_date(); }
+      else if (CSV_DATETIME == inferred.at(i)) { col.meta_.set_datetime(); col.accuracy_.set_scale(0); }
     }
   }
   if (OB_NOT_NULL(line)) ::free(line);
