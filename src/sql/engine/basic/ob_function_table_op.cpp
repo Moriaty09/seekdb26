@@ -35,7 +35,7 @@ namespace sql
 
 OB_SERIALIZE_MEMBER((ObFunctionTableSpec, ObOpSpec), value_expr_, column_exprs_, column_names_, file_column_names_, has_correlated_expr_,
                     file_format_, file_path_, file_header_, file_size_, file_mtime_ns_,
-                    file_device_, file_inode_);
+                    file_device_, file_inode_, delimiter_, quote_, escape_, null_str_);
 
 int ObFunctionTableOp::inner_open()
 {
@@ -69,7 +69,9 @@ int ObFunctionTableOp::inner_open()
                FILE_TABLE_PARQUET != MY_SPEC.file_format_) {
       ret = OB_NOT_SUPPORTED;
     } else if (OB_FAIL(ObFileTableUtils::validate_unchanged(def))) {
-    } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.open(MY_SPEC.file_path_))) {
+    } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ &&
+               OB_FAIL(csv_reader_.open(MY_SPEC.file_path_, MY_SPEC.delimiter_, MY_SPEC.quote_,
+                                        MY_SPEC.escape_, MY_SPEC.null_str_))) {
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && MY_SPEC.file_header_ && OB_FAIL(csv_reader_.next(file_fields_))) {
     } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ && OB_FAIL(jsonl_reader_.open(MY_SPEC.file_path_))) {
     } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(parquet_reader_.open(MY_SPEC.file_path_))) {
@@ -180,7 +182,7 @@ int ObFunctionTableOp::inner_get_next_row_file()
   int ret = OB_SUCCESS;
   clear_evaluated_flag();
   if (OB_FAIL(ctx_.check_status())) {
-  } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.next(file_fields_))) {
+  } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.next(file_fields_, &file_nulls_))) {
   } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ &&
              OB_FAIL(jsonl_reader_.next(MY_SPEC.column_names_, file_fields_, file_nulls_))) {
   } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(read_next_parquet())) {
@@ -197,8 +199,8 @@ int ObFunctionTableOp::inner_get_next_row_file()
       if (OB_SUCC(ret)) {
         ObDatum &datum = expr->locate_datum_for_write(eval_ctx_);
         const std::string &field = file_fields_.at(i);
-        if (((FILE_TABLE_JSONL == MY_SPEC.file_format_ || FILE_TABLE_PARQUET == MY_SPEC.file_format_) && file_nulls_.at(i)) ||
-            (FILE_TABLE_CSV == MY_SPEC.file_format_ && field.empty())) {
+        if ((FILE_TABLE_JSONL == MY_SPEC.file_format_ || FILE_TABLE_PARQUET == MY_SPEC.file_format_ ||
+             FILE_TABLE_CSV == MY_SPEC.file_format_) && file_nulls_.at(i)) {
           datum.set_null();
         } else if (ObTinyIntType == expr->datum_meta_.type_) {
           datum.set_int(0 == strcasecmp(field.c_str(), "true") ? 1 : 0);

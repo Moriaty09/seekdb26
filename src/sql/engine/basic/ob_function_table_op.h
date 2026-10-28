@@ -36,7 +36,7 @@ public:
   ObFunctionTableSpec(common::ObIAllocator &alloc, const ObPhyOperatorType type)
     : ObOpSpec(alloc, type), value_expr_(nullptr), column_exprs_(alloc), column_names_(alloc), file_column_names_(alloc), has_correlated_expr_(false),
       file_format_(FILE_TABLE_INVALID), file_path_(), file_header_(true), file_size_(0),
-      file_mtime_ns_(0), file_device_(0), file_inode_(0)
+      file_mtime_ns_(0), file_device_(0), file_inode_(0), delimiter_(','), quote_('"'), escape_('"'), null_str_()
   {}
   ObExpr *value_expr_;
   common::ObFixedArray<ObExpr*, common::ObIAllocator> column_exprs_;
@@ -50,6 +50,10 @@ public:
   int64_t file_mtime_ns_;
   uint64_t file_device_;
   uint64_t file_inode_;
+  char delimiter_;
+  char quote_;
+  char escape_;
+  common::ObString null_str_;
 };
 
 class ObFunctionTableOp : public ObOperator

@@ -244,7 +244,8 @@ int snappy_decompress(const uint8_t *src, size_t src_len, std::vector<uint8_t> &
 }
 } // namespace
 
-ObFileTableCsvReader::ObFileTableCsvReader() : file_(nullptr), path_(), line_no_(0) {}
+ObFileTableCsvReader::ObFileTableCsvReader()
+  : file_(nullptr), path_(), line_no_(0), delimiter_(','), quote_('"'), escape_('"'), null_str_() {}
 ObFileTableCsvReader::~ObFileTableCsvReader() { close(); }
 
 ObFileTableJsonlReader::ObFileTableJsonlReader()
@@ -917,13 +918,19 @@ int ObFileTableJsonlReader::next(const ObIArray<ObString> &column_names,
   return ret;
 }
 
-int ObFileTableCsvReader::open(const ObString &path)
+int ObFileTableCsvReader::open(const ObString &path, char delimiter, char quote,
+                               char escape, const ObString &null_str)
 {
   int ret = OB_SUCCESS;
   if (OB_NOT_NULL(file_)) {
     ret = OB_INIT_TWICE;
   } else {
     path_.assign(path.ptr(), path.length());
+    delimiter_ = delimiter;
+    quote_ = quote;
+    escape_ = escape;
+    if (null_str.empty()) null_str_.clear();
+    else null_str_.assign(null_str.ptr(), null_str.length());
     if (OB_ISNULL(file_ = ::fopen(path_.c_str(), "rb"))) {
       ret = OB_FILE_NOT_EXIST;
       LOG_WARN("failed to open file table", K(ret), K(path), K(errno));
@@ -960,16 +967,24 @@ int ObFileTableCsvReader::rewind()
   return ret;
 }
 
-int ObFileTableCsvReader::next(std::vector<std::string> &fields)
+int ObFileTableCsvReader::next(std::vector<std::string> &fields, std::vector<bool> *is_null)
 {
   int ret = OB_SUCCESS;
   fields.clear();
+  if (OB_NOT_NULL(is_null)) is_null->clear();
   std::string field;
   bool quoted = false;
+  bool field_was_quoted = false;
   bool just_closed_quote = false;
   bool at_field_start = true;
   bool saw_any = false;
   size_t record_bytes = 0;
+  auto finish_field = [&]() {
+    fields.push_back(field);
+    if (OB_NOT_NULL(is_null)) is_null->push_back(!field_was_quoted && field == null_str_);
+    field.clear();
+    field_was_quoted = false;
+  };
   while (OB_SUCC(ret)) {
     const int ch = ::fgetc(file_);
     if (EOF == ch) {
@@ -981,7 +996,7 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
         ret = OB_ERR_UNEXPECTED;
         LOG_USER_ERROR(OB_ERR_UNEXPECTED, "unterminated quoted CSV field");
       } else {
-        fields.push_back(field);
+        finish_field();
       }
       break;
     }
@@ -992,15 +1007,20 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
       break;
     }
     if (quoted) {
-      if ('"' == ch) {
+      if (quote_ == ch) {
+        if (escape_ != quote_) {
+          quoted = false;
+          just_closed_quote = true;
+          continue;
+        }
         const int next_ch = ::fgetc(file_);
-        if ('"' == next_ch) {
+        if (quote_ == next_ch) {
           if (++record_bytes > FILE_SQL_MAX_RECORD_BYTES) {
             ret = OB_SIZE_OVERFLOW;
             LOG_USER_ERROR(OB_SIZE_OVERFLOW, "File SQL record exceeds 64 MiB");
             break;
           }
-          field.push_back('"');
+          field.push_back(quote_);
         } else {
           quoted = false;
           just_closed_quote = true;
@@ -1008,19 +1028,30 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
             ::ungetc(next_ch, file_);
           }
         }
+      } else if (escape_ != quote_ && escape_ == ch) {
+        const int next_ch = ::fgetc(file_);
+        if (EOF == next_ch) {
+          ret = OB_ERR_UNEXPECTED;
+          LOG_USER_ERROR(OB_ERR_UNEXPECTED, "unterminated CSV escape");
+        } else if (++record_bytes > FILE_SQL_MAX_RECORD_BYTES) {
+          ret = OB_SIZE_OVERFLOW;
+        } else {
+          field.push_back(static_cast<char>(next_ch));
+          if ('\n' == next_ch) ++line_no_;
+        }
       } else {
         field.push_back(static_cast<char>(ch));
         if ('\n' == ch) {
           ++line_no_;
         }
       }
-    } else if (at_field_start && '"' == ch) {
+    } else if (at_field_start && quote_ == ch) {
       quoted = true;
+      field_was_quoted = true;
       just_closed_quote = false;
       at_field_start = false;
-    } else if (',' == ch) {
-      fields.push_back(field);
-      field.clear();
+    } else if (delimiter_ == ch) {
+      finish_field();
       at_field_start = true;
       just_closed_quote = false;
     } else if ('\n' == ch || '\r' == ch) {
@@ -1031,7 +1062,7 @@ int ObFileTableCsvReader::next(std::vector<std::string> &fields)
         }
       }
       ++line_no_;
-      fields.push_back(field);
+      finish_field();
       break;
     } else if (just_closed_quote) {
       ret = OB_INVALID_DATA;
@@ -1129,11 +1160,12 @@ int ObFileTableUtils::infer_csv_schema(ObIAllocator &allocator, ObFileTableDef &
   int ret = OB_SUCCESS;
   ObFileTableCsvReader reader;
   std::vector<std::string> fields;
+  std::vector<bool> nulls;
   struct stat st;
-  if (OB_FAIL(reader.open(def.path_))) {
+  if (OB_FAIL(reader.open(def.path_, def.delimiter_, def.quote_, def.escape_, def.null_str_))) {
   } else if (0 != ::stat(std::string(def.path_.ptr(), def.path_.length()).c_str(), &st)) {
     ret = OB_IO_ERROR;
-  } else if (OB_FAIL(reader.next(fields))) {
+  } else if (OB_FAIL(reader.next(fields, &nulls))) {
     if (OB_ITER_END == ret) {
       ret = OB_ERR_UNEXPECTED;
       LOG_USER_ERROR(OB_ERR_UNEXPECTED, "CSV file has no columns");
@@ -1165,7 +1197,7 @@ int ObFileTableUtils::infer_csv_schema(ObIAllocator &allocator, ObFileTableDef &
     bool use_current_as_data = !def.header_;
     while (OB_SUCC(ret)) {
       if (!use_current_as_data) {
-        ret = reader.next(fields);
+        ret = reader.next(fields, &nulls);
         if (OB_ITER_END == ret) {
           ret = OB_SUCCESS;
           break;
@@ -1179,8 +1211,12 @@ int ObFileTableUtils::infer_csv_schema(ObIAllocator &allocator, ObFileTableDef &
                  K(reader.line_no()), K(column_count), "actual", fields.size());
       } else {
         for (int64_t i = 0; i < column_count; ++i) {
-          if (fields.at(i).empty()) def.columns_.at(i).nullable_ = true;
-          inferred.at(i) = widen_csv_type(inferred.at(i), classify_csv_value(fields.at(i)));
+          if (nulls.at(i)) {
+            def.columns_.at(i).nullable_ = true;
+          } else {
+            inferred.at(i) = widen_csv_type(inferred.at(i),
+                                             fields.at(i).empty() ? CSV_STRING : classify_csv_value(fields.at(i)));
+          }
         }
       }
     }

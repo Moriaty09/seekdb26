@@ -5534,7 +5534,11 @@ int ObStaticEngineCG::generate_spec(ObLogFunctionTable &op, ObFunctionTableSpec 
       spec.file_mtime_ns_ = def.file_mtime_ns_;
       spec.file_device_ = def.file_device_;
       spec.file_inode_ = def.file_inode_;
+      spec.delimiter_ = def.delimiter_;
+      spec.quote_ = def.quote_;
+      spec.escape_ = def.escape_;
       OZ (ob_write_string(alloc, def.path_, spec.file_path_));
+      OZ (ob_write_string(alloc, def.null_str_, spec.null_str_));
       for (int64_t i = 0; OB_SUCC(ret) && i < def.columns_.count(); ++i) {
         ObString column_name;
         OZ (ob_write_string(alloc, def.columns_.at(i).name_, column_name));

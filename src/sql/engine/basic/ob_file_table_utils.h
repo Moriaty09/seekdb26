@@ -24,15 +24,20 @@ class ObFileTableCsvReader
 public:
   ObFileTableCsvReader();
   ~ObFileTableCsvReader();
-  int open(const common::ObString &path);
+  int open(const common::ObString &path, char delimiter = ',', char quote = '"',
+           char escape = '"', const common::ObString &null_str = common::ObString());
   int close();
   int rewind();
-  int next(std::vector<std::string> &fields);
+  int next(std::vector<std::string> &fields, std::vector<bool> *is_null = nullptr);
   int64_t line_no() const { return line_no_; }
 private:
   FILE *file_;
   std::string path_;
   int64_t line_no_;
+  char delimiter_;
+  char quote_;
+  char escape_;
+  std::string null_str_;
   DISALLOW_COPY_AND_ASSIGN(ObFileTableCsvReader);
 };
 

@@ -4119,6 +4119,21 @@ int ObDMLResolver::resolve_file_table_item(const ParseNode &parse_tree,
     } else {
       def->format_ = FILE_TABLE_GLOB;
     }
+    auto get_string_option = [&](const ParseNode *node, ObString &value) -> int {
+      int tmp_ret = OB_SUCCESS;
+      if (OB_ISNULL(node)) {
+        tmp_ret = OB_INVALID_ARGUMENT;
+      } else if (T_VARCHAR == node->type_ || T_CHAR == node->type_ || T_NCHAR == node->type_) {
+        value.assign_ptr(node->str_value_, static_cast<int32_t>(node->str_len_));
+      } else if (T_QUESTIONMARK == node->type_ && OB_NOT_NULL(params_.param_list_) &&
+                 node->value_ >= 0 && node->value_ < params_.param_list_->count() &&
+                 params_.param_list_->at(node->value_).is_string_type()) {
+        value = params_.param_list_->at(node->value_).get_string();
+      } else {
+        tmp_ret = OB_INVALID_ARGUMENT;
+      }
+      return tmp_ret;
+    };
     for (int64_t i = 1; OB_SUCC(ret) && i < params->num_child_; ++i) {
       const ParseNode *option = params->children_[i];
       if (OB_ISNULL(option) || T_OP_EQ != option->type_ || option->num_child_ != 2 ||
@@ -4168,6 +4183,29 @@ int ObDMLResolver::resolve_file_table_item(const ParseNode &parse_tree,
           } else if (OB_SUCC(ret)) {
             def->sample_size_ = sample_size;
           }
+        } else if (0 == key.case_compare("delimiter") || 0 == key.case_compare("delim") ||
+                   0 == key.case_compare("quote") || 0 == key.case_compare("escape")) {
+          ObString option_value;
+          if (FILE_TABLE_CSV != def->format_) {
+            ret = OB_NOT_SUPPORTED;
+          } else if (OB_FAIL(get_string_option(value_node, option_value))) {
+          } else if (1 != option_value.length()) {
+            ret = OB_INVALID_ARGUMENT;
+            LOG_USER_ERROR(OB_INVALID_ARGUMENT, "CSV delimiter, quote and escape must be one byte");
+          } else if (0 == key.case_compare("delimiter") || 0 == key.case_compare("delim")) {
+            def->delimiter_ = option_value[0];
+          } else if (0 == key.case_compare("quote")) {
+            def->quote_ = option_value[0];
+          } else {
+            def->escape_ = option_value[0];
+          }
+        } else if (0 == key.case_compare("nullstr") || 0 == key.case_compare("null")) {
+          ObString option_value;
+          if (FILE_TABLE_CSV != def->format_) {
+            ret = OB_NOT_SUPPORTED;
+          } else if (OB_FAIL(get_string_option(value_node, option_value))) {
+          } else if (OB_FAIL(ob_write_string(*allocator_, option_value, def->null_str_))) {
+          }
         } else if (0 == key.case_compare("format")) {
           ObString format;
           if (T_VARCHAR == value_node->type_) {
@@ -4186,6 +4224,14 @@ int ObDMLResolver::resolve_file_table_item(const ParseNode &parse_tree,
           LOG_USER_ERROR(OB_NOT_SUPPORTED, "unknown File SQL option");
         }
       }
+    }
+    if (OB_SUCC(ret) && FILE_TABLE_CSV == def->format_ &&
+        ('\0' == def->delimiter_ || '\n' == def->delimiter_ || '\r' == def->delimiter_ ||
+         '\0' == def->quote_ || '\n' == def->quote_ || '\r' == def->quote_ ||
+         '\0' == def->escape_ || '\n' == def->escape_ || '\r' == def->escape_ ||
+         def->delimiter_ == def->quote_)) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "invalid CSV delimiter, quote or escape");
     }
     if (OB_FAIL(ret)) {
     } else if (FILE_TABLE_GLOB == def->format_) {

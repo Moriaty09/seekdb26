@@ -149,17 +149,23 @@ struct ObFileTableColumnDef {
 struct ObFileTableDef {
   ObFileTableDef()
     : format_(FILE_TABLE_INVALID), path_(), columns_(), header_(true), sample_size_(-1),
+      delimiter_(','), quote_('"'), escape_('"'), null_str_(),
       file_size_(0), file_mtime_ns_(0), file_device_(0), file_inode_(0) {}
   ObFileTableFormat format_;
   common::ObString path_;
   common::ObSEArray<ObFileTableColumnDef, 8, common::ModulePageAllocator, true> columns_;
   bool header_;
   int64_t sample_size_;
+  char delimiter_;
+  char quote_;
+  char escape_;
+  common::ObString null_str_;
   int64_t file_size_;
   int64_t file_mtime_ns_;
   uint64_t file_device_;
   uint64_t file_inode_;
   TO_STRING_KV(K_(format), K_(path), K_(columns), K_(header), K_(sample_size),
+               K_(delimiter), K_(quote), K_(escape), K_(null_str),
                K_(file_size), K_(file_mtime_ns), K_(file_device), K_(file_inode));
 };
 
