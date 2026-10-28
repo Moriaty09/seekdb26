@@ -72,9 +72,6 @@ int ObFunctionTableOp::inner_open()
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && OB_FAIL(csv_reader_.open(MY_SPEC.file_path_))) {
     } else if (FILE_TABLE_CSV == MY_SPEC.file_format_ && MY_SPEC.file_header_ && OB_FAIL(csv_reader_.next(file_fields_))) {
     } else if (FILE_TABLE_JSONL == MY_SPEC.file_format_ && OB_FAIL(jsonl_reader_.open(MY_SPEC.file_path_))) {
-    } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && MY_SPEC.column_exprs_.count() > 1) {
-      ret = OB_NOT_SUPPORTED;
-      LOG_USER_ERROR(OB_NOT_SUPPORTED, "streaming Parquet scan currently supports one projected column");
     } else if (FILE_TABLE_PARQUET == MY_SPEC.file_format_ && OB_FAIL(parquet_reader_.open(MY_SPEC.file_path_))) {
     } else {
       next_row_func_ = &ObFunctionTableOp::inner_get_next_row_file;
@@ -259,16 +256,10 @@ int ObFunctionTableOp::inner_get_next_row_file()
 
 int ObFunctionTableOp::read_next_parquet()
 {
-  int ret = OB_SUCCESS;
-  std::string value;
-  bool is_null = false;
-  if (OB_FAIL(parquet_reader_.next(value, is_null))) {
-  } else if (MY_SPEC.column_exprs_.empty()) {
+  int ret = parquet_reader_.next(file_fields_, file_nulls_);
+  if (OB_SUCC(ret) && MY_SPEC.column_exprs_.empty()) {
     file_fields_.clear();
     file_nulls_.clear();
-  } else {
-    file_fields_.assign(1, value);
-    file_nulls_.assign(1, is_null);
   }
   return ret;
 }

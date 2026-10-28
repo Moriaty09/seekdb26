@@ -172,9 +172,10 @@ private:
 
 struct ParquetSchemaElement
 {
-  ParquetSchemaElement() : has_type_(false), type_(-1), name_(), children_(0) {}
+  ParquetSchemaElement() : has_type_(false), type_(-1), repetition_(-1), name_(), children_(0) {}
   bool has_type_;
   int64_t type_;
+  int64_t repetition_;
   std::string name_;
   int64_t children_;
 };
@@ -186,6 +187,7 @@ int parse_parquet_schema_element(CompactReader &reader, ParquetSchemaElement &el
     OZ (reader.field(last, id, type));
     if (OB_FAIL(ret) || 0 == type) break;
     if (1 == id && (4 == type || 5 == type || 6 == type)) { elem.has_type_ = true; OZ (reader.sint(elem.type_)); }
+    else if (3 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.repetition_));
     else if (4 == id && 8 == type) OZ (reader.binary(elem.name_));
     else if (5 == id && (4 == type || 5 == type || 6 == type)) OZ (reader.sint(elem.children_));
     else OZ (reader.skip(type));
@@ -252,30 +254,134 @@ ObFileTableJsonlReader::~ObFileTableJsonlReader()
   }
 }
 
-ObFileTableParquetReader::ObFileTableParquetReader()
-  : file_(nullptr), path_(), footer_offset_(0), next_page_offset_(4), remaining_rows_(0),
-    page_value_idx_(0), page_physical_idx_(0), physical_type_(-1), page_nulls_(), page_values_() {}
+struct ObFileTableParquetReader::Impl
+{
+  struct Chunk {
+    Chunk() : start_(-1), end_(-1), value_count_(0), codec_(-1) {}
+    int64_t start_;
+    int64_t end_;
+    int64_t value_count_;
+    int64_t codec_;
+  };
+  struct Column {
+    Column() : physical_type_(-1), chunk_idx_(0), next_offset_(0), chunk_end_(0),
+               chunk_remaining_(0), page_value_idx_(0), page_physical_idx_(0) {}
+    int64_t physical_type_;
+    std::vector<Chunk> chunks_;
+    size_t chunk_idx_;
+    int64_t next_offset_;
+    int64_t chunk_end_;
+    int64_t chunk_remaining_;
+    int64_t page_value_idx_;
+    int64_t page_physical_idx_;
+    std::vector<bool> page_nulls_;
+    std::vector<std::string> page_values_;
+  };
+  Impl() : file_(nullptr), remaining_rows_(0), columns_() {}
+  FILE *file_;
+  int64_t remaining_rows_;
+  std::vector<Column> columns_;
+};
+
+namespace
+{
+int parse_parquet_column_metadata(CompactReader &reader,
+                                  ObFileTableParquetReader::Impl::Chunk &chunk,
+                                  int64_t &physical_type)
+{
+  int ret = OB_SUCCESS;
+  int64_t compressed_size = -1, data_offset = -1, dictionary_offset = -1;
+  int16_t last = 0, id = 0; uint8_t type = 0;
+  while (OB_SUCC(ret)) {
+    OZ (reader.field(last, id, type));
+    if (OB_FAIL(ret) || 0 == type) break;
+    if ((1 == id || 4 == id || 5 == id || 7 == id || 9 == id || 11 == id) &&
+        (4 == type || 5 == type || 6 == type)) {
+      int64_t value = 0; OZ (reader.sint(value));
+      if (1 == id) physical_type = value;
+      else if (4 == id) chunk.codec_ = value;
+      else if (5 == id) chunk.value_count_ = value;
+      else if (7 == id) compressed_size = value;
+      else if (9 == id) data_offset = value;
+      else if (11 == id) dictionary_offset = value;
+    } else {
+      OZ (reader.skip(type));
+    }
+  }
+  if (OB_SUCC(ret)) {
+    chunk.start_ = dictionary_offset >= 0 ? std::min(dictionary_offset, data_offset) : data_offset;
+    chunk.end_ = chunk.start_ + compressed_size;
+    if (physical_type < 0 || chunk.codec_ < 0 || chunk.value_count_ < 0 ||
+        chunk.start_ < 4 || compressed_size < 0 || chunk.end_ < chunk.start_) ret = OB_INVALID_DATA;
+  }
+  return ret;
+}
+
+int parse_parquet_column_chunk(CompactReader &reader,
+                               ObFileTableParquetReader::Impl::Chunk &chunk,
+                               int64_t &physical_type)
+{
+  int ret = OB_SUCCESS; int16_t last = 0, id = 0; uint8_t type = 0;
+  while (OB_SUCC(ret)) {
+    OZ (reader.field(last, id, type));
+    if (OB_FAIL(ret) || 0 == type) break;
+    if (3 == id && 12 == type) OZ (parse_parquet_column_metadata(reader, chunk, physical_type));
+    else OZ (reader.skip(type));
+  }
+  return ret;
+}
+
+int parse_parquet_row_group(CompactReader &reader,
+                            std::vector<ObFileTableParquetReader::Impl::Chunk> &chunks,
+                            std::vector<int64_t> &physical_types,
+                            int64_t &row_count)
+{
+  int ret = OB_SUCCESS; int16_t last = 0, id = 0; uint8_t type = 0;
+  while (OB_SUCC(ret)) {
+    OZ (reader.field(last, id, type));
+    if (OB_FAIL(ret) || 0 == type) break;
+    if (1 == id && 9 == type) {
+      uint8_t elem_type = 0; uint64_t count = 0; OZ (reader.list(elem_type, count));
+      if (OB_SUCC(ret) && (12 != elem_type || count > 10000)) ret = OB_INVALID_DATA;
+      chunks.resize(count); physical_types.assign(count, -1);
+      for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) {
+        OZ (parse_parquet_column_chunk(reader, chunks.at(i), physical_types.at(i)));
+      }
+    } else if (3 == id && (4 == type || 5 == type || 6 == type)) {
+      OZ (reader.sint(row_count));
+    } else OZ (reader.skip(type));
+  }
+  return ret;
+}
+} // namespace
+
+ObFileTableParquetReader::ObFileTableParquetReader() : path_(), impl_(nullptr) {}
 ObFileTableParquetReader::~ObFileTableParquetReader() { close(); }
 
 int ObFileTableParquetReader::open(const ObString &path)
 {
   int ret = OB_SUCCESS;
+  if (OB_NOT_NULL(impl_)) return OB_INIT_TWICE;
   path_.assign(path.ptr(), path.length());
+  impl_ = new (std::nothrow) Impl();
+  if (OB_ISNULL(impl_)) return OB_ALLOCATE_MEMORY_FAILED;
   struct stat st;
   uint8_t trailer[8] = {0};
   std::vector<uint8_t> footer;
-  if (OB_NOT_NULL(file_)) ret = OB_INIT_TWICE;
-  else if (OB_ISNULL(file_ = ::fopen(path_.c_str(), "rb"))) ret = OB_FILE_NOT_EXIST;
+  if (OB_ISNULL(impl_->file_ = ::fopen(path_.c_str(), "rb"))) ret = OB_FILE_NOT_EXIST;
   else if (0 != ::stat(path_.c_str(), &st) || st.st_size < 12) ret = OB_INVALID_DATA;
-  else if (0 != ::fseek(file_, st.st_size - 8, SEEK_SET) || 8 != ::fread(trailer, 1, 8, file_)) ret = OB_IO_ERROR;
+  else if (0 != ::fseek(impl_->file_, st.st_size - 8, SEEK_SET) || 8 != ::fread(trailer, 1, 8, impl_->file_)) ret = OB_IO_ERROR;
   else if (0 != MEMCMP(trailer + 4, "PAR1", 4)) ret = OB_INVALID_DATA;
   else {
     const uint32_t len = trailer[0] | (trailer[1] << 8) | (trailer[2] << 16) | (trailer[3] << 24);
-    footer_offset_ = st.st_size - 8 - len;
-    if (len > FILE_SQL_MAX_RECORD_BYTES || footer_offset_ < 4) ret = OB_SIZE_OVERFLOW;
-    else { footer.resize(len); if (0 != ::fseek(file_, footer_offset_, SEEK_SET) || len != ::fread(footer.data(), 1, len, file_)) ret = OB_IO_ERROR; }
+    const int64_t footer_offset = st.st_size - 8 - len;
+    if (len > FILE_SQL_MAX_RECORD_BYTES || footer_offset < 4) ret = OB_SIZE_OVERFLOW;
+    else { footer.resize(len); if (0 != ::fseek(impl_->file_, footer_offset, SEEK_SET) || len != ::fread(footer.data(), 1, len, impl_->file_)) ret = OB_IO_ERROR; }
   }
   std::vector<ParquetSchemaElement> schema;
+  std::vector<std::vector<Impl::Chunk> > row_groups;
+  std::vector<std::vector<int64_t> > row_group_types;
+  std::vector<int64_t> row_group_rows;
   if (OB_SUCC(ret)) {
     CompactReader reader(footer.data(), footer.size());
     int16_t last = 0, id = 0; uint8_t type = 0;
@@ -285,18 +391,37 @@ int ObFileTableParquetReader::open(const ObString &path)
         uint8_t elem_type = 0; uint64_t count = 0; OZ (reader.list(elem_type, count));
         for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) { ParquetSchemaElement e; OZ (parse_parquet_schema_element(reader, e)); if (OB_SUCC(ret)) schema.push_back(e); }
       } else if (3 == id && (4 == type || 5 == type || 6 == type)) {
-        OZ (reader.sint(remaining_rows_));
+        OZ (reader.sint(impl_->remaining_rows_));
+      } else if (4 == id && 9 == type) {
+        uint8_t elem_type = 0; uint64_t count = 0; OZ (reader.list(elem_type, count));
+        if (OB_SUCC(ret) && (12 != elem_type || count > 100000)) ret = OB_INVALID_DATA;
+        row_groups.resize(count); row_group_types.resize(count); row_group_rows.assign(count, -1);
+        for (uint64_t i = 0; OB_SUCC(ret) && i < count; ++i) {
+          OZ (parse_parquet_row_group(reader, row_groups.at(i), row_group_types.at(i), row_group_rows.at(i)));
+        }
       } else OZ (reader.skip(type));
     }
   }
-  if (OB_SUCC(ret) && (2 != schema.size() || !schema.at(1).has_type_)) {
+  if (OB_SUCC(ret) && (schema.size() < 2 || row_groups.empty())) {
     ret = OB_NOT_SUPPORTED;
-    LOG_USER_ERROR(OB_NOT_SUPPORTED, "streaming Parquet scan currently requires one flat column");
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "Parquet file has no flat columns or row groups");
   } else if (OB_SUCC(ret)) {
-    physical_type_ = schema.at(1).type_;
-    next_page_offset_ = 4;
-    page_value_idx_ = page_physical_idx_ = 0;
-    page_nulls_.clear(); page_values_.clear();
+    const size_t column_count = schema.size() - 1;
+    impl_->columns_.resize(column_count);
+    int64_t rows_sum = 0;
+    for (size_t g = 0; OB_SUCC(ret) && g < row_groups.size(); ++g) {
+      if (row_groups.at(g).size() != column_count || row_group_rows.at(g) < 0) ret = OB_INVALID_DATA;
+      else rows_sum += row_group_rows.at(g);
+      for (size_t c = 0; OB_SUCC(ret) && c < column_count; ++c) {
+        if (!schema.at(c + 1).has_type_ || row_group_types.at(g).at(c) != schema.at(c + 1).type_ ||
+            row_groups.at(g).at(c).value_count_ != row_group_rows.at(g)) ret = OB_NOT_SUPPORTED;
+        else {
+          impl_->columns_.at(c).physical_type_ = schema.at(c + 1).type_;
+          impl_->columns_.at(c).chunks_.push_back(row_groups.at(g).at(c));
+        }
+      }
+    }
+    if (OB_SUCC(ret) && rows_sum != impl_->remaining_rows_) ret = OB_INVALID_DATA;
   }
   if (OB_FAIL(ret)) close();
   return ret;
@@ -305,8 +430,11 @@ int ObFileTableParquetReader::open(const ObString &path)
 int ObFileTableParquetReader::close()
 {
   int ret = OB_SUCCESS;
-  if (OB_NOT_NULL(file_)) { if (0 != ::fclose(file_)) ret = OB_IO_ERROR; file_ = nullptr; }
-  page_nulls_.clear(); page_values_.clear();
+  if (OB_NOT_NULL(impl_)) {
+    if (OB_NOT_NULL(impl_->file_) && 0 != ::fclose(impl_->file_)) ret = OB_IO_ERROR;
+    delete impl_;
+    impl_ = nullptr;
+  }
   return ret;
 }
 
@@ -318,15 +446,21 @@ int ObFileTableParquetReader::rewind()
   return ret;
 }
 
-int ObFileTableParquetReader::load_page()
+int ObFileTableParquetReader::load_page(int64_t column_idx)
 {
   int ret = OB_SUCCESS;
-  if (next_page_offset_ >= footer_offset_) ret = OB_ITER_END;
+  if (OB_ISNULL(impl_) || column_idx < 0 || column_idx >= static_cast<int64_t>(impl_->columns_.size())) return OB_INVALID_ARGUMENT;
+  Impl::Column &column = impl_->columns_.at(column_idx);
+  while (0 == column.chunk_remaining_ && column.chunk_idx_ < column.chunks_.size()) {
+    const Impl::Chunk &chunk = column.chunks_.at(column.chunk_idx_++);
+    column.next_offset_ = chunk.start_; column.chunk_end_ = chunk.end_; column.chunk_remaining_ = chunk.value_count_;
+  }
+  if (0 == column.chunk_remaining_ || column.next_offset_ >= column.chunk_end_) ret = OB_ITER_END;
   std::vector<uint8_t> header_buf;
-  const int64_t available = footer_offset_ - next_page_offset_;
+  const int64_t available = column.chunk_end_ - column.next_offset_;
   const size_t probe = static_cast<size_t>(std::min<int64_t>(available, 64 * 1024));
   header_buf.resize(probe);
-  if (OB_SUCC(ret) && (0 != ::fseek(file_, next_page_offset_, SEEK_SET) || probe != ::fread(header_buf.data(), 1, probe, file_))) ret = OB_IO_ERROR;
+  if (OB_SUCC(ret) && (0 != ::fseek(impl_->file_, column.next_offset_, SEEK_SET) || probe != ::fread(header_buf.data(), 1, probe, impl_->file_))) ret = OB_IO_ERROR;
   int64_t page_type = -1, uncompressed = -1, compressed = -1, num_values = -1;
   int64_t encoding = -1, def_len = 0, rep_len = 0;
   bool values_compressed = true;
@@ -353,7 +487,7 @@ int ObFileTableParquetReader::load_page()
     }
     header_len = reader.position();
   }
-  if (OB_SUCC(ret) && (3 != page_type || num_values < 0 || 0 != encoding || compressed < 0 || uncompressed < 0 ||
+  if (OB_SUCC(ret) && (3 != page_type || num_values < 0 || num_values > column.chunk_remaining_ || 0 != encoding || compressed < 0 || uncompressed < 0 ||
                        compressed > static_cast<int64_t>(FILE_SQL_MAX_RECORD_BYTES) || rep_len != 0 || def_len < 0 || def_len > compressed)) {
     ret = OB_NOT_SUPPORTED;
     LOG_USER_ERROR(OB_NOT_SUPPORTED, "unsupported Parquet page encoding");
@@ -361,67 +495,78 @@ int ObFileTableParquetReader::load_page()
   std::vector<uint8_t> body;
   if (OB_SUCC(ret)) {
     body.resize(compressed);
-    if (0 != ::fseek(file_, next_page_offset_ + header_len, SEEK_SET) || compressed != static_cast<int64_t>(::fread(body.data(), 1, compressed, file_))) ret = OB_IO_ERROR;
-    next_page_offset_ += header_len + compressed;
+    if (column.next_offset_ + static_cast<int64_t>(header_len) + compressed > column.chunk_end_) ret = OB_INVALID_DATA;
+    else if (0 != ::fseek(impl_->file_, column.next_offset_ + header_len, SEEK_SET) || compressed != static_cast<int64_t>(::fread(body.data(), 1, compressed, impl_->file_))) ret = OB_IO_ERROR;
+    column.next_offset_ += header_len + compressed;
   }
-  page_nulls_.clear(); page_values_.clear(); page_value_idx_ = page_physical_idx_ = 0;
+  column.page_nulls_.clear(); column.page_values_.clear(); column.page_value_idx_ = column.page_physical_idx_ = 0;
   if (OB_SUCC(ret)) {
     // Decode the RLE/bit-packed definition levels (bit width one for flat optional columns).
-    if (0 == def_len) page_nulls_.assign(num_values, false);
+    if (0 == def_len) column.page_nulls_.assign(num_values, false);
     else {
       size_t p = rep_len, end = rep_len + def_len;
-      while (OB_SUCC(ret) && p < end && page_nulls_.size() < static_cast<size_t>(num_values)) {
+      while (OB_SUCC(ret) && p < end && column.page_nulls_.size() < static_cast<size_t>(num_values)) {
         uint64_t run = 0; uint32_t shift = 0; uint8_t b = 0;
         do { if (p >= end || shift >= 64) { ret = OB_INVALID_DATA; break; } b = body[p++]; run |= static_cast<uint64_t>(b & 0x7f) << shift; shift += 7; } while (b & 0x80);
         if (OB_FAIL(ret)) break;
-        if (0 == (run & 1)) { const uint64_t count = run >> 1; if (p >= end) { ret = OB_INVALID_DATA; break; } const bool present = 0 != body[p++]; for (uint64_t i = 0; i < count && page_nulls_.size() < static_cast<size_t>(num_values); ++i) page_nulls_.push_back(!present); }
-        else { const uint64_t groups = run >> 1; for (uint64_t g = 0; OB_SUCC(ret) && g < groups; ++g) { if (p >= end) { ret = OB_INVALID_DATA; break; } const uint8_t bits = body[p++]; for (int bit = 0; bit < 8 && page_nulls_.size() < static_cast<size_t>(num_values); ++bit) page_nulls_.push_back(0 == (bits & (1 << bit))); } }
+        if (0 == (run & 1)) { const uint64_t count = run >> 1; if (p >= end) { ret = OB_INVALID_DATA; break; } const bool present = 0 != body[p++]; for (uint64_t i = 0; i < count && column.page_nulls_.size() < static_cast<size_t>(num_values); ++i) column.page_nulls_.push_back(!present); }
+        else { const uint64_t groups = run >> 1; for (uint64_t g = 0; OB_SUCC(ret) && g < groups; ++g) { if (p >= end) { ret = OB_INVALID_DATA; break; } const uint8_t bits = body[p++]; for (int bit = 0; bit < 8 && column.page_nulls_.size() < static_cast<size_t>(num_values); ++bit) column.page_nulls_.push_back(0 == (bits & (1 << bit))); } }
       }
-      if (OB_SUCC(ret) && page_nulls_.size() != static_cast<size_t>(num_values)) ret = OB_INVALID_DATA;
+      if (OB_SUCC(ret) && column.page_nulls_.size() != static_cast<size_t>(num_values)) ret = OB_INVALID_DATA;
     }
   }
   std::vector<uint8_t> values;
   if (OB_SUCC(ret)) {
     const size_t value_off = rep_len + def_len;
-    if (values_compressed) OZ (snappy_decompress(body.data() + value_off, body.size() - value_off, values));
+    const Impl::Chunk &chunk = column.chunks_.at(column.chunk_idx_ - 1);
+    if (values_compressed && 1 == chunk.codec_) OZ (snappy_decompress(body.data() + value_off, body.size() - value_off, values));
+    else if (values_compressed && 0 != chunk.codec_) ret = OB_NOT_SUPPORTED;
     else values.assign(body.begin() + value_off, body.end());
   }
   if (OB_SUCC(ret)) {
-    size_t p = 0; int64_t non_null = 0; for (bool is_null : page_nulls_) if (!is_null) ++non_null;
+    size_t p = 0; int64_t non_null = 0; for (bool is_null : column.page_nulls_) if (!is_null) ++non_null;
     for (int64_t i = 0; OB_SUCC(ret) && i < non_null; ++i) {
       std::string value;
-      if (0 == physical_type_) {
+      if (0 == column.physical_type_) {
         if (p / 8 >= values.size()) ret = OB_INVALID_DATA; else { value = (values[p / 8] & (1 << (p % 8))) ? "true" : "false"; ++p; }
-      } else if (1 == physical_type_) {
+      } else if (1 == column.physical_type_) {
         if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { int32_t v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
-      } else if (2 == physical_type_) {
+      } else if (2 == column.physical_type_) {
         if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { int64_t v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
-      } else if (4 == physical_type_) {
+      } else if (4 == column.physical_type_) {
         if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { float v; MEMCPY(&v, values.data() + p, 4); p += 4; value = std::to_string(v); }
-      } else if (5 == physical_type_) {
+      } else if (5 == column.physical_type_) {
         if (p + 8 > values.size()) ret = OB_INVALID_DATA; else { double v; MEMCPY(&v, values.data() + p, 8); p += 8; value = std::to_string(v); }
-      } else if (6 == physical_type_) {
+      } else if (6 == column.physical_type_) {
         if (p + 4 > values.size()) ret = OB_INVALID_DATA; else { uint32_t len; MEMCPY(&len, values.data() + p, 4); p += 4; if (len > values.size() - p) ret = OB_INVALID_DATA; else { value.assign(reinterpret_cast<char *>(values.data() + p), len); p += len; } }
       } else ret = OB_NOT_SUPPORTED;
-      if (OB_SUCC(ret)) page_values_.push_back(value);
+      if (OB_SUCC(ret)) column.page_values_.push_back(value);
     }
   }
   return ret;
 }
 
-int ObFileTableParquetReader::next(std::string &field, bool &is_null)
+int ObFileTableParquetReader::next(std::vector<std::string> &fields, std::vector<bool> &is_null)
 {
   int ret = OB_SUCCESS;
-  if (remaining_rows_ <= 0) ret = OB_ITER_END;
-  while (OB_SUCC(ret) && page_value_idx_ >= static_cast<int64_t>(page_nulls_.size())) OZ (load_page());
-  if (OB_SUCC(ret)) {
-    is_null = page_nulls_.at(page_value_idx_++);
-    field.clear();
-    if (!is_null) {
-      if (page_physical_idx_ >= static_cast<int64_t>(page_values_.size())) ret = OB_INVALID_DATA;
-      else field = page_values_.at(page_physical_idx_++);
+  if (OB_ISNULL(impl_)) ret = OB_NOT_INIT;
+  else if (impl_->remaining_rows_ <= 0) ret = OB_ITER_END;
+  else {
+    fields.assign(impl_->columns_.size(), std::string());
+    is_null.assign(impl_->columns_.size(), false);
+    for (int64_t i = 0; OB_SUCC(ret) && i < static_cast<int64_t>(impl_->columns_.size()); ++i) {
+      Impl::Column &column = impl_->columns_.at(i);
+      while (OB_SUCC(ret) && column.page_value_idx_ >= static_cast<int64_t>(column.page_nulls_.size())) OZ (load_page(i));
+      if (OB_SUCC(ret)) {
+        is_null.at(i) = column.page_nulls_.at(column.page_value_idx_++);
+        if (!is_null.at(i)) {
+          if (column.page_physical_idx_ >= static_cast<int64_t>(column.page_values_.size())) ret = OB_INVALID_DATA;
+          else fields.at(i) = column.page_values_.at(column.page_physical_idx_++);
+        }
+        --column.chunk_remaining_;
+      }
     }
-    --remaining_rows_;
+    if (OB_SUCC(ret)) --impl_->remaining_rows_;
   }
   return ret;
 }
@@ -986,6 +1131,7 @@ int ObFileTableUtils::infer_parquet_schema(ObIAllocator &allocator, ObFileTableD
       ret = OB_NOT_SUPPORTED;
     } else {
       OZ (make_column_name(allocator, src.name_, i - 1, def.columns_, col.name_));
+      OX (col.nullable_ = 0 != src.repetition_);
       if (OB_FAIL(ret)) {
       } else if (0 == src.type_) {
         col.meta_.set_tinyint(); col.accuracy_.set_precision(1); col.accuracy_.set_scale(0);
