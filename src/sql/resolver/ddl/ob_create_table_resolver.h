@@ -85,6 +85,9 @@ private:
                                       share::schema::ObTableSchema &table_schema,
                                       obcall::ObCreateTableArg &create_arg);
   int resolve_ai_column_max_retries(const ParseNode *options, int64_t &max_retries) const;
+  int collect_ai_dependency_column_ids(const ParseNode &expr,
+                                       const share::schema::ObTableSchema &table_schema,
+                                       common::ObIArray<uint64_t> &column_ids) const;
   int resolve_primary_key_node(const ParseNode &pk_node, common::ObArray<ObColumnResolveStat> &stats);
   int resolve_table_elements(const ParseNode *node,
                              common::ObArray<int> &idx_index_node,

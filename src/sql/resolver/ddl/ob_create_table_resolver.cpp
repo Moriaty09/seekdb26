@@ -600,6 +600,41 @@ int ObCreateTableResolver::resolve_ai_column_max_retries(const ParseNode *option
   return ret;
 }
 
+int ObCreateTableResolver::collect_ai_dependency_column_ids(
+    const ParseNode &expr,
+    const ObTableSchema &table_schema,
+    ObIArray<uint64_t> &column_ids) const
+{
+  int ret = OB_SUCCESS;
+  if (T_COLUMN_REF == expr.type_ && expr.num_child_ > COLUMN_NAME_NODE
+      && OB_NOT_NULL(expr.children_[COLUMN_NAME_NODE])) {
+    const ParseNode *name_node = expr.children_[COLUMN_NAME_NODE];
+    const ObString name(static_cast<int32_t>(name_node->str_len_), name_node->str_value_);
+    const ObColumnSchemaV2 *column = table_schema.get_column_schema(name);
+    if (OB_ISNULL(column)) {
+      ret = OB_ERR_BAD_FIELD_ERROR;
+      LOG_USER_ERROR(OB_ERR_BAD_FIELD_ERROR, name.length(), name.ptr(),
+                     table_name_.length(), table_name_.ptr());
+    } else {
+      bool found = false;
+      for (int64_t i = 0; !found && i < column_ids.count(); ++i) {
+        found = column_ids.at(i) == column->get_column_id();
+      }
+      if (!found) {
+        OZ (column_ids.push_back(column->get_column_id()));
+      }
+    }
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < expr.num_child_; ++i) {
+    if (OB_NOT_NULL(expr.children_[i])) {
+      OZ (SMART_CALL(collect_ai_dependency_column_ids(*expr.children_[i],
+                                                      table_schema,
+                                                      column_ids)));
+    }
+  }
+  return ret;
+}
+
 int ObCreateTableResolver::add_ai_column_physical_metadata(
     const ParseNode &definition,
     const ObColumnSchemaV2 &result_column,
@@ -614,8 +649,28 @@ int ObCreateTableResolver::add_ai_column_physical_metadata(
   if (OB_ISNULL(expr) || OB_ISNULL(expr->str_value_)) {
     ret = OB_ERR_UNEXPECTED;
   } else {
-    ai_def.normalized_expr_.assign_ptr(expr->str_value_, static_cast<int32_t>(expr->str_len_));
+    const ObString raw_expr(static_cast<int32_t>(expr->str_len_), expr->str_value_);
+    if (result_column.is_json()) {
+      ObSqlString typed_expr;
+      OZ (typed_expr.append_fmt("%.*s /* Return exactly one valid JSON value */",
+                                raw_expr.length(), raw_expr.ptr()));
+      OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
+    } else {
+      ai_def.normalized_expr_ = raw_expr;
+    }
     OZ (resolve_ai_column_max_retries(definition.children_[4], ai_def.max_retries_));
+    ObSEArray<uint64_t, 4> dependency_ids;
+    OZ (collect_ai_dependency_column_ids(*expr, table_schema, dependency_ids));
+    if (OB_SUCC(ret) && !dependency_ids.empty()) {
+      ObSqlString dependency_text;
+      for (int64_t i = 0; OB_SUCC(ret) && i < dependency_ids.count(); ++i) {
+        if (i > 0) {
+          OZ (dependency_text.append(","));
+        }
+        OZ (dependency_text.append_fmt("%lu", dependency_ids.at(i)));
+      }
+      OZ (ob_write_string(*allocator_, dependency_text.string(), ai_def.dependency_column_ids_));
+    }
   }
 
   const char *suffixes[] = {"state", "request", "result_spec"};
