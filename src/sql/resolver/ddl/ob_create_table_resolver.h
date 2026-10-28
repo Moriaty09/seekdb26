@@ -76,6 +76,10 @@ private:
   int add_primary_key_part(const common::ObString &column_name, common::ObArray<ObColumnResolveStat> &stats, int64_t &pk_data_length);
   int add_hidden_tablet_seq_col();
   int check_column_name_duplicate(const ParseNode *node);
+  int validate_ai_column_dependencies(const ParseNode &table_elements);
+  int find_ai_column_dependency(const ParseNode &expr,
+                                const common::ObIArray<common::ObString> &ai_column_names,
+                                common::ObString &dependency_name) const;
   int resolve_primary_key_node(const ParseNode &pk_node, common::ObArray<ObColumnResolveStat> &stats);
   int resolve_table_elements(const ParseNode *node,
                              common::ObArray<int> &idx_index_node,

@@ -512,6 +512,64 @@ int ObCreateTableResolver::check_column_name_duplicate(const ParseNode *node)
   return ret;
 }
 
+int ObCreateTableResolver::find_ai_column_dependency(
+    const ParseNode &expr,
+    const ObIArray<ObString> &ai_column_names,
+    ObString &dependency_name) const
+{
+  int ret = OB_SUCCESS;
+  if (T_COLUMN_REF == expr.type_ && expr.num_child_ > COLUMN_NAME_NODE
+      && OB_NOT_NULL(expr.children_[COLUMN_NAME_NODE])) {
+    const ParseNode *name_node = expr.children_[COLUMN_NAME_NODE];
+    const ObString name(static_cast<int32_t>(name_node->str_len_), name_node->str_value_);
+    for (int64_t i = 0; i < ai_column_names.count() && dependency_name.empty(); ++i) {
+      if (0 == name.case_compare(ai_column_names.at(i))) {
+        dependency_name = name;
+      }
+    }
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && dependency_name.empty()
+       && i < expr.num_child_; ++i) {
+    if (OB_NOT_NULL(expr.children_[i])) {
+      OZ (SMART_CALL(find_ai_column_dependency(*expr.children_[i],
+                                               ai_column_names,
+                                               dependency_name)));
+    }
+  }
+  return ret;
+}
+
+int ObCreateTableResolver::validate_ai_column_dependencies(const ParseNode &table_elements)
+{
+  int ret = OB_SUCCESS;
+  ObSEArray<ObString, 4> ai_column_names;
+  for (int64_t i = 0; OB_SUCC(ret) && i < table_elements.num_child_; ++i) {
+    const ParseNode *element = table_elements.children_[i];
+    if (OB_NOT_NULL(element)
+        && AI_COLUMN_DEFINITION_NUM_CHILD == element->num_child_
+        && OB_NOT_NULL(element->children_[COLUMN_REF_NODE])
+        && OB_NOT_NULL(element->children_[COLUMN_REF_NODE]->children_[COLUMN_NAME_NODE])) {
+      const ParseNode *name_node = element->children_[COLUMN_REF_NODE]->children_[COLUMN_NAME_NODE];
+      OZ (ai_column_names.push_back(ObString(static_cast<int32_t>(name_node->str_len_),
+                                             name_node->str_value_)));
+    }
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < table_elements.num_child_; ++i) {
+    const ParseNode *element = table_elements.children_[i];
+    if (OB_NOT_NULL(element)
+        && AI_COLUMN_DEFINITION_NUM_CHILD == element->num_child_
+        && OB_NOT_NULL(element->children_[3])) {
+      ObString dependency_name;
+      OZ (find_ai_column_dependency(*element->children_[3], ai_column_names, dependency_name));
+      if (OB_SUCC(ret) && !dependency_name.empty()) {
+        ret = OB_NOT_SUPPORTED;
+        LOG_USER_ERROR(OB_NOT_SUPPORTED, "AI COLUMN depending on another AI COLUMN is");
+      }
+    }
+  }
+  return ret;
+}
+
 int ObCreateTableResolver::resolve_primary_key_node(const ParseNode &pk_node,
                                                     ObArray<ObColumnResolveStat> &stats)
 {
@@ -641,6 +699,8 @@ int ObCreateTableResolver::resolve_table_elements(const ParseNode *node,
       if (OB_FAIL(get_resolve_stats_from_table_schema(table_schema, stats))) {
       }
     } else if (OB_FAIL(check_column_name_duplicate(node))) {
+    } else if ((RESOLVE_ALL == resolve_rule || RESOLVE_COL_ONLY == resolve_rule)
+               && OB_FAIL(validate_ai_column_dependencies(*node))) {
     }
     // To implement defining generated columns in any order, we need to traverse the node twice
     // First traversal, parse all column names, generate column_schema and store in resolved_cols
