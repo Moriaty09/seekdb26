@@ -40,8 +40,7 @@ public:
         coll_type_(ObCollationType::CS_TYPE_INVALID),
         ctx_(nullptr),
         hub_(hub),
-        segmenters_{nullptr, nullptr, nullptr, nullptr},
-        segmenter_count_(0),
+        segmenters_(allocator_),
         cache_main_(allocator),
         cache_quan_(allocator),
         cache_stop_(allocator),
@@ -97,9 +96,7 @@ private:
   ObCollationType coll_type_;
   TokenizeContext *ctx_;
   ObFTDictHub *hub_;
-  static constexpr int64_t SEGMENTER_CAPACITY = 4;
-  ObIIKProcessor *segmenters_[SEGMENTER_CAPACITY];
-  int64_t segmenter_count_;
+  ObList<ObIIKProcessor *, ObIAllocator> segmenters_;
 
   // For now there's no change of dict in one query, so we can pin dict this level.
   ObFTCacheRangeContainer cache_main_;
