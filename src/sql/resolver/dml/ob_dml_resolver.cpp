@@ -4138,8 +4138,18 @@ int ObDMLResolver::resolve_file_table_item(const ParseNode &parse_tree,
       const ParseNode *option = params->children_[i];
       if (OB_ISNULL(option) || T_OP_EQ != option->type_ || option->num_child_ != 2 ||
           OB_ISNULL(option->children_[0]) || OB_ISNULL(option->children_[1])) {
-        ret = OB_ERR_PARSER_SYNTAX;
-        LOG_USER_ERROR(OB_ERR_PARSER_SYNTAX, "File SQL options must use name = value syntax");
+        ret = OB_ERR_PARSE_SQL;
+        const char *error_text = OB_NOT_NULL(option) && OB_NOT_NULL(option->raw_text_)
+                                     ? option->raw_text_
+                                     : "File SQL option";
+        const int32_t error_text_len = OB_NOT_NULL(option) && option->text_len_ > 0
+                                           ? option->text_len_
+                                           : static_cast<int32_t>(STRLEN(error_text));
+        LOG_USER_ERROR(OB_ERR_PARSE_SQL,
+                       ob_errpkt_strerror(OB_ERR_PARSER_SYNTAX),
+                       error_text_len,
+                       error_text,
+                       1);
       } else {
         const ParseNode *key_node = option->children_[0];
         const ParseNode *value_node = option->children_[1];

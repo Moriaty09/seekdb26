@@ -563,7 +563,6 @@ int ObCreateTableResolver::validate_ai_column_dependencies(const ParseNode &tabl
       OZ (find_ai_column_dependency(*element->children_[3], ai_column_names, dependency_name));
       if (OB_SUCC(ret) && !dependency_name.empty()) {
         ret = OB_NOT_SUPPORTED;
-        LOG_USER_ERROR(OB_NOT_SUPPORTED, "AI COLUMN depending on another AI COLUMN is");
       }
     }
   }
