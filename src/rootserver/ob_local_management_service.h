@@ -104,6 +104,18 @@ public:
     ObLocalManagementService &local_management_service_;
   };
 
+  class ObAIColumnWorkerTask : public common::ObTimerTask
+  {
+  public:
+    explicit ObAIColumnWorkerTask(ObLocalManagementService &local_management_service)
+        : local_management_service_(local_management_service)
+    {}
+    virtual ~ObAIColumnWorkerTask() = default;
+    virtual void runTimerTask() override;
+  private:
+    ObLocalManagementService &local_management_service_;
+  };
+
 
 public:
   ObLocalManagementService();
@@ -304,6 +316,7 @@ private:
   int init_sequence_id();
   int start_timer_tasks();
   int stop_timer_tasks();
+  int process_ai_column_tasks();
   int init_sys_admin_ctx(ObSystemAdminCtx &ctx);
   int clear_special_cluster_schema_status();
   int check_database_config(bool &db_config_ok,
@@ -359,12 +372,14 @@ private:
   common::ObTimer load_ddl_task_timer_;
   common::ObTimer deadlock_event_clear_task_timer_;
   common::ObTimer purge_recyclebin_task_timer_;
+  common::ObTimer ai_column_worker_timer_;
 
   // async timer tasks
   ObLoadDDLTask load_ddl_task_; // repeat on failure and cancel on success
   ObDeadlockEventClearTask deadlock_event_clear_task_;  // repeat & no retry
 
   ObPurgeRecyclebinTask purge_recyclebin_task_;     // periodic schedule
+  ObAIColumnWorkerTask ai_column_worker_task_;
   // for set_config
   ObLatch set_config_lock_;
 

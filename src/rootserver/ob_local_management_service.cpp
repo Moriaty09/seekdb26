@@ -102,9 +102,11 @@ ObLocalManagementService::ObLocalManagementService()
     load_ddl_task_timer_(),
     deadlock_event_clear_task_timer_(),
     purge_recyclebin_task_timer_(),
+    ai_column_worker_timer_(),
     load_ddl_task_(*this),
     deadlock_event_clear_task_(*this),
     purge_recyclebin_task_(*this),
+    ai_column_worker_task_(*this),
     snapshot_manager_(),
     core_meta_table_version_(0),
     baseline_schema_version_(0),
@@ -158,6 +160,8 @@ int ObLocalManagementService::init(ObConfigManager &config_mgr,
     FLOG_WARN("init local deadlock event clear task timer failed", KR(ret));
   } else if (OB_FAIL(purge_recyclebin_task_timer_.init("LocalRecycle", ObMemAttr("LocalRecycle")))) {
     FLOG_WARN("init local purge recyclebin task timer failed", KR(ret));
+  } else if (OB_FAIL(ai_column_worker_timer_.init("AIColWorker", ObMemAttr("AIColWorker")))) {
+    FLOG_WARN("init AI column worker timer failed", KR(ret));
   } else if (OB_FAIL(root_minor_freeze_.init())) {
     // init root minor freeze
     FLOG_WARN("init root_minor_freeze_ failed", KR(ret));
@@ -200,6 +204,7 @@ void ObLocalManagementService::destroy()
   load_ddl_task_timer_.destroy();
   deadlock_event_clear_task_timer_.destroy();
   purge_recyclebin_task_timer_.destroy();
+  ai_column_worker_timer_.destroy();
   FLOG_INFO("task timer destroy");
 
   if (OB_SUCC(ret)) {
@@ -232,6 +237,8 @@ int ObLocalManagementService::start_service()
       FLOG_WARN("event table clear task timer start failed", KR(ret));
     } else if (OB_FAIL(purge_recyclebin_task_timer_.start())) {
       FLOG_WARN("purge recyclebin task timer start failed", KR(ret));
+    } else if (OB_FAIL(ai_column_worker_timer_.start())) {
+      FLOG_WARN("AI column worker timer start failed", KR(ret));
     }
   }
 
@@ -317,6 +324,7 @@ int ObLocalManagementService::stop()
       load_ddl_task_timer_.stop();
       deadlock_event_clear_task_timer_.stop();
       purge_recyclebin_task_timer_.stop();
+      ai_column_worker_timer_.stop();
       FLOG_INFO("task timer stop");
       max_id_cache_mgr_.reset();
       FLOG_INFO("max id cache mgr reset");
@@ -337,6 +345,7 @@ void ObLocalManagementService::wait()
   if (load_ddl_task_timer_.inited()) { load_ddl_task_timer_.wait(); }
   if (deadlock_event_clear_task_timer_.inited()) { deadlock_event_clear_task_timer_.wait(); }
   if (purge_recyclebin_task_timer_.inited()) { purge_recyclebin_task_timer_.wait(); }
+  if (ai_column_worker_timer_.inited()) { ai_column_worker_timer_.wait(); }
   FLOG_INFO("task timer exit success");
   THE_ADMIN_JOB_TABLE.reset_max_job_id();
   int64_t cost = ObTimeUtility::current_time() - start_time;
@@ -1908,6 +1917,110 @@ void ObLocalManagementService::ObDeadlockEventClearTask::runTimerTask()
   }
 }
 
+void ObLocalManagementService::ObAIColumnWorkerTask::runTimerTask()
+{
+  const int ret = local_management_service_.process_ai_column_tasks();
+  if (OB_SUCCESS != ret && OB_ITER_END != ret) {
+    LOG_WARN("AI column worker iteration failed", KR(ret));
+  }
+}
+
+int ObLocalManagementService::process_ai_column_tasks()
+{
+  int ret = OB_SUCCESS;
+  ObSqlString select_sql;
+  ObSqlString update_sql;
+  ObSqlString finish_sql;
+  ObSqlString task_filter;
+  int64_t affected_rows = 0;
+  uint64_t table_id = OB_INVALID_ID;
+  int64_t retry_count = 0;
+  int64_t max_retries = 0;
+  ObString request_id;
+  ObString rowkey_predicate;
+  ObString database_name;
+  ObString table_name;
+  ObString assignments;
+
+  OZ (select_sql.assign(
+      "SELECT q.table_id,q.request_id,q.rowkey_predicate,"
+      "MAX(q.retry_count) retry_count,MAX(a.max_retries) max_retries,"
+      "d.database_name,t.table_name,"
+      "GROUP_CONCAT(CONCAT('`',a.column_name,'`=(',a.normalized_expr,')') "
+      "ORDER BY q.column_id SEPARATOR ',') assignments "
+      "FROM oceanbase.__all_ai_column_task q "
+      "JOIN oceanbase.__all_ai_column a "
+      "ON a.table_id=q.table_id AND a.column_id=q.column_id "
+      "JOIN oceanbase.__all_table t ON t.table_id=q.table_id "
+      "JOIN oceanbase.__all_database d ON d.database_id=t.database_id "
+      "WHERE q.eligible_ts<=NOW(6) AND q.request_id=("
+      "SELECT request_id FROM oceanbase.__all_ai_column_task "
+      "WHERE eligible_ts<=NOW(6) ORDER BY task_id LIMIT 1) "
+      "GROUP BY q.table_id,q.request_id,q.rowkey_predicate,"
+      "d.database_name,t.table_name LIMIT 1"));
+
+  HEAP_VAR(ObMySQLProxy::MySQLResult, res) {
+    sqlclient::ObMySQLResult *result = NULL;
+    if (OB_FAIL(ret)) {
+    } else if (OB_FAIL(sql_proxy_.read(res, select_sql.ptr()))) {
+    } else if (OB_ISNULL(result = res.get_result())) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (OB_FAIL(result->next())) {
+    } else {
+      EXTRACT_INT_FIELD_MYSQL(*result, "table_id", table_id, uint64_t);
+      EXTRACT_INT_FIELD_MYSQL(*result, "retry_count", retry_count, int64_t);
+      EXTRACT_INT_FIELD_MYSQL(*result, "max_retries", max_retries, int64_t);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "request_id", request_id);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "rowkey_predicate", rowkey_predicate);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "database_name", database_name);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "table_name", table_name);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "assignments", assignments);
+      if (OB_SUCC(ret)) {
+        OZ (update_sql.assign_fmt(
+            "UPDATE `%.*s`.`%.*s` SET %.*s WHERE %.*s",
+            database_name.length(), database_name.ptr(),
+            table_name.length(), table_name.ptr(),
+            assignments.length(), assignments.ptr(),
+            rowkey_predicate.length(), rowkey_predicate.ptr()));
+        OZ (task_filter.assign_fmt(
+            "table_id=%lu AND request_id='%.*s' AND rowkey_predicate='%.*s'",
+            table_id, request_id.length(), request_id.ptr(),
+            rowkey_predicate.length(), rowkey_predicate.ptr()));
+      }
+    }
+  }
+
+  if (OB_ITER_END == ret) {
+    // An empty queue is the normal steady state for the periodic worker.
+  } else if (OB_SUCC(ret)) {
+    const int execute_ret = sql_proxy_.write(update_sql.ptr(), affected_rows);
+    if (OB_SUCCESS != execute_ret) {
+      LOG_WARN("execute AI column expression failed", KR(execute_ret), K(update_sql),
+               K(retry_count), K(max_retries));
+    }
+    const bool row_updated = OB_SUCCESS == execute_ret && affected_rows > 0;
+    if (row_updated || (OB_SUCCESS != execute_ret && retry_count >= max_retries)) {
+      OZ (finish_sql.assign_fmt(
+          "DELETE FROM oceanbase.__all_ai_column_task "
+          "WHERE %s", task_filter.ptr()));
+    } else {
+      OZ (finish_sql.assign_fmt(
+          "UPDATE oceanbase.__all_ai_column_task "
+          "SET state=%d,retry_count=retry_count+%d,"
+          "eligible_ts=DATE_ADD(NOW(6),INTERVAL 500000 MICROSECOND),"
+          "last_error='AI expression execution failed' "
+          "WHERE %s",
+          OB_SUCCESS == execute_ret ? 0 : 3,
+          OB_SUCCESS == execute_ret ? 0 : 1,
+          task_filter.ptr()));
+    }
+    if (OB_SUCC(ret)) {
+      OZ (sql_proxy_.write(finish_sql.ptr(), affected_rows));
+    }
+  }
+  return ret;
+}
+
 int ObLocalManagementService::start_timer_tasks()
 {
   int ret = OB_SUCCESS;
@@ -1933,6 +2046,14 @@ int ObLocalManagementService::start_timer_tasks()
     }
   }
 
+  if (OB_SUCC(ret) && !ai_column_worker_timer_.task_exist(ai_column_worker_task_)) {
+    const int64_t interval = 100 * 1000L;
+    if (OB_FAIL(ai_column_worker_timer_.schedule(
+            ai_column_worker_task_, interval, true, true))) {
+      LOG_WARN("schedule AI column worker failed", KR(ret));
+    }
+  }
+
   LOG_INFO("start all timer tasks finish", K(ret));
   return ret;
 }
@@ -1946,6 +2067,7 @@ int ObLocalManagementService::stop_timer_tasks()
     load_ddl_task_timer_.cancel_task(load_ddl_task_);
     deadlock_event_clear_task_timer_.cancel_task(deadlock_event_clear_task_);
     purge_recyclebin_task_timer_.cancel_task(purge_recyclebin_task_);
+    ai_column_worker_timer_.cancel_task(ai_column_worker_task_);
   }
 
   //stop other timer tasks here

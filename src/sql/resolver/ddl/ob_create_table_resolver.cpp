@@ -651,8 +651,18 @@ int ObCreateTableResolver::add_ai_column_physical_metadata(
     const ObString raw_expr(static_cast<int32_t>(expr->str_len_), expr->str_value_);
     if (result_column.is_json()) {
       ObSqlString typed_expr;
-      OZ (typed_expr.append_fmt("%.*s /* Return exactly one valid JSON value */",
-                                raw_expr.length(), raw_expr.ptr()));
+      OZ (typed_expr.append_fmt(
+          "%.*s, '{\"__system_prompt\":"
+          "\"Return exactly one valid JSON value\"}') "
+          "/* Return exactly one valid JSON value */",
+          raw_expr.length() - 1, raw_expr.ptr()));
+      OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
+    } else if (result_column.get_meta_type().is_integer_type()) {
+      ObSqlString typed_expr;
+      OZ (typed_expr.append_fmt(
+          "%.*s, '{\"__system_prompt\":"
+          "\"Return exactly one base-10 integer and no other text\"}')",
+          raw_expr.length() - 1, raw_expr.ptr()));
       OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
     } else {
       ai_def.normalized_expr_ = raw_expr;

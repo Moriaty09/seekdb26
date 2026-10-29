@@ -400,6 +400,9 @@ int ObAIFuncClient::init_easy_handle(CURL *curl, ObJsonObject *body, ObStringBuf
   if (OB_SUCC(ret)) {
     if (CURLE_OK != (res = curl_easy_setopt(curl, CURLOPT_URL, url_))) {
       LOG_WARN("set url failed", K(res), K(url_));
+    } else if (CURLE_OK != (res = curl_easy_setopt(
+                   curl, CURLOPT_NOPROXY, "localhost,127.0.0.1,::1"))) {
+      LOG_WARN("set loopback no-proxy failed", K(res));
     } else if (CURLE_OK !=(res = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ObAIFuncClient::write_callback))) {
       LOG_WARN("set write function failed", K(res));
     } else if (CURLE_OK !=(res = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_buf))) {
