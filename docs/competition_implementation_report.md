@@ -168,3 +168,9 @@ After reverting and rebuilding, `vector_null_transitions`,
 `vector_large_invalidation`, `ai_column_vector_regeneration` and
 `ai_column_vector_races` all pass. The unchanged original vector test again
 fails only the EXPLAIN 4/15 versus 2/10 comparison.
+
+## Second upstream investigation and BENG normalization
+
+Source snapshot `1aa6bd6e72dd7cf412833c8797224a0fbd0fdc4a` adds a UTF-8 lowercase-ASCII normalization fast path and an AI vector old-read-view regression inspired by upstream `47fa38c`. Upstream bitmap publication, DML skip invalidation, identifier quoting, child DDL error preservation and FTS index-back fixes are already present. No additional AI vector kernel fix was found.
+
+The build and five FTS mysqltests pass, as does the new AI snapshot comparison. A 300-input corpus matches the old binary exactly. Alternating microbenchmarks show about 4.6% faster mixed English and about 2% slower uppercase/Unicode fallbacks in the repeat run; the first run was noisier. The full benchmark regressed in construction and TOKENIZE, with mixed query results. Both sets of observations are retained, not interpreted as an official score improvement. The latest reported official FTS mean improvement is -6.7624%, score zero. The original AI vector EXPLAIN mismatch remains unresolved.
