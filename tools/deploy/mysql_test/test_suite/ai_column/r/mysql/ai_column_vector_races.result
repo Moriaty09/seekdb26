@@ -1,0 +1,95 @@
+drop database if exists ai_column_vector_races;
+create database ai_column_vector_races;
+use ai_column_vector_races;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('vector_races_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('vector_races');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('vector_races',
+'{"type":"dense_embedding","model_name":"mock-embed"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('vector_races_ep',
+'{"ai_model_name":"vector_races","url":"http://127.0.0.1:19127/v1/embeddings","access_key":"vector-regeneration","provider":"openai","request_model_name":"mock-embed"}');
+create table docs(id bigint primary key, content varchar(200),
+emb vector(4) AI COLUMN (AI_EMBED('vector_races', content))
+WITH (sync_mode='async', max_retries=2));
+create vector index vi on docs(emb)
+with(distance=l2, type=hnsw, lib=vsag, m=10,
+ef_construction=12, ef_search=40);
+insert into docs(id, content) values (1, 'vec-zero'), (2, 'vec-ten');
+select id, emb from docs order by id;
+id	emb
+1	[0,0,0,0]
+2	[10,0,0,0]
+select count(*) = 1 and sum(id = 2) = 1 as regenerated_nearest_vector
+from (select id from docs order by l2_distance(emb, [10,0,0,0]) approximate limit 1) ann;
+regenerated_nearest_vector
+1
+update docs set content = 'slow-old vec-twenty' where id = 2;
+select 1 = 1 as old_request_in_flight;
+old_request_in_flight
+1
+update docs set content = 'vec-zero' where id = 2;
+select emb = [0,0,0,0] as late_vector_cannot_overwrite from docs where id = 2;
+late_vector_cannot_overwrite
+1
+select count(*)=2 and sum(id=2)=1 as latest_ann_has_no_duplicate
+from (select id from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10) ann;
+latest_ann_has_no_duplicate
+1
+update docs set content = 'slow-old vec-twenty' where id = 2;
+select 1 = 1 as deleted_request_in_flight;
+deleted_request_in_flight
+1
+delete from docs where id = 2;
+insert into docs(id,content) values(2,'vec-ten');
+select emb = [10,0,0,0] as reinserted_key_keeps_new_vector from docs where id = 2;
+reinserted_key_keeps_new_vector
+1
+select count(*)=1 and sum(id=2)=1 as reinserted_nearest_vector
+from (select id from docs order by l2_distance(emb,[10,0,0,0]) approximate limit 1) ann;
+reinserted_nearest_vector
+1
+update docs set content='slow-old vec-twenty' where id=2;
+update docs set id=3 where id=2;
+select count(*)=1 and sum(id=3)=1 as moved_vector_visible
+from (select id from docs order by l2_distance(emb,[20,0,0,0]) approximate limit 1) ann;
+moved_vector_visible
+1
+select count(*)=0 as moved_old_key_absent from docs where id=2;
+moved_old_key_absent
+1
+update docs set content='wrong-vector-dimension' where id=3;
+select emb is null as failed_embedding_is_null from docs where id=3;
+failed_embedding_is_null
+1
+select count(*)=1 and sum(id=1)=1 as failed_embedding_absent_from_ann
+from (select id from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10) ann;
+failed_embedding_absent_from_ann
+1
+set ai_column_strict_read=on;
+select emb from docs;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+set ai_column_strict_read=off;
+select count(*)=1 as dimension_failure_archived from oceanbase.__all_ai_column_task_history q
+join oceanbase.__all_table t on t.table_id=q.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id
+where d.database_name='ai_column_vector_races' and q.state=3;
+dimension_failure_archived
+1
+mock_vector_dimension_retries=ok
+select count(*)=0 as failed_vector_tasks_cleaned from oceanbase.__all_ai_column_task q
+join oceanbase.__all_table t on t.table_id=q.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id
+where d.database_name='ai_column_vector_races';
+failed_vector_tasks_cleaned
+1
+update docs set content='vec-ten' where id=3;
+select emb=[10,0,0,0] as embedding_recovers_after_failure from docs where id=3;
+embedding_recovers_after_failure
+1
+select count(*)=1 and sum(id=3)=1 as recovered_nearest_vector
+from (select id from docs order by l2_distance(emb,[10,0,0,0]) approximate limit 1) ann;
+recovered_nearest_vector
+1
+drop table docs;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('vector_races_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('vector_races');
+drop database ai_column_vector_races;

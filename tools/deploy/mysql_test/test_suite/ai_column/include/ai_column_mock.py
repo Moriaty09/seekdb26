@@ -146,6 +146,8 @@ def serve(port):
 
                 def vector(value, index):
                     text = str(value)
+                    if "wrong-vector-dimension" in text:
+                        return [1.0] * (requested_dimension + 1)
                     if "vec-zero" in text:
                         return [0.0] * requested_dimension
                     if "vec-ten" in text:
@@ -261,6 +263,9 @@ def assert_events(port, assertion):
             and sum("valid JSON value" not in event["system"] for event in failed) == 1
             and len(recovered) == 2
         )
+    elif assertion == "vector-dimension-retries":
+        failures = [event for event in events if event["user"] == "wrong-vector-dimension"]
+        ok = len(failures) == 3
     elif assertion == "embedding":
         ok = any(event["path"].endswith("/embeddings") for event in events)
     else:

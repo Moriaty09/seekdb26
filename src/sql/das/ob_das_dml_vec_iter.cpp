@@ -122,14 +122,15 @@ int ObVecIndexDMLIterator::get_vec_data_for_update(
     int64_t old_vec_id = store_row->cells()[vec_id_old_proj_idx].get_int();
     int64_t new_vec_id = store_row->cells()[vec_id_new_proj_idx].get_int();
     vec_id = is_old_row_ ? old_vec_id : new_vec_id;
-    // get vec data
-    const int64_t vector_old_proj_idx = das_ctdef_->old_row_projector_.at(vector_idx);
-    const int64_t vector_new_proj_idx = das_ctdef_->new_row_projector_.at(vector_idx);
-    vector = is_old_row_ ? store_row->cells()[vector_old_proj_idx].get_string()
-                         : store_row->cells()[vector_new_proj_idx].get_string();
-    // get vec data without lob
-    // here expect always has lob header
-    if (OB_FAIL(ObTextStringHelper::read_real_string_data(
+    // UPDATE emits an old-id tombstone followed by the new vector. The
+    // tombstone stores NULL payload, so loading the old (possibly out-of-row)
+    // LOB is unnecessary. AI invalidation must only remove the old id.
+    if (is_old_row_) {
+      vector.reset();
+    } else {
+      vector = store_row->cells()[das_ctdef_->new_row_projector_.at(vector_idx)].get_string();
+    }
+    if (!is_old_row_ && OB_FAIL(ObTextStringHelper::read_real_string_data(
                                                           *lob_read_options_,
                                                           &allocator_,
                                                           ObLongTextType,
