@@ -144,3 +144,27 @@ These regressions pass. The original vector EXPLAIN comparison remains 4/15
 versus 2/10; its expected output has not been changed. The latest platform FTS
 score is still zero for the previous submission. The follow-up has no official
 score yet; the full-text report retains both improved and regressed local timings.
+
+## Upstream commit investigation (2026-10-30)
+
+The live upstream ref inspected was `5f855bc118c25f24974d4e0ca4d180355442388e`.
+Path-specific GitHub commit history and patches were checked for vector DML,
+vector expressions, FTS, TOKENIZE and the optimizer. Relevant historical fixes
+for embedding LOB handling, IK dictionary naming and generated-column filter
+copies are already represented in this branch.
+
+An experiment retaining upstream NULL delta records stalled AI publication.
+A narrower variant retained NULL insert records, preserved SQL NULL and avoided
+NULL LOB reads while still skipping redundant NULL deletions. It matched the
+original vector test's functional output, but estimated rows/cost were 3/12
+instead of 4/15. More importantly, both repeated AI vector regression suites
+failed with duplicate `3-I` entries. All experimental kernel edits were reverted;
+none of these variants is delivered as a fix. The submission source remains
+`dbbc9263507151484371f7928ce84905e79fdb5d`. Original EXPLAIN expectations and
+reported FTS score remain unresolved. See the acceptance guide for upstream
+commit links and the experiment details.
+
+After reverting and rebuilding, `vector_null_transitions`,
+`vector_large_invalidation`, `ai_column_vector_regeneration` and
+`ai_column_vector_races` all pass. The unchanged original vector test again
+fails only the EXPLAIN 4/15 versus 2/10 comparison.
