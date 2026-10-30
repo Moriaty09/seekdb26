@@ -239,3 +239,48 @@ The unmodified full benchmark uses 20,000 rows, 3,000 tokenization rounds, 200 q
 | Load (s) | 0.816 | 0.867 |
 
 Hit counts remain 8001 / 11000 / 7332 / 20. Raw reports: [before](fts_token_scan_before.txt), [after](fts_token_scan_after.txt). BENG tokenization improves about 7.0%, BENG construction about 11.1%, total construction about 1.1%; IK-all build regresses. After-run English query samples span 5.7393–8.0291 ms, so query improvements cannot all be attributed to a per-character tokenizer change. This is evidence for submitting the patch, not proof of a positive official score. Original benchmark files and expected outputs remain unchanged. The before report identifies checkout 6fbf19e while the before executable is source 4b1be26 (subsequent changes were documentation only). The after executable is d07c0c9; git_dirty reflects preserved unrelated local files/deletions.
+
+## IK follow-up after official 11.631 / 50
+
+The latest user-reported official result for `d07c0c9ddac949bbb41cff9733df57622550a255` is 11.631 / 50, mean improvement 0.11630917273202195 and raw score 23.26183454640439. AI COLUMN already has full marks. Source `97112d83904fa5f2236e146266bc7c3ec45d63ba` is a new candidate, not a newly verified official score.
+
+Delivered changes:
+
+- For utf8mb4_general_ci/bin words composed entirely of well-formed basic CJK U+4E00–U+9FFF, copy the word into the existing allocator without an identity case conversion. Other words/collations retain the converter. Key ownership and lifetime remain unchanged.
+- Remove per-parser acquisition/construction of the unused IK stop-word dictionary. Its token-filter call was already commented out. Shared add-word stop-word filtering is preserved.
+
+Upstream [2d6a632](https://github.com/oceanbase/seekdb/commit/2d6a63248d14b65ae0ea959a7dc266512094d7c5) disables additional defensive checks by default. An isolated 1/0/0/1 diagnostic did not show stable improvement, so this configuration patch was not adopted and the instance was restored to 1. The central changes in upstream [0ff2745](https://github.com/oceanbase/seekdb/commit/0ff2745716123f0e86a137e0c88861b1841ff7a9) are already present. The delivered patch is local work, not a claimed cherry-pick.
+
+Experiments with binary dictionary-range lookup and shared character decoding were reverted. The combined candidate regressed strongly even on a fixed logical CPU; default smart-mode gains from decoding alone were inconclusive. No rejected experiment remains in source.
+
+The optimized RelWithDebInfo build and nine mysqltests pass: eight FTS suites, including 320 new IK compatibility cases, and the original AI vector-index test. The cases cover both modes, three collations, overlaps, supplementary Unicode, control bytes, CJK range boundaries and retained stop words. The first 314 expected outputs were captured on the previous scored binary; six extra CJK-boundary cases were captured before the case-conversion change, and the existing prefix was verified identical. Original competition expectations are untouched.
+
+All diagnostics are retained in [measurements](fts_ik_case_measurements.json). Under normal scheduling the microbenchmarks were noisy. For the controlled follow-up, old and new instances ran sequentially on logical CPU 13, each executing BENCHMARK(10000,TOKENIZE(@doc,'ik',options)), with one warm-up and three measured calls. Comparing the final old-version repeat to the delivered candidate:
+
+| Input / mode | Old median wall s | New median wall s |
+| --- | ---: | ---: |
+| Mixed / smart | 0.889652 | 0.862526 |
+| Overlap / smart | 0.483025 | 0.460324 |
+| Mixed / max_word | 0.943401 | 0.877716 |
+| Overlap / max_word | 0.581692 | 0.505133 |
+
+Full unmodified benchmark, restored normal CPU scheduling, same instance configuration and 20,000 rows / 3,000 tokenization rounds / 200 query rounds / three samples / 30 warmups:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| IK all build (s) | 15.721 | 15.075 |
+| IK content build (s) | 11.723 | 12.434 |
+| BENG build (s) | 9.101 | 6.888 |
+| Build total (s) | 36.563 | 34.414 |
+| IK TOKENIZE (ms) | 0.2919 | 0.2831 |
+| BENG TOKENIZE (ms) | 0.1392 | 0.1323 |
+| Chinese query (ms) | 5.4170 | 4.1227 |
+| English query (ms) | 6.3556 | 6.0525 |
+| Mixed query (ms) | 4.5396 | 4.6016 |
+| LIMIT query (ms) | 4.4854 | 6.1377 |
+| SELECT 1 (ms) | 0.0778 | 0.0933 |
+| Load (s) | 0.791 | 0.819 |
+
+Hits remain 8001 / 11000 / 7332 / 20. Reports: [before](fts_ik_case_before.txt), [after](fts_ik_case_after.txt). The before report's original label is ik_dictionary_before, from the initial investigation; its executable is the previously scored d07c0c9. The after executable is 97112d8. Reports retain unrelated git_dirty state.
+
+IK tokenization is about 3.0% lower and total construction about 5.9% lower in this pair. However IK-content construction, mixed queries, LIMIT and SELECT 1 regress; the new LIMIT standard deviation is 1.0013 ms. BENG construction improves even though its implementation was unchanged, further showing that all observed timing differences cannot be credited to this patch. Official re-evaluation is required to determine whether the total score improves. The previous scored source remains available for rollback.
