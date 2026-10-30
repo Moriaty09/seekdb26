@@ -1931,6 +1931,7 @@ int ObLocalManagementService::process_ai_column_tasks()
   ObSqlString select_sql;
   ObSqlString update_sql;
   ObSqlString finish_sql;
+  ObSqlString history_sql;
   ObSqlString task_filter;
   int64_t affected_rows = 0;
   uint64_t table_id = OB_INVALID_ID;
@@ -2012,6 +2013,19 @@ int ObLocalManagementService::process_ai_column_tasks()
       }
     }
     if (row_updated || (OB_SUCCESS != execute_ret && retry_count >= max_retries)) {
+      // Keep terminal outcomes after removing runnable tasks.  A NULL result
+      // alone cannot distinguish a failed invocation from a successful one.
+      OZ (history_sql.assign_fmt(
+          "INSERT INTO oceanbase.__all_ai_column_task_history "
+          "(task_id,schema_version,is_deleted,table_id,column_id,request_id,"
+          "rowkey_predicate,state,retry_count,eligible_ts,lease_owner,lease_expire_ts,"
+          "definition_version,input_payload,last_error) "
+          "SELECT task_id,definition_version,0,table_id,column_id,request_id,"
+          "rowkey_predicate,%d,retry_count,eligible_ts,lease_owner,lease_expire_ts,"
+          "definition_version,input_payload,'%s' "
+          "FROM oceanbase.__all_ai_column_task WHERE %s",
+          row_updated ? 2 : 3,
+          row_updated ? "" : "AI expression execution failed", task_filter.ptr()));
       OZ (finish_sql.assign_fmt(
           "DELETE FROM oceanbase.__all_ai_column_task "
           "WHERE %s", task_filter.ptr()));
@@ -2028,7 +2042,20 @@ int ObLocalManagementService::process_ai_column_tasks()
     }
     if (OB_SUCC(ret)) {
       if (row_updated) {
+        OZ (publish_trans.write(history_sql.ptr(), affected_rows));
         OZ (publish_trans.write(finish_sql.ptr(), affected_rows));
+      } else if (!history_sql.empty()) {
+        // Final failure status and queue cleanup must also commit together.
+        ObMySQLTransaction failure_trans;
+        OZ (failure_trans.start(&sql_proxy_));
+        OZ (failure_trans.write(history_sql.ptr(), affected_rows));
+        OZ (failure_trans.write(finish_sql.ptr(), affected_rows));
+        if (failure_trans.is_started()) {
+          const int end_ret = failure_trans.end(OB_SUCC(ret));
+          if (OB_SUCC(ret)) {
+            ret = end_ret;
+          }
+        }
       } else {
         OZ (sql_proxy_.write(finish_sql.ptr(), affected_rows));
       }
