@@ -2,7 +2,7 @@
 
 This branch collects the implementations and local verification completed for
 the competition tasks described in `ob.md`.  It intentionally records tested
-behavior separately from partial AI-column work so that reviewers can reproduce
+behavior separately from outstanding evaluation differences so that reviewers can reproduce
 the results without treating compilation alone as proof of correctness.
 
 ## Task 1: local deployment
@@ -10,9 +10,9 @@ the results without treating compilation alone as proof of correctness.
 - The source tree builds a runnable `seekdb` binary.
 - The deployed instance was connected with the MySQL-compatible client and used
   for all end-to-end tests below.
-- Telemetry ID obtained from the deployed instance:
-  `80feb7ed-3e67-8970-9a8c-ee6d6ef08b01`.
-- Submission to the competition platform remains an account-owner action.
+- The participant confirmed that task 1 passed the platform's UUID check.
+  Preserve the accepted deployment UUID; isolated regression instances have
+  different identities and must not replace it.
 
 ## Task 2: competition issue fix
 
@@ -82,25 +82,42 @@ new AI-column tables. Tests verified exact numeric predicates such as
 `` `id` = 2 ``, grouped request IDs, dependency invalidation, and zero tasks
 after rollback or row deletion.
 
-Not claimed complete: a production-safe tenant-aware asynchronous model worker,
-manual `RETRY AI COLUMN`, strict-read enforcement, and trigger regeneration for
-AI columns added to an existing table. An experimental timer worker was
-discarded after testing showed that its system internal connection could not
-see business-tenant task rows; no nonfunctional implementation is retained.
+The October 30 update adds durable asynchronous claiming and lease recovery,
+request/version checks, cached typed results, bounded retries, and atomic
+publication of mixed READY/FAILED column groups. External model calls occur
+outside the business transaction and only after its committed task is visible.
+`ALTER ... RETRY AI COLUMN` supports status and business predicates. Strict
+reads check actual referenced columns on every execution, including cached
+plans, optimized-away expressions, views, and uncommitted caller changes.
+ALTER ADD installs triggers and backfills existing rows. Direct assignment
+protection also covers INSERT SET, implicit columns, duplicate-key updates,
+and updatable views.
+
+Additional regressions cover mixed successful/failed groups, READY SQL NULL,
+conversion retries without repeating cached successes, expired leases, quoted
+identifiers, ALTER ADD backfill, repeated NULL/vector transitions, and rollback.
+See the Chinese acceptance guide for final test outcomes and submission commit.
+
+The original vector-index test still differs in EXPLAIN estimated rows/cost
+(expected 4/15, observed 2/10). Its data and ANN checks match. The original
+expected output is preserved; the test is not reported as passing. The same
+estimate behavior is reproducible with ordinary vector columns and depends on
+delta-entry history, so this difference needs evaluator clarification.
 
 ## Full-text performance
 
-The IK hot path decodes Unicode once and uses contiguous processor dispatch,
-removing repeated classification work without changing tokenization semantics.
-The complete official-size local benchmark was run with 20,000 rows, batch 500,
-3,000 tokenization rounds, 200 query rounds, three samples, 30 warmups, and a
-fresh load. The supplied score tool accepted every metric and reported:
+The update reduces redundant tokenizer conversion/hash work and skips BM25
+calculation only for positive natural-language MATCH filters that do not
+consume scores. Score projections, thresholds, sorting, complex boolean
+expressions, and lookup/merge paths retain scoring. Differential tokenization
+and SQL regression checks preserve existing results.
 
-- mean improvement: 72.46%
-- performance score: 100.00/100
-
-Detailed timings and correctness notes are in
-`docs/competition_fts_optimization.md`.
+The earlier 100/100 local score against a fixed external baseline did not
+establish a code improvement and is withdrawn. Use paired before/after runs
+on the same machine, with identical benchmark data and parameters. The final
+measurements and their limits are recorded in
+[the full-text report](competition_fts_optimization.md). Platform performance
+scores require a new evaluation of the submitted commit.
 
 ## Build and repository state
 
@@ -110,7 +127,7 @@ The final tracked source builds with:
 cmake --build build_release --target seekdb -j4
 ```
 
-Generated parser/schema outputs and deployment artifacts are deliberately not
-committed. The competition implementation is on `competition-solutions`; a
-network timeout prevented pushing this accumulated branch during the final
-verification, so it must be pushed when GitHub connectivity is available.
+Generated parser/schema outputs and deployment artifacts are not committed.
+The target fork is `Moriaty09/seekdb26`, branch `competition-solutions`.
+For the verified submission commit, test results, and remaining participant
+steps, consult [the acceptance guide](比赛成果验收与提交指南.md).
