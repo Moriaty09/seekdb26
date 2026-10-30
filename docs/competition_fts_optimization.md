@@ -262,3 +262,41 @@ The unmodified 20,000-row benchmark ran before and after restarting the same por
 | Load (s) | 0.792 | 0.835 |
 
 Hits remain 8001 / 11000 / 7332 / 20. Total construction improves by about 8.6%, but IK-all construction, BENG tokenization and LIMIT regress; this pair does not establish a positive overall score or isolate causality. Raw results are [before](fts_trigger_sampling_before.txt) and [after](fts_trigger_sampling_after.txt). The latest official result, received before this patch, is mean improvement -8.7702%, score zero. A new official evaluation is still needed.
+
+## Token scanning follow-up after official AI full score
+
+The user confirmed the AI COLUMN implementation received full marks. The latest official FTS score remains zero: mean improvement -7.3350%, construction total 18.717 s. This feedback predates the following patch.
+
+Source `d07c0c9ddac949bbb41cff9733df57622550a255` changes only token scanning: bypass generic character-length calls for ASCII in utf8mb4_general_ci/bin, combine whitespace/control/punctuation classification using the same charset table, and stop the all-mark filter at the first non-mark byte. Non-ASCII character-length handling and other collations retain their existing path. No benchmark, scoring, AI, or MATCH ordering code changes.
+
+Release build succeeds. Seven FTS mysqltests pass, including 96 boundary cases recorded on the previous binary (all ASCII bytes, NUL, delimiter runs, long tokens, Unicode, and three collations). The original AI vector test also passes.
+
+Microbenchmark: SELECT BENCHMARK(30000, TOKENIZE(@doc, 'beng')), one warm-up then six measured client calls; median wall time. The mixed input is the full benchmark's BENG text; uppercase input is `UPPERCASE DATABASE PERFORMANCE INDEXING AUDIT WORD WORD`; Unicode input is `中文数据库 café CAFÉ İstanbul Straße Σ σ 😀`; long input repeats `abcdefghijklmnopqrstuvwxyz ` 100 times. Input is assigned via CONVERT(hex USING utf8mb4). Initial run order is old/new; repeat order is new/old and excludes the long case.
+
+| Input | First old/new (s) | Repeat old/new (s) |
+| --- | ---: | ---: |
+| Mixed English | 0.805546 / 0.503018 | 0.804849 / 0.473183 |
+| Uppercase | 0.456366 / 0.439789 | 0.459285 / 0.272578 |
+| Unicode | 0.418033 / 0.540586 | 0.276361 / 0.260212 |
+| Long English | 8.797956 / 4.974280 | Not repeated |
+
+The first Unicode regression did not reproduce. Large between-run differences remain; both runs are retained in `token_scan_micro_before.json`, `token_scan_micro_after.json`, `token_scan_micro_before_repeat.json`, and `token_scan_micro_after_repeat.json`.
+
+The unmodified full benchmark uses 20,000 rows, 3,000 tokenization rounds, 200 query rounds, three samples and 30 warmups, on the same port-11963 instance before/after binary restart:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| IK all build (s) | 19.054 | 21.180 |
+| IK content build (s) | 15.950 | 14.433 |
+| BENG build (s) | 10.016 | 8.904 |
+| Total build (s) | 45.038 | 44.545 |
+| IK TOKENIZE (ms) | 0.3019 | 0.2881 |
+| BENG TOKENIZE (ms) | 0.1389 | 0.1292 |
+| Chinese query (ms) | 5.4623 | 5.3593 |
+| English query (ms) | 8.3770 | 7.0861 |
+| Mixed query (ms) | 6.1255 | 3.8456 |
+| LIMIT query (ms) | 8.1734 | 5.8310 |
+| SELECT 1 (ms) | 0.0861 | 0.0800 |
+| Load (s) | 0.816 | 0.867 |
+
+Hit counts remain 8001 / 11000 / 7332 / 20. Raw reports: [before](fts_token_scan_before.txt), [after](fts_token_scan_after.txt). BENG tokenization improves about 7.0%, BENG construction about 11.1%, total construction about 1.1%; IK-all build regresses. After-run English query samples span 5.7393–8.0291 ms, so query improvements cannot all be attributed to a per-character tokenizer change. This is evidence for submitting the patch, not proof of a positive official score. Original benchmark files and expected outputs remain unchanged. The before report identifies checkout 6fbf19e while the before executable is source 4b1be26 (subsequent changes were documentation only). The after executable is d07c0c9; git_dirty reflects preserved unrelated local files/deletions.
