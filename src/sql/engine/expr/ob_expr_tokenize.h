@@ -64,7 +64,6 @@ private:
 
     // check and reform parser properties to standard format
     int reform_parser_properties(const ObString &properties);
-    int set_default_parser_properties();
     int try_load_dictionary_for_ik();
 
   public:
@@ -84,6 +83,7 @@ private:
 private:
   static int parse_param(const ObExpr &expr,
                          ObEvalCtx &ctx,
+                         common::ObArenaAllocator &allocator,
                          TokenizeParam &param);
 
   static int parse_fulltext(const ObExpr &expr, ObEvalCtx &ctx, TokenizeParam &param);
