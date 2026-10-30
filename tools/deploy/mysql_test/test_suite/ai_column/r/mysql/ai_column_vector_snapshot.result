@@ -1,0 +1,61 @@
+drop database if exists ai_column_vector_snapshot;
+create database ai_column_vector_snapshot;
+use ai_column_vector_snapshot;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('vector_snapshot_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('vector_snapshot');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('vector_snapshot',
+'{"type":"dense_embedding","model_name":"mock-embed"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('vector_snapshot_ep',
+'{"ai_model_name":"vector_snapshot","url":"http://127.0.0.1:19128/v1/embeddings","access_key":"vector-regeneration","provider":"openai","request_model_name":"mock-embed"}');
+create table docs(id bigint primary key, content varchar(200),
+emb vector(4) AI COLUMN (AI_EMBED('vector_snapshot', content))
+WITH (sync_mode='async', max_retries=2));
+create vector index vi on docs(emb)
+with(distance=l2, type=hnsw, lib=vsag, m=10,
+ef_construction=12, ef_search=40);
+insert into docs(id, content) values (1, 'vec-zero');
+set session transaction isolation level repeatable read;
+set ob_trx_timeout=120000000;
+start transaction;
+select id,content,emb from docs;
+id	content	emb
+1	vec-zero	[0,0,0,0]
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+1	vec-zero	[0,0,0,0]
+update docs set content='vec-ten' where id=1;
+call dbms_vector.refresh_index('vi','docs','emb',1,'FAST');
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+1	vec-ten	[10,0,0,0]
+select id,content,emb from docs;
+id	content	emb
+1	vec-zero	[0,0,0,0]
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+1	vec-zero	[0,0,0,0]
+commit;
+start transaction;
+select id,content,emb from docs;
+id	content	emb
+1	vec-ten	[10,0,0,0]
+delete from docs where id=1;
+insert into docs(id,content) values (2,'vec-twenty');
+call dbms_vector.refresh_index('vi','docs','emb',1,'FAST');
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+2	vec-twenty	[20,0,0,0]
+select id,content,emb from docs;
+id	content	emb
+1	vec-ten	[10,0,0,0]
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+1	vec-ten	[10,0,0,0]
+commit;
+select id,content,emb from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10;
+id	content	emb
+2	vec-twenty	[20,0,0,0]
+drop table docs;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('vector_snapshot_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('vector_snapshot');
+drop database ai_column_vector_snapshot;

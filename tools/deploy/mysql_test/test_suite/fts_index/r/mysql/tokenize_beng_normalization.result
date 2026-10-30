@@ -1,0 +1,60 @@
+select tokenize(_utf8mb4'lowercase database indexing token token' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"lowercase": 1}, {"token": 2}, {"database": 1}, {"indexing": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'UPPERCASE Mixed Case I i' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"case": 1}, {"mixed": 1}, {"uppercase": 1}], "doc_len": 3}
+select tokenize(_utf8mb4'...alpha... beta-gamma abc123 123 --- !!!' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"123": 1}, {"gamma": 1}, {"abc123": 1}, {"alpha": 1}, {"beta": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'the THE The an a database DATABASE' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"database": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'café CAFÉ 中文数据库 İstanbul Straße Σ σ' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"café": 2}, {"straße": 1}, {"中文数据库": 1}, {"istanbul": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'lowercase abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij LOWERCASE' collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"lowercase": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'lowercase database indexing token token' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"database": 1}, {"indexing": 1}, {"lowercase": 1}, {"token": 2}], "doc_len": 5}
+select tokenize(_utf8mb4'UPPERCASE Mixed Case I i' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"case": 1}, {"uppercase": 1}, {"mixed": 1}], "doc_len": 3}
+select tokenize(_utf8mb4'...alpha... beta-gamma abc123 123 --- !!!' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"beta": 1}, {"alpha": 1}, {"123": 1}, {"abc123": 1}, {"gamma": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'the THE The an a database DATABASE' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"database": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'café CAFÉ 中文数据库 İstanbul Straße Σ σ' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"istanbul": 1}, {"straße": 1}, {"中文数据库": 1}, {"café": 2}], "doc_len": 5}
+select tokenize(_utf8mb4'lowercase abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij LOWERCASE' collate utf8mb4_bin, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"lowercase": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'lowercase database indexing token token' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"token": 2}, {"database": 1}, {"lowercase": 1}, {"indexing": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'UPPERCASE Mixed Case I i' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"uppercase": 1}, {"case": 1}, {"mixed": 1}], "doc_len": 3}
+select tokenize(_utf8mb4'...alpha... beta-gamma abc123 123 --- !!!' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"abc123": 1}, {"123": 1}, {"alpha": 1}, {"gamma": 1}, {"beta": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'the THE The an a database DATABASE' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"database": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'café CAFÉ 中文数据库 İstanbul Straße Σ σ' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"中文数据库": 1}, {"café": 2}, {"istanbul": 1}, {"straße": 1}], "doc_len": 5}
+select tokenize(_utf8mb4'lowercase abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij LOWERCASE' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"lowercase": 2}], "doc_len": 2}
+select tokenize('', 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(NULL, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
