@@ -345,3 +345,49 @@ Full unmodified benchmark, restored normal CPU scheduling, same instance configu
 Hits remain 8001 / 11000 / 7332 / 20. Reports: [before](fts_ik_case_before.txt), [after](fts_ik_case_after.txt). The before report's original label is ik_dictionary_before, from the initial investigation; its executable is the previously scored d07c0c9. The after executable is 97112d8. Reports retain unrelated git_dirty state.
 
 IK tokenization is about 3.0% lower and total construction about 5.9% lower in this pair. However IK-content construction, mixed queries, LIMIT and SELECT 1 regress; the new LIMIT standard deviation is 1.0013 ms. BENG construction improves even though its implementation was unchanged, further showing that all observed timing differences cannot be credited to this patch. Official re-evaluation is required to determine whether the total score improves. The previous scored source remains available for rollback.
+
+
+## Follow-up after the reported 5.098 / 50 result
+
+Delivered source: `3c126f77da5836579e95111982ed0c00b6bae04b`. AI COLUMN remains officially full-marked; its source is unchanged. The latest official FTS report is 5.098 / 50, mean improvement 0.050979163358350336. All nine scored latencies are lower than in the previous 11.631-point report. With identical positive baselines, categories and weights, the repository score formula is monotonic and cannot produce a lower score from those improvements. Baseline/scoring/run association differences remain unverified; no platform baseline is available. No official score is claimed for this patch.
+
+Additional official commits inspected:
+
+- [8d030edd: CPU Optimization](https://github.com/oceanbase/seekdb/commit/8d030edd59e9142318a7a21489eda9ad0cb1bbe4): a broad historical multi-component patch. It is not safe to transplant wholesale over the current refactored paths; it was not cherry-picked.
+- [38bd9c62: jemalloc and module memory limits](https://github.com/oceanbase/seekdb/commit/38bd9c622dce12131990726be6c916e395cec6e6): the relevant adaptive cache-bucket sizing already exists locally.
+- [415af2ac: disable PIE and enable ICF](https://github.com/oceanbase/seekdb/commit/415af2acd559463f65e9ba5ea15bd7ae3b52eab4): corresponding build options already exist locally.
+- [0ff27457: FTS query optimization](https://github.com/oceanbase/seekdb/commit/0ff2745716123f0e86a137e0c88861b1841ff7a9): the simple-merger implementation is present. This patch extends its benefit by using qualified concrete calls for its per-posting operations, allowing inlining and avoiding virtual dispatch. The general loser-tree path remains unchanged.
+
+The non-owning simple-merger alias is set only when that exact type is allocated and cleared on reset. It survives iterator reuse with its owning heap. Queries without a filter bypass the previously empty filter call and batch guard; existing relevance collectors, scoring, filters, result storage and ordering remain intact. A separate batch-output rewrite was rejected because LIMIT regressed. A filter-only candidate did not show convincing aggregate improvement. Both rejected candidates are represented in the raw measurements; neither batch-output rewrite nor unrelated upstream changes are delivered.
+
+The optimized RelWithDebInfo build succeeds. Nine FTS suites, the complete original sparse-vector query suite and the original AI vector-index suite pass. The 1,033-row regression covers multi-batch outputs, score filtering including zero accepted rows, boolean exclusion, offsets around 256/512/1024, four-term fallback and prepared-statement rescans. The initial expected outputs were captured on the old binary; two added aggregate cases have independently derived expected counts/sums. No original expected results were modified. One earlier AI run failed at model cleanup with errno 4023 after reaching the end of the test; subsequent complete runs passed.
+
+Pinned query diagnostic: isolate the server on logical CPU 13, use one warm-up and five measured samples per query, with 500 identical queries per client connection. Median milliseconds per query:
+
+| Query | Old 97112d8 | Final candidate | Reduction |
+| --- | ---: | ---: | ---: |
+| Chinese | 2.856324 | 2.762898 | 3.27% |
+| English | 4.316147 | 4.217667 | 2.28% |
+| Mixed | 3.172004 | 3.124775 | 1.49% |
+| LIMIT | 4.215164 | 4.196658 | 0.44% |
+
+The retained implementation was measured before final formatting and moving a side-effect-free heap-empty check behind the row-completion flag. Final rebuilt binary passed the batch, score, sparse-vector and AI-vector regressions again. Shared physical-core/host load and sequential sample timing remain uncontrolled; the English candidate includes a 5.584 ms outlier. These medians are modest evidence, not a statistically established speedup or score guarantee. All samples, including rejected candidates, are in [fts_dispatch_measurements.json](fts_dispatch_measurements.json). The initial unpinned baseline overlapped brief regression work near its end and is retained only as a diagnostic, not the primary comparison.
+
+Full unmodified benchmark on normal CPU scheduling: 20,000 rows, 3,000 tokenization rounds, 200 query rounds, three samples and 30 warmups:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| IK all build (s) | 17.959 | 13.569 |
+| IK content build (s) | 13.731 | 10.606 |
+| BENG build (s) | 7.906 | 5.492 |
+| Build total (s) | 39.616 | 29.691 |
+| IK TOKENIZE (ms) | 0.2821 | 0.2306 |
+| BENG TOKENIZE (ms) | 0.1375 | 0.1357 |
+| Chinese query (ms) | 4.1380 | 2.8187 |
+| English query (ms) | 7.4488 | 4.5289 |
+| Mixed query (ms) | 5.2622 | 3.3407 |
+| LIMIT query (ms) | 6.2133 | 4.3062 |
+| SELECT 1 (ms) | 0.0774 | 0.0776 |
+| Load (s) | 0.774 | 0.581 |
+
+Hits remain 8001 / 11000 / 7332 / 20. Reports: [before](fts_dispatch_before.txt), [after](fts_dispatch_after.txt). Both reports carry checkout 3f2eccb and preserved dirty state: before executable is 97112d8, after executable contains the change later committed as 3c126f7. These runs are separated in time; construction and tokenization are unchanged by this patch, so their large improvements demonstrate host/run variability and must not be attributed to query dispatch. SELECT 1 slightly regresses. Benchmark scripts, scoring rules and original tests are unchanged.
