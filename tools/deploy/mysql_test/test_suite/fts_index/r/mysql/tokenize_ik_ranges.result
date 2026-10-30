@@ -1,0 +1,960 @@
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"研究": 1}, {"起源": 1}, {"南京市": 1}, {"小时": 1}, {"生命": 1}, {"一二三四五": 1}], "doc_len": 7}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"性能": 1}, {"分词器": 1}, {"数据库": 1}, {"中华人民共和国": 1}, {"全文索引": 1}], "doc_len": 5}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"ab-123": 1}, {"somebody": 1}, {"中文": 1}, {"abc": 1}, {"123.45": 1}, {"测试": 1}], "doc_len": 6}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"e": 1}, {"stanbul": 1}, {"stra": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"龦": 1}, {"ａｂｃ１２３": 1}, {"龥": 1}, {"㐀": 1}, {"䶿": 1}, {"一": 1}], "doc_len": 6}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"foo-bar": 1}], "doc_len": 2}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"墩": 1}, {"foo-bar": 1}, {"abc123.456": 1}, {"藥": 1}, {"长江大桥": 2}, {"索引": 2}, {"abc": 4}, {"解析": 1}, {"数据库": 1}, {"123.456": 1}, {"嘚": 1}, {"狅": 1}], "doc_len": 18}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 2}, {"索引": 2}, {"縭": 1}, {"数据库": 1}, {"搜索引擎": 1}], "doc_len": 7}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"塚": 1}, {"长江大桥": 2}, {"解析": 2}, {"索引": 1}, {"南京市": 1}, {"鲠": 1}, {"foo-bar": 2}, {"数据库": 1}, {"搜索引擎": 1}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"解析": 2}, {"南京市": 1}, {"淌": 1}, {"foo-bar": 2}, {"数据库": 2}, {"abc": 1}, {"搜索引擎": 2}], "doc_len": 12}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 2}, {"南京市": 3}, {"数据库": 1}, {"搜索引擎": 1}], "doc_len": 7}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 2}, {"foo-bar": 2}, {"长江大桥": 8}, {"乊": 1}, {"abc": 2}, {"搜索引擎": 1}, {"数据库": 1}, {"南京市": 3}], "doc_len": 20}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456123.456123.456": 1}, {"abc123.456": 1}, {"索引": 1}, {"foo-bar": 1}, {"解析": 3}, {"长江大桥": 2}, {"123.456": 2}, {"123.456foo-bar": 1}, {"搜索引擎": 4}, {"数据库": 1}, {"南京市": 2}], "doc_len": 19}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"长江大桥": 2}, {"解析": 1}, {"索引": 1}, {"南京市": 1}, {"兤": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"莖": 1}], "doc_len": 10}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"匭": 1}, {"䥫": 1}, {"索引": 1}, {"南京市": 3}, {"foo-bar": 1}, {"侑": 1}, {"搜索引擎": 1}], "doc_len": 9}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"澮": 1}, {"长江大桥": 2}, {"索引": 1}, {"abc": 1}, {"解析": 1}, {"蓋": 1}, {"数据库": 4}, {"123.456": 2}, {"搜索引擎": 1}], "doc_len": 14}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"数据库": 2}], "doc_len": 2}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"祎": 1}, {"錝": 1}, {"foo-bar": 1}, {"豌": 1}, {"长江大桥": 2}, {"索引": 3}, {"䶾": 1}, {"abc": 2}, {"解析": 5}, {"数据库": 1}, {"搜索引擎": 4}, {"唏": 1}, {"南京市": 2}], "doc_len": 25}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"abc": 2}, {"噆": 1}, {"搜索引擎": 4}], "doc_len": 8}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 2}, {"foo-barabc123.456": 1}, {"䠃": 1}, {"数据库": 2}, {"abc": 1}, {"桯": 1}], "doc_len": 8}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 3}, {"abc": 2}, {"解析": 1}, {"数据库": 1}, {"123.456": 4}, {"搜索引擎": 3}, {"渦": 1}], "doc_len": 15}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 2}, {"长江大桥": 1}, {"索引": 3}, {"数据库": 2}, {"搜索引擎": 3}, {"南京市": 1}], "doc_len": 12}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"纍": 1}, {"123.456abc": 1}, {"濵": 1}, {"长江大桥": 3}, {"abc": 3}, {"数据库": 1}, {"輼": 1}, {"123.456": 2}, {"搜索引擎": 1}, {"䞦": 1}, {"南京市": 4}], "doc_len": 19}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"壒": 1}, {"长江大桥": 3}, {"索引": 2}, {"解析": 2}, {"数据库": 2}, {"軙": 1}, {"123.456": 1}, {"搜索引擎": 1}, {"灀": 1}, {"臖": 1}, {"㹁": 1}, {"㟢": 1}], "doc_len": 17}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 4}, {"裻": 1}, {"鼨": 1}, {"塠": 1}, {"长江大桥": 1}, {"索引": 2}, {"abc": 1}, {"解析": 1}, {"123.456": 1}, {"搜索引擎": 3}, {"南京市": 2}], "doc_len": 18}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 3}, {"索引": 2}, {"碬": 1}, {"abc": 2}, {"解析": 1}, {"䰊": 1}, {"数据库": 1}, {"123.456": 1}, {"搜索引擎": 1}, {"南京市": 1}, {"123.456foo-bar": 1}], "doc_len": 15}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"foo-bar": 1}, {"长江大桥": 1}, {"索引": 3}, {"abc": 3}, {"解析": 1}, {"数据库": 1}, {"搜索引擎": 3}, {"abcfoo-bar": 1}, {"南京市": 2}], "doc_len": 17}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"雼": 1}, {"foo-bar": 1}, {"长江大桥": 1}, {"索引": 2}, {"数据库": 1}, {"123.456": 2}, {"abcfoo-bar": 1}, {"榁": 1}, {"南京市": 5}], "doc_len": 15}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 1}, {"何": 1}, {"迒": 1}, {"长江大桥": 2}, {"索引": 3}, {"解析": 1}, {"数据库": 3}, {"搜索引擎": 1}, {"嬵": 1}], "doc_len": 14}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"迮": 1}, {"foo-bar": 2}, {"abc123.456": 1}, {"鈋": 1}, {"长江大桥": 1}, {"索引": 4}, {"abc": 2}, {"解析": 1}, {"女": 1}, {"数据库": 1}, {"搜索引擎": 2}, {"南京市": 2}], "doc_len": 19}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 2}, {"abc": 1}, {"解析": 1}, {"数据库": 1}, {"搜索引擎": 4}], "doc_len": 9}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 2}, {"解析": 2}, {"abc": 1}, {"搜索引擎": 2}], "doc_len": 7}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"鱧": 1}, {"索引": 1}, {"南京市": 2}, {"数据库": 1}, {"abc": 1}, {"搜索引擎": 1}, {"壉": 1}], "doc_len": 8}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 2}, {"溵": 1}, {"foo-barabcfoo-bar": 1}, {"长江大桥": 1}, {"索引": 3}, {"abc": 2}, {"数据库": 4}, {"搜索引擎": 4}, {"南京市": 2}, {"爗": 1}], "doc_len": 21}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"foo-bar": 2}, {"长江大桥": 2}, {"索引": 2}, {"解析": 5}, {"123.456": 1}, {"搜索引擎": 1}, {"臰": 1}, {"南京市": 2}, {"詪": 1}, {"涖": 1}], "doc_len": 19}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"数据库": 1}, {"搜索引擎": 1}], "doc_len": 3}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"緫": 1}, {"foo-bar": 1}, {"崤": 1}, {"长江大桥": 1}, {"索引": 3}, {"数据库": 1}, {"㚸": 1}, {"123.456": 2}, {"搜索引擎": 3}, {"南京市": 1}], "doc_len": 15}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"南京市": 1}], "doc_len": 2}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"解析": 2}, {"索引": 1}, {"南京市": 1}, {"搜索引擎": 1}], "doc_len": 6}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"foo-bar": 1}, {"长江大桥": 1}, {"abc": 2}, {"解析": 7}, {"䤀": 1}, {"123.456": 1}, {"搜索引擎": 3}, {"蚧": 1}, {"南京市": 2}], "doc_len": 20}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"长江大桥": 2}, {"解析": 1}, {"索引": 3}, {"foo-bar": 1}, {"abc": 1}, {"abc123.456": 1}, {"搜索引擎": 2}], "doc_len": 12}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 1}, {"移": 1}, {"长江大桥": 3}, {"索引": 1}, {"解析": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"abcfoo-bar": 1}, {"南京市": 2}], "doc_len": 12}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"解析": 1}, {"索引": 1}, {"南京市": 2}, {"foo-bar": 1}, {"数据库": 1}], "doc_len": 7}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"南京市": 1}, {"foo-bar": 1}, {"錾": 1}, {"123.456abc": 1}, {"abc": 1}, {"搜索引擎": 4}], "doc_len": 10}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 2}, {"foo-barfoo-bar": 1}, {"长江大桥": 3}, {"索引": 4}, {"解析": 3}, {"㶝": 1}, {"玗": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"㚷": 1}], "doc_len": 18}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"豻": 1}, {"南京市": 1}, {"㔨": 1}, {"数据库": 1}, {"搜索引擎": 1}], "doc_len": 6}
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"生命": 1}, {"一二三四五": 1}, {"长江大桥": 1}, {"起源": 1}, {"南京市": 1}, {"研究": 1}, {"小时": 1}], "doc_len": 7}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"全文索引": 1}, {"性能": 1}, {"中华人民共和国": 1}, {"数据库": 1}, {"分词器": 1}], "doc_len": 5}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"测试": 1}, {"中文": 1}, {"ab-123": 1}, {"123.45": 1}, {"somebody": 1}], "doc_len": 6}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"e": 1}, {"stanbul": 1}, {"stra": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"龥": 1}, {"䶿": 1}, {"㐀": 1}, {"龦": 1}, {"ａｂｃ１２３": 1}, {"一": 1}], "doc_len": 6}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"foo-bar": 1}], "doc_len": 2}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"嘚": 1}, {"abc123.456": 1}, {"123.456": 1}, {"解析": 1}, {"123.456123.456": 1}, {"狅": 1}, {"foo-bar": 1}, {"abc": 4}, {"索引": 2}, {"数据库": 1}, {"长江大桥": 2}, {"藥": 1}, {"墩": 1}], "doc_len": 18}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"解析": 2}, {"数据库": 1}, {"縭": 1}, {"索引": 2}], "doc_len": 7}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"解析": 2}, {"长江大桥": 2}, {"数据库": 1}, {"南京市": 1}, {"foo-bar": 2}, {"塚": 1}, {"索引": 1}, {"鲠": 1}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"123.456": 1}, {"搜索引擎": 2}, {"解析": 2}, {"数据库": 2}, {"南京市": 1}, {"淌": 1}, {"foo-bar": 2}], "doc_len": 12}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"数据库": 1}, {"南京市": 3}, {"索引": 2}], "doc_len": 7}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"解析": 2}, {"搜索引擎": 1}, {"南京市": 3}, {"数据库": 1}, {"长江大桥": 8}, {"foo-bar": 2}, {"乊": 1}], "doc_len": 20}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"解析": 3}, {"搜索引擎": 4}, {"索引": 1}, {"123.456foo-bar": 1}, {"南京市": 2}, {"数据库": 1}, {"abc123.456123.456123.456": 1}, {"长江大桥": 2}, {"123.456": 2}, {"foo-bar": 1}], "doc_len": 19}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"搜索引擎": 1}, {"解析": 1}, {"长江大桥": 2}, {"数据库": 1}, {"南京市": 1}, {"莖": 1}, {"索引": 1}, {"兤": 1}], "doc_len": 10}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"䥫": 1}, {"南京市": 3}, {"匭": 1}, {"foo-bar": 1}, {"侑": 1}, {"索引": 1}], "doc_len": 9}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"解析": 1}, {"搜索引擎": 1}, {"abc": 1}, {"索引": 1}, {"澮": 1}, {"数据库": 4}, {"长江大桥": 2}, {"蓋": 1}], "doc_len": 14}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"数据库": 2}], "doc_len": 2}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"錝": 1}, {"䶾": 1}, {"解析": 5}, {"foo-bar": 1}, {"搜索引擎": 4}, {"唏": 1}, {"abc": 2}, {"索引": 3}, {"数据库": 1}, {"豌": 1}, {"祎": 1}, {"南京市": 2}, {"长江大桥": 2}], "doc_len": 25}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"搜索引擎": 4}, {"噆": 1}, {"索引": 1}], "doc_len": 8}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"䠃": 1}, {"解析": 2}, {"数据库": 2}, {"桯": 1}, {"foo-barabc123.456": 1}], "doc_len": 8}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 4}, {"解析": 1}, {"搜索引擎": 3}, {"abc": 2}, {"渦": 1}, {"索引": 3}, {"数据库": 1}], "doc_len": 15}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 2}, {"搜索引擎": 3}, {"索引": 3}, {"数据库": 2}, {"南京市": 1}, {"长江大桥": 1}], "doc_len": 12}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"濵": 1}, {"搜索引擎": 1}, {"abc": 3}, {"数据库": 1}, {"䞦": 1}, {"南京市": 4}, {"长江大桥": 3}, {"輼": 1}, {"纍": 1}, {"123.456abc": 1}], "doc_len": 19}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"軙": 1}, {"解析": 2}, {"臖": 1}, {"壒": 1}, {"搜索引擎": 1}, {"㹁": 1}, {"索引": 2}, {"数据库": 2}, {"长江大桥": 3}, {"㟢": 1}, {"灀": 1}], "doc_len": 17}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"鼨": 1}, {"123.456": 1}, {"解析": 1}, {"foo-bar": 4}, {"搜索引擎": 3}, {"abc": 1}, {"索引": 2}, {"裻": 1}, {"南京市": 2}, {"长江大桥": 1}, {"塠": 1}], "doc_len": 18}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"123.456foo-bar": 1}, {"解析": 1}, {"foo-bar": 3}, {"搜索引擎": 1}, {"abc": 2}, {"䰊": 1}, {"索引": 2}, {"数据库": 1}, {"碬": 1}, {"南京市": 1}], "doc_len": 15}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"123.456123.456": 1}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"abc": 3}, {"索引": 3}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 1}], "doc_len": 17}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"榁": 1}, {"123.456": 2}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"索引": 2}, {"数据库": 1}, {"南京市": 5}, {"长江大桥": 1}, {"雼": 1}], "doc_len": 15}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"foo-bar": 1}, {"搜索引擎": 1}, {"何": 1}, {"索引": 3}, {"数据库": 3}, {"长江大桥": 2}, {"嬵": 1}, {"迒": 1}], "doc_len": 14}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"迮": 1}, {"abc123.456": 1}, {"解析": 1}, {"女": 1}, {"foo-bar": 2}, {"搜索引擎": 2}, {"abc": 2}, {"鈋": 1}, {"索引": 4}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 1}], "doc_len": 19}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"搜索引擎": 4}, {"abc": 1}, {"数据库": 1}, {"长江大桥": 2}], "doc_len": 9}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"搜索引擎": 2}, {"解析": 2}, {"长江大桥": 2}], "doc_len": 7}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"搜索引擎": 1}, {"壉": 1}, {"数据库": 1}, {"南京市": 2}, {"鱧": 1}, {"索引": 1}], "doc_len": 8}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"溵": 1}, {"爗": 1}, {"foo-bar": 2}, {"搜索引擎": 4}, {"abc": 2}, {"索引": 3}, {"数据库": 4}, {"foo-barabcfoo-bar": 1}, {"南京市": 2}, {"长江大桥": 1}], "doc_len": 21}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"涖": 1}, {"123.456": 1}, {"解析": 5}, {"123.456123.456": 1}, {"foo-bar": 2}, {"搜索引擎": 1}, {"詪": 1}, {"索引": 2}, {"南京市": 2}, {"长江大桥": 2}, {"臰": 1}], "doc_len": 19}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"数据库": 1}, {"索引": 1}], "doc_len": 3}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"崤": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"㚸": 1}, {"索引": 3}, {"緫": 1}, {"数据库": 1}, {"南京市": 1}, {"长江大桥": 1}], "doc_len": 15}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"南京市": 1}], "doc_len": 2}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"搜索引擎": 1}, {"解析": 2}, {"南京市": 1}, {"索引": 1}], "doc_len": 6}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"蚧": 1}, {"123.456": 1}, {"解析": 7}, {"123.456123.456": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"abc": 2}, {"南京市": 2}, {"长江大桥": 1}, {"䤀": 1}], "doc_len": 20}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"abc": 1}, {"abc123.456": 1}, {"搜索引擎": 2}, {"解析": 1}, {"长江大桥": 2}, {"foo-bar": 1}, {"索引": 3}], "doc_len": 12}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"搜索引擎": 1}, {"索引": 1}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 3}, {"移": 1}], "doc_len": 12}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"解析": 1}, {"数据库": 1}, {"南京市": 2}, {"foo-bar": 1}, {"索引": 1}], "doc_len": 7}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"搜索引擎": 4}, {"解析": 1}, {"南京市": 1}, {"錾": 1}, {"foo-bar": 1}, {"123.456abc": 1}], "doc_len": 10}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 3}, {"㚷": 1}, {"foo-bar": 2}, {"搜索引擎": 1}, {"索引": 4}, {"数据库": 1}, {"玗": 1}, {"㶝": 1}, {"foo-barfoo-bar": 1}, {"长江大桥": 3}], "doc_len": 18}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"㔨": 1}, {"搜索引擎": 1}, {"解析": 1}, {"数据库": 1}, {"南京市": 1}, {"豻": 1}], "doc_len": 6}
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"生命": 1}, {"长江大桥": 1}, {"起源": 1}, {"一二三四五": 1}, {"南京市": 1}, {"研究": 1}, {"小时": 1}], "doc_len": 7}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"性能": 1}, {"中华人民共和国": 1}, {"数据库": 1}, {"全文索引": 1}, {"分词器": 1}], "doc_len": 5}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"中文": 1}, {"ab-123": 1}, {"测试": 1}, {"somebody": 1}, {"123.45": 1}], "doc_len": 6}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"stra": 1}, {"stanbul": 1}, {"e": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"龥": 1}, {"龦": 1}, {"ａｂｃ１２３": 1}, {"䶿": 1}, {"㐀": 1}, {"一": 1}], "doc_len": 6}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 1}, {"解析": 1}], "doc_len": 2}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"123.456123.456": 1}, {"索引": 2}, {"长江大桥": 2}, {"墩": 1}, {"解析": 1}, {"123.456": 1}, {"foo-bar": 1}, {"abc": 4}, {"藥": 1}, {"嘚": 1}, {"数据库": 1}, {"狅": 1}], "doc_len": 18}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"縭": 1}, {"索引": 2}, {"搜索引擎": 1}, {"数据库": 1}, {"解析": 2}], "doc_len": 7}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"foo-bar": 2}, {"搜索引擎": 1}, {"长江大桥": 2}, {"南京市": 1}, {"数据库": 1}, {"塚": 1}, {"解析": 2}, {"鲠": 1}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"淌": 1}, {"123.456": 1}, {"foo-bar": 2}, {"搜索引擎": 2}, {"南京市": 1}, {"数据库": 2}, {"解析": 2}], "doc_len": 12}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 2}, {"搜索引擎": 1}, {"南京市": 3}, {"数据库": 1}], "doc_len": 7}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"abc": 2}, {"南京市": 3}, {"长江大桥": 8}, {"解析": 2}, {"乊": 1}, {"foo-bar": 2}, {"数据库": 1}], "doc_len": 20}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"搜索引擎": 4}, {"索引": 1}, {"123.456foo-bar": 1}, {"南京市": 2}, {"abc123.456": 1}, {"长江大桥": 2}, {"解析": 3}, {"foo-bar": 1}, {"数据库": 1}, {"abc123.456123.456123.456": 1}], "doc_len": 19}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"兤": 1}, {"莖": 1}, {"索引": 1}, {"123.456": 1}, {"搜索引擎": 1}, {"长江大桥": 2}, {"南京市": 1}, {"数据库": 1}, {"解析": 1}], "doc_len": 10}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"侑": 1}, {"foo-bar": 1}, {"索引": 1}, {"搜索引擎": 1}, {"匭": 1}, {"䥫": 1}, {"南京市": 3}], "doc_len": 9}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"长江大桥": 2}, {"解析": 1}, {"搜索引擎": 1}, {"123.456": 2}, {"澮": 1}, {"abc": 1}, {"蓋": 1}, {"数据库": 4}], "doc_len": 14}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"数据库": 2}], "doc_len": 2}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"唏": 1}, {"南京市": 2}, {"索引": 3}, {"䶾": 1}, {"豌": 1}, {"长江大桥": 2}, {"解析": 5}, {"錝": 1}, {"搜索引擎": 4}, {"foo-bar": 1}, {"abc": 2}, {"祎": 1}, {"数据库": 1}], "doc_len": 25}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"索引": 1}, {"搜索引擎": 4}, {"噆": 1}], "doc_len": 8}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"䠃": 1}, {"数据库": 2}, {"解析": 2}, {"foo-barabc123.456": 1}, {"桯": 1}], "doc_len": 8}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"渦": 1}, {"索引": 3}, {"解析": 1}, {"搜索引擎": 3}, {"123.456": 4}, {"abc": 2}, {"数据库": 1}], "doc_len": 15}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 2}, {"南京市": 1}, {"索引": 3}, {"长江大桥": 1}, {"搜索引擎": 3}, {"数据库": 2}], "doc_len": 12}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"輼": 1}, {"南京市": 4}, {"123.456abc": 1}, {"䞦": 1}, {"长江大桥": 3}, {"搜索引擎": 1}, {"123.456": 2}, {"abc": 3}, {"纍": 1}, {"濵": 1}, {"数据库": 1}], "doc_len": 19}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 2}, {"臖": 1}, {"㟢": 1}, {"长江大桥": 3}, {"㹁": 1}, {"解析": 2}, {"軙": 1}, {"壒": 1}, {"搜索引擎": 1}, {"123.456": 1}, {"灀": 1}, {"数据库": 2}], "doc_len": 17}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"南京市": 2}, {"索引": 2}, {"塠": 1}, {"长江大桥": 1}, {"解析": 1}, {"搜索引擎": 3}, {"123.456": 1}, {"鼨": 1}, {"foo-bar": 4}, {"abc": 1}, {"裻": 1}], "doc_len": 18}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"南京市": 1}, {"索引": 2}, {"碬": 1}, {"123.456foo-bar": 1}, {"解析": 1}, {"搜索引擎": 1}, {"123.456": 1}, {"abc": 2}, {"foo-bar": 3}, {"数据库": 1}, {"䰊": 1}], "doc_len": 15}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"南京市": 2}, {"索引": 3}, {"长江大桥": 1}, {"解析": 1}, {"搜索引擎": 3}, {"foo-bar": 1}, {"abc": 3}, {"abcfoo-bar": 1}, {"数据库": 1}], "doc_len": 17}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"雼": 1}, {"南京市": 5}, {"索引": 2}, {"长江大桥": 1}, {"123.456": 2}, {"foo-bar": 1}, {"abcfoo-bar": 1}, {"榁": 1}, {"数据库": 1}], "doc_len": 15}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"迒": 1}, {"索引": 3}, {"长江大桥": 2}, {"嬵": 1}, {"解析": 1}, {"搜索引擎": 1}, {"foo-bar": 1}, {"何": 1}, {"数据库": 3}], "doc_len": 14}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"迮": 1}, {"南京市": 2}, {"索引": 4}, {"长江大桥": 1}, {"解析": 1}, {"搜索引擎": 2}, {"abc": 2}, {"foo-bar": 2}, {"女": 1}, {"数据库": 1}, {"鈋": 1}], "doc_len": 19}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 2}, {"解析": 1}, {"搜索引擎": 4}, {"abc": 1}, {"数据库": 1}], "doc_len": 9}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"搜索引擎": 2}, {"长江大桥": 2}, {"解析": 2}], "doc_len": 7}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"索引": 1}, {"搜索引擎": 1}, {"壉": 1}, {"南京市": 2}, {"数据库": 1}, {"鱧": 1}], "doc_len": 8}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"南京市": 2}, {"索引": 3}, {"foo-barabcfoo-bar": 1}, {"爗": 1}, {"长江大桥": 1}, {"溵": 1}, {"搜索引擎": 4}, {"foo-bar": 2}, {"abc": 2}, {"数据库": 4}], "doc_len": 21}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"詪": 1}, {"南京市": 2}, {"索引": 2}, {"长江大桥": 2}, {"解析": 5}, {"搜索引擎": 1}, {"123.456": 1}, {"foo-bar": 2}, {"臰": 1}, {"涖": 1}], "doc_len": 19}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"搜索引擎": 1}, {"数据库": 1}], "doc_len": 3}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"緫": 1}, {"南京市": 1}, {"索引": 3}, {"长江大桥": 1}, {"㚸": 1}, {"搜索引擎": 3}, {"123.456": 2}, {"foo-bar": 1}, {"崤": 1}, {"数据库": 1}], "doc_len": 15}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"南京市": 1}], "doc_len": 2}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"索引": 1}, {"搜索引擎": 1}, {"南京市": 1}, {"解析": 2}], "doc_len": 6}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"南京市": 2}, {"蚧": 1}, {"长江大桥": 1}, {"解析": 7}, {"䤀": 1}, {"搜索引擎": 3}, {"123.456": 1}, {"foo-bar": 1}, {"abc": 2}], "doc_len": 20}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"abc": 1}, {"123.456": 1}, {"foo-bar": 1}, {"索引": 3}, {"搜索引擎": 2}, {"长江大桥": 2}, {"解析": 1}], "doc_len": 12}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"南京市": 2}, {"索引": 1}, {"长江大桥": 3}, {"解析": 1}, {"移": 1}, {"搜索引擎": 1}, {"foo-bar": 1}, {"abcfoo-bar": 1}, {"数据库": 1}], "doc_len": 12}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 1}, {"foo-bar": 1}, {"123.456": 1}, {"南京市": 2}, {"数据库": 1}, {"解析": 1}], "doc_len": 7}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"foo-bar": 1}, {"123.456abc": 1}, {"搜索引擎": 4}, {"錾": 1}, {"南京市": 1}, {"解析": 1}], "doc_len": 10}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"索引": 4}, {"长江大桥": 3}, {"解析": 3}, {"㚷": 1}, {"搜索引擎": 1}, {"㶝": 1}, {"foo-bar": 2}, {"玗": 1}, {"数据库": 1}, {"foo-barfoo-bar": 1}], "doc_len": 18}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索引擎": 1}, {"豻": 1}, {"南京市": 1}, {"数据库": 1}, {"㔨": 1}, {"解析": 1}], "doc_len": 6}
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"市长": 1}, {"研究生": 1}, {"研究": 1}, {"五小时": 1}, {"起源": 1}, {"南京市": 1}, {"南京": 1}, {"五小": 1}, {"小时": 1}, {"二三": 1}, {"生命": 1}, {"长江": 1}, {"四五": 1}, {"一二三四五": 1}, {"大桥": 1}], "doc_len": 16}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"性能": 1}, {"数据": 1}, {"器": 1}, {"共和国": 1}, {"人民共和国": 1}, {"索引": 1}, {"中华人民": 1}, {"共和": 1}, {"分词器": 1}, {"国": 1}, {"全文": 1}, {"分词": 1}, {"数据库": 1}, {"中华": 1}, {"中华人民共和国": 1}, {"全文索引": 1}, {"华人": 1}, {"库": 1}, {"人民": 1}], "doc_len": 19}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"ab": 1}, {"123": 1}, {"ab-123": 1}, {"somebody": 1}, {"中文": 1}, {"abc": 1}, {"123.45": 1}, {"测试": 1}], "doc_len": 8}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"e": 1}, {"stanbul": 1}, {"stra": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"龦": 1}, {"ａｂｃ１２３": 1}, {"龥": 1}, {"㐀": 1}, {"１２３": 1}, {"䶿": 1}, {"ａｂｃ": 1}, {"一": 1}], "doc_len": 8}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"bar": 1}, {"解析": 1}, {"foo-bar": 1}, {"foo": 1}], "doc_len": 4}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"123.456123.456": 1}, {"墩": 1}, {"foo-bar": 1}, {"数据": 1}, {"abc123.456": 1}, {"库": 1}, {"藥": 1}, {"长江大桥": 2}, {"索引": 2}, {"abc": 5}, {"解析": 1}, {"bar": 1}, {"数据库": 1}, {"123.456": 2}, {"嘚": 1}, {"狅": 1}, {"foo": 1}, {"长江": 2}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"引擎": 1}, {"解析": 2}, {"索引": 3}, {"搜索": 1}, {"縭": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"库": 1}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"塚": 1}, {"长江大桥": 2}, {"数据": 1}, {"引擎": 1}, {"bar": 2}, {"解析": 2}, {"索引": 2}, {"南京市": 1}, {"鲠": 1}, {"南京": 1}, {"搜索": 1}, {"foo-bar": 2}, {"数据库": 1}, {"长江": 2}, {"搜索引擎": 1}, {"foo": 2}, {"市": 1}, {"库": 1}, {"大桥": 2}], "doc_len": 27}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"数据": 2}, {"引擎": 2}, {"bar": 2}, {"解析": 2}, {"索引": 2}, {"南京市": 1}, {"淌": 1}, {"南京": 1}, {"搜索": 2}, {"foo-bar": 2}, {"数据库": 2}, {"abc": 1}, {"搜索引擎": 2}, {"foo": 2}, {"市": 1}, {"库": 2}], "doc_len": 28}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"引擎": 1}, {"索引": 3}, {"南京市": 3}, {"南京": 3}, {"搜索": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"市": 3}, {"库": 1}], "doc_len": 18}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 3}, {"数据": 1}, {"大桥": 8}, {"市数": 1}, {"库": 1}, {"foo": 2}, {"bar": 2}, {"索引": 1}, {"解析": 2}, {"foo-bar": 2}, {"长江大桥": 8}, {"乊": 1}, {"引擎": 1}, {"abc": 2}, {"搜索引擎": 1}, {"长江": 8}, {"市": 2}, {"数据库": 1}, {"南京市": 3}, {"搜索": 1}, {"桥长": 1}], "doc_len": 52}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 2}, {"数据": 1}, {"大桥": 2}, {"库": 1}, {"abc123.456123.456123.456": 1}, {"foo": 2}, {"123.456123.456123.456": 1}, {"abc123.456": 1}, {"bar": 2}, {"索引": 5}, {"foo-bar": 1}, {"解析": 3}, {"长江大桥": 2}, {"123.456": 4}, {"引擎": 4}, {"123.456foo-bar": 1}, {"abc": 2}, {"搜索引擎": 4}, {"长江": 2}, {"市": 2}, {"数据库": 1}, {"南京市": 2}, {"搜索": 4}], "doc_len": 50}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"长江大桥": 2}, {"数据": 1}, {"引擎": 1}, {"解析": 1}, {"索引": 2}, {"南京市": 1}, {"南京": 1}, {"兤": 1}, {"搜索": 1}, {"数据库": 1}, {"长江": 2}, {"搜索引擎": 1}, {"市": 1}, {"库": 1}, {"大桥": 2}, {"莖": 1}], "doc_len": 21}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"匭": 1}, {"引擎": 1}, {"䥫": 1}, {"bar": 1}, {"索引": 2}, {"南京市": 3}, {"南京": 3}, {"foo-bar": 1}, {"搜索": 1}, {"侑": 1}, {"foo": 1}, {"搜索引擎": 1}, {"市": 3}], "doc_len": 20}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"搜索": 1}, {"澮": 1}, {"数据": 4}, {"库": 4}, {"长江大桥": 2}, {"索引": 2}, {"abc": 1}, {"解析": 1}, {"引擎": 1}, {"蓋": 1}, {"数据库": 4}, {"123.456": 2}, {"搜索引擎": 1}, {"长江": 2}], "doc_len": 29}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 2}, {"数据库": 2}, {"库": 2}], "doc_len": 6}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"祎": 1}, {"錝": 1}, {"foo-bar": 1}, {"搜索": 4}, {"数据": 1}, {"豌": 1}, {"库": 1}, {"长江大桥": 2}, {"索引": 7}, {"䶾": 1}, {"abc": 2}, {"解析": 5}, {"bar": 1}, {"引擎": 4}, {"数据库": 1}, {"市": 1}, {"搜索引擎": 4}, {"南京": 2}, {"foo": 1}, {"市长": 1}, {"长江": 2}, {"唏": 1}, {"南京市": 2}], "doc_len": 49}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"引擎": 4}, {"索引": 5}, {"搜索": 4}, {"abc": 2}, {"噆": 1}, {"搜索引擎": 4}], "doc_len": 20}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"数据": 2}, {"解析": 2}, {"foo-barabc123.456": 1}, {"䠃": 1}, {"barabc": 1}, {"数据库": 2}, {"abc": 1}, {"foo": 1}, {"桯": 1}, {"库": 2}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"搜索": 3}, {"数据": 1}, {"库": 1}, {"索引": 6}, {"abc": 2}, {"解析": 1}, {"引擎": 3}, {"数据库": 1}, {"123.456": 4}, {"搜索引擎": 3}, {"渦": 1}], "doc_len": 26}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"搜索": 3}, {"数据": 2}, {"abc123.456": 2}, {"库": 2}, {"长江大桥": 1}, {"索引": 6}, {"abc": 2}, {"引擎": 3}, {"数据库": 2}, {"市": 1}, {"123.456": 2}, {"搜索引擎": 3}, {"南京": 1}, {"长江": 1}, {"南京市": 1}], "doc_len": 33}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 3}, {"搜索": 1}, {"数据": 1}, {"纍": 1}, {"123.456abc": 1}, {"濵": 1}, {"库": 1}, {"桥长": 1}, {"长江大桥": 3}, {"索引": 1}, {"abc": 4}, {"引擎": 1}, {"数据库": 1}, {"輼": 1}, {"市": 4}, {"123.456": 3}, {"搜索引擎": 1}, {"䞦": 1}, {"南京": 4}, {"长江": 3}, {"南京市": 4}], "doc_len": 41}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"壒": 1}, {"大桥": 3}, {"搜索": 1}, {"数据": 2}, {"库": 2}, {"长江大桥": 3}, {"索引": 3}, {"解析": 2}, {"引擎": 1}, {"数据库": 2}, {"軙": 1}, {"123.456": 1}, {"搜索引擎": 1}, {"灀": 1}, {"长江": 3}, {"臖": 1}, {"㹁": 1}, {"㟢": 1}], "doc_len": 30}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"foo-bar": 4}, {"搜索": 3}, {"裻": 1}, {"鼨": 1}, {"塠": 1}, {"长江大桥": 1}, {"索引": 5}, {"abc": 1}, {"解析": 1}, {"bar": 4}, {"引擎": 3}, {"市": 2}, {"123.456": 1}, {"搜索引擎": 3}, {"南京": 2}, {"foo": 4}, {"长江": 1}, {"南京市": 2}], "doc_len": 41}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 3}, {"搜索": 1}, {"数据": 1}, {"库": 1}, {"索引": 3}, {"碬": 1}, {"abc": 2}, {"解析": 1}, {"䰊": 1}, {"bar": 4}, {"引擎": 1}, {"数据库": 1}, {"市": 1}, {"123.456": 2}, {"搜索引擎": 1}, {"南京": 1}, {"foo": 4}, {"南京市": 1}, {"123.456foo-bar": 1}], "doc_len": 31}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"123.456123.456": 1}, {"foo-bar": 1}, {"搜索": 3}, {"数据": 1}, {"abcfoo": 1}, {"库": 1}, {"长江大桥": 1}, {"索引": 6}, {"abc": 3}, {"解析": 1}, {"bar": 2}, {"引擎": 3}, {"数据库": 1}, {"市": 2}, {"搜索引擎": 3}, {"abcfoo-bar": 1}, {"南京": 2}, {"foo": 1}, {"长江": 1}, {"南京市": 2}], "doc_len": 38}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"市数": 1}, {"雼": 1}, {"foo-bar": 1}, {"数据": 1}, {"abcfoo": 1}, {"库": 1}, {"长江大桥": 1}, {"索引": 2}, {"bar": 2}, {"数据库": 1}, {"市": 4}, {"123.456": 2}, {"abcfoo-bar": 1}, {"南京": 5}, {"foo": 1}, {"榁": 1}, {"长江": 1}, {"南京市": 5}], "doc_len": 33}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"foo-bar": 1}, {"搜索": 1}, {"数据": 3}, {"何": 1}, {"库": 3}, {"迒": 1}, {"长江大桥": 2}, {"索引": 4}, {"解析": 1}, {"bar": 1}, {"引擎": 1}, {"数据库": 3}, {"搜索引擎": 1}, {"foo": 1}, {"长江": 2}, {"嬵": 1}], "doc_len": 29}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"迮": 1}, {"foo-bar": 2}, {"搜索": 2}, {"数据": 1}, {"abc123.456": 1}, {"鈋": 1}, {"库": 1}, {"长江大桥": 1}, {"索引": 6}, {"abc": 3}, {"解析": 1}, {"女": 1}, {"bar": 2}, {"引擎": 2}, {"数据库": 1}, {"市": 2}, {"123.456": 1}, {"搜索引擎": 2}, {"南京": 2}, {"foo": 2}, {"长江": 1}, {"南京市": 2}], "doc_len": 39}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"搜索": 4}, {"数据": 1}, {"库": 1}, {"桥长": 1}, {"长江大桥": 2}, {"索引": 4}, {"abc": 1}, {"解析": 1}, {"引擎": 4}, {"数据库": 1}, {"搜索引擎": 4}, {"长江": 2}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 2}, {"引擎": 2}, {"解析": 2}, {"索引": 2}, {"搜索": 2}, {"桥长": 1}, {"abc": 1}, {"长江": 2}, {"搜索引擎": 2}, {"大桥": 2}], "doc_len": 18}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"鱧": 1}, {"引擎": 1}, {"索引": 2}, {"南京市": 2}, {"南京": 2}, {"搜索": 1}, {"数据库": 1}, {"abc": 1}, {"搜索引擎": 1}, {"壉": 1}, {"市": 2}, {"库": 1}], "doc_len": 17}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"foo-bar": 2}, {"搜索": 4}, {"数据": 4}, {"barabcfoo": 1}, {"溵": 1}, {"库": 4}, {"foo-barabcfoo-bar": 1}, {"长江大桥": 1}, {"索引": 7}, {"abc": 2}, {"bar": 3}, {"引擎": 4}, {"数据库": 4}, {"市": 2}, {"搜索引擎": 4}, {"南京": 2}, {"foo": 3}, {"长江": 1}, {"南京市": 2}, {"爗": 1}], "doc_len": 54}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 2}, {"123.456123.456": 1}, {"foo-bar": 2}, {"搜索": 1}, {"长江大桥": 2}, {"索引": 3}, {"解析": 5}, {"bar": 2}, {"引擎": 1}, {"市": 2}, {"123.456": 1}, {"搜索引擎": 1}, {"臰": 1}, {"南京": 2}, {"foo": 2}, {"长江": 2}, {"南京市": 2}, {"詪": 1}, {"涖": 1}], "doc_len": 34}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"引擎": 1}, {"索引": 2}, {"搜索": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"库": 1}], "doc_len": 8}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"緫": 1}, {"foo-bar": 1}, {"搜索": 3}, {"数据": 1}, {"库": 1}, {"崤": 1}, {"长江大桥": 1}, {"索引": 6}, {"bar": 1}, {"引擎": 3}, {"数据库": 1}, {"㚸": 1}, {"市": 1}, {"123.456": 2}, {"搜索引擎": 3}, {"南京": 1}, {"foo": 1}, {"长江": 1}, {"南京市": 1}], "doc_len": 32}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江大桥": 1}, {"南京市": 1}, {"南京": 1}, {"长江": 1}, {"市": 1}, {"大桥": 1}], "doc_len": 6}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"引擎": 1}, {"解析": 2}, {"索引": 2}, {"南京市": 1}, {"南京": 1}, {"搜索": 1}, {"搜索引擎": 1}, {"市": 1}], "doc_len": 11}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 1}, {"123.456123.456": 1}, {"foo-bar": 1}, {"搜索": 3}, {"长江大桥": 1}, {"索引": 3}, {"abc": 2}, {"解析": 7}, {"bar": 1}, {"䤀": 1}, {"引擎": 3}, {"市": 2}, {"123.456": 1}, {"搜索引擎": 3}, {"蚧": 1}, {"南京": 2}, {"foo": 1}, {"长江": 1}, {"南京市": 2}], "doc_len": 37}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"长江大桥": 2}, {"引擎": 2}, {"bar": 1}, {"解析": 1}, {"索引": 5}, {"foo-bar": 1}, {"搜索": 2}, {"桥长": 1}, {"abc": 2}, {"长江": 2}, {"abc123.456": 1}, {"foo": 1}, {"搜索引擎": 2}, {"大桥": 2}], "doc_len": 27}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 3}, {"foo-bar": 1}, {"搜索": 1}, {"数据": 1}, {"abcfoo": 1}, {"库": 1}, {"移": 1}, {"长江大桥": 3}, {"索引": 2}, {"解析": 1}, {"bar": 2}, {"引擎": 1}, {"数据库": 1}, {"市": 1}, {"搜索引擎": 1}, {"abcfoo-bar": 1}, {"南京": 2}, {"foo": 1}, {"市长": 1}, {"长江": 3}, {"南京市": 2}], "doc_len": 31}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"数据": 1}, {"bar": 1}, {"解析": 1}, {"索引": 1}, {"南京市": 2}, {"南京": 2}, {"foo-bar": 1}, {"数据库": 1}, {"foo": 1}, {"市": 2}, {"库": 1}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"引擎": 4}, {"bar": 1}, {"解析": 1}, {"索引": 4}, {"南京市": 1}, {"南京": 1}, {"foo-bar": 1}, {"搜索": 4}, {"錾": 1}, {"123.456abc": 1}, {"abc": 2}, {"foo": 1}, {"搜索引擎": 4}, {"市": 1}], "doc_len": 28}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"大桥": 3}, {"foo-bar": 2}, {"搜索": 1}, {"数据": 1}, {"foo-barfoo-bar": 1}, {"库": 1}, {"长江大桥": 3}, {"索引": 5}, {"解析": 3}, {"bar": 3}, {"㶝": 1}, {"引擎": 1}, {"玗": 1}, {"barfoo": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"foo": 3}, {"长江": 3}, {"㚷": 1}], "doc_len": 36}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"引擎": 1}, {"解析": 1}, {"豻": 1}, {"索引": 1}, {"南京市": 1}, {"南京": 1}, {"搜索": 1}, {"㔨": 1}, {"数据库": 1}, {"搜索引擎": 1}, {"市": 1}, {"库": 1}], "doc_len": 13}
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 1}, {"生命": 1}, {"市长": 1}, {"南京": 1}, {"一二三四五": 1}, {"长江大桥": 1}, {"起源": 1}, {"大桥": 1}, {"南京市": 1}, {"五小": 1}, {"二三": 1}, {"研究": 1}, {"四五": 1}, {"五小时": 1}, {"小时": 1}, {"研究生": 1}], "doc_len": 16}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"全文": 1}, {"人民": 1}, {"人民共和国": 1}, {"分词": 1}, {"全文索引": 1}, {"性能": 1}, {"中华人民共和国": 1}, {"库": 1}, {"中华": 1}, {"中华人民": 1}, {"共和": 1}, {"数据库": 1}, {"分词器": 1}, {"器": 1}, {"共和国": 1}, {"国": 1}, {"华人": 1}, {"索引": 1}], "doc_len": 19}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"测试": 1}, {"中文": 1}, {"ab": 1}, {"123": 1}, {"ab-123": 1}, {"123.45": 1}, {"somebody": 1}], "doc_len": 8}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"e": 1}, {"stanbul": 1}, {"stra": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"１２３": 1}, {"ａｂｃ": 1}, {"龥": 1}, {"䶿": 1}, {"㐀": 1}, {"龦": 1}, {"ａｂｃ１２３": 1}, {"一": 1}], "doc_len": 8}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}, {"bar": 1}, {"foo": 1}, {"foo-bar": 1}], "doc_len": 4}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"嘚": 1}, {"abc123.456": 1}, {"123.456": 2}, {"长江": 2}, {"解析": 1}, {"123.456123.456": 1}, {"狅": 1}, {"foo-bar": 1}, {"abc": 5}, {"大桥": 2}, {"foo": 1}, {"数据": 1}, {"索引": 2}, {"数据库": 1}, {"长江大桥": 2}, {"藥": 1}, {"库": 1}, {"墩": 1}, {"bar": 1}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"搜索引擎": 1}, {"库": 1}, {"解析": 2}, {"数据库": 1}, {"引擎": 1}, {"縭": 1}, {"搜索": 1}, {"索引": 3}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"长江": 2}, {"南京": 1}, {"搜索引擎": 1}, {"库": 1}, {"解析": 2}, {"长江大桥": 2}, {"数据库": 1}, {"南京市": 1}, {"大桥": 2}, {"引擎": 1}, {"bar": 2}, {"foo": 2}, {"foo-bar": 2}, {"搜索": 1}, {"市": 1}, {"塚": 1}, {"索引": 2}, {"鲠": 1}], "doc_len": 27}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"123.456": 1}, {"数据": 2}, {"南京": 1}, {"搜索引擎": 2}, {"库": 2}, {"解析": 2}, {"数据库": 2}, {"南京市": 1}, {"引擎": 2}, {"bar": 2}, {"foo": 2}, {"淌": 1}, {"foo-bar": 2}, {"搜索": 2}, {"市": 1}, {"索引": 2}], "doc_len": 28}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"南京": 3}, {"搜索引擎": 1}, {"库": 1}, {"数据库": 1}, {"南京市": 3}, {"引擎": 1}, {"搜索": 1}, {"市": 3}, {"索引": 3}], "doc_len": 18}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"市数": 1}, {"abc": 2}, {"解析": 2}, {"搜索引擎": 1}, {"搜索": 1}, {"南京": 3}, {"索引": 1}, {"桥长": 1}, {"数据": 1}, {"南京市": 3}, {"长江": 8}, {"数据库": 1}, {"bar": 2}, {"大桥": 8}, {"引擎": 1}, {"市": 2}, {"长江大桥": 8}, {"foo": 2}, {"foo-bar": 2}, {"乊": 1}], "doc_len": 52}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"abc123.456": 1}, {"abc": 2}, {"解析": 3}, {"搜索引擎": 4}, {"搜索": 4}, {"南京": 2}, {"索引": 5}, {"123.456foo-bar": 1}, {"数据": 1}, {"南京市": 2}, {"长江": 2}, {"数据库": 1}, {"bar": 2}, {"大桥": 2}, {"abc123.456123.456123.456": 1}, {"引擎": 4}, {"市": 2}, {"长江大桥": 2}, {"foo": 2}, {"123.456": 4}, {"foo-bar": 1}, {"123.456123.456123.456": 1}], "doc_len": 50}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"数据": 1}, {"长江": 2}, {"南京": 1}, {"搜索引擎": 1}, {"库": 1}, {"解析": 1}, {"长江大桥": 2}, {"数据库": 1}, {"南京市": 1}, {"大桥": 2}, {"莖": 1}, {"引擎": 1}, {"搜索": 1}, {"市": 1}, {"索引": 2}, {"兤": 1}], "doc_len": 21}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 3}, {"搜索引擎": 1}, {"䥫": 1}, {"南京市": 3}, {"匭": 1}, {"引擎": 1}, {"bar": 1}, {"foo": 1}, {"foo-bar": 1}, {"侑": 1}, {"搜索": 1}, {"市": 3}, {"索引": 2}], "doc_len": 20}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"长江": 2}, {"解析": 1}, {"搜索引擎": 1}, {"abc": 1}, {"大桥": 2}, {"数据": 4}, {"索引": 2}, {"引擎": 1}, {"澮": 1}, {"数据库": 4}, {"长江大桥": 2}, {"搜索": 1}, {"蓋": 1}, {"库": 4}], "doc_len": 29}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 2}, {"库": 2}, {"数据库": 2}], "doc_len": 6}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"錝": 1}, {"䶾": 1}, {"南京": 2}, {"市长": 1}, {"长江": 2}, {"解析": 5}, {"foo-bar": 1}, {"搜索引擎": 4}, {"唏": 1}, {"abc": 2}, {"大桥": 2}, {"foo": 1}, {"数据": 1}, {"索引": 7}, {"引擎": 4}, {"数据库": 1}, {"豌": 1}, {"祎": 1}, {"南京市": 2}, {"长江大桥": 2}, {"市": 1}, {"搜索": 4}, {"库": 1}, {"bar": 1}], "doc_len": 49}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"搜索引擎": 4}, {"引擎": 4}, {"搜索": 4}, {"噆": 1}, {"索引": 5}], "doc_len": 20}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"abc": 1}, {"数据": 2}, {"barabc": 1}, {"䠃": 1}, {"库": 2}, {"解析": 2}, {"数据库": 2}, {"foo": 1}, {"桯": 1}, {"foo-barabc123.456": 1}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 4}, {"解析": 1}, {"搜索引擎": 3}, {"abc": 2}, {"渦": 1}, {"数据": 1}, {"索引": 6}, {"引擎": 3}, {"数据库": 1}, {"搜索": 3}, {"库": 1}], "doc_len": 26}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 1}, {"abc123.456": 2}, {"123.456": 2}, {"长江": 1}, {"搜索引擎": 3}, {"abc": 2}, {"大桥": 1}, {"数据": 2}, {"索引": 6}, {"引擎": 3}, {"数据库": 2}, {"南京市": 1}, {"长江大桥": 1}, {"市": 1}, {"搜索": 3}, {"库": 2}], "doc_len": 33}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 4}, {"123.456": 3}, {"长江": 3}, {"濵": 1}, {"搜索引擎": 1}, {"abc": 4}, {"大桥": 3}, {"数据": 1}, {"索引": 1}, {"引擎": 1}, {"数据库": 1}, {"䞦": 1}, {"南京市": 4}, {"长江大桥": 3}, {"輼": 1}, {"市": 4}, {"纍": 1}, {"搜索": 1}, {"桥长": 1}, {"库": 1}, {"123.456abc": 1}], "doc_len": 41}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"长江": 3}, {"軙": 1}, {"解析": 2}, {"臖": 1}, {"壒": 1}, {"搜索引擎": 1}, {"大桥": 3}, {"数据": 2}, {"㹁": 1}, {"索引": 3}, {"引擎": 1}, {"数据库": 2}, {"长江大桥": 3}, {"搜索": 1}, {"㟢": 1}, {"库": 2}, {"灀": 1}], "doc_len": 30}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"鼨": 1}, {"南京": 2}, {"123.456": 1}, {"长江": 1}, {"解析": 1}, {"foo-bar": 4}, {"搜索引擎": 3}, {"abc": 1}, {"大桥": 1}, {"foo": 4}, {"索引": 5}, {"引擎": 3}, {"裻": 1}, {"南京市": 2}, {"长江大桥": 1}, {"市": 2}, {"搜索": 3}, {"塠": 1}, {"bar": 4}], "doc_len": 41}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 1}, {"123.456": 2}, {"123.456foo-bar": 1}, {"解析": 1}, {"foo-bar": 3}, {"搜索引擎": 1}, {"abc": 2}, {"䰊": 1}, {"foo": 4}, {"数据": 1}, {"索引": 3}, {"引擎": 1}, {"数据库": 1}, {"碬": 1}, {"南京市": 1}, {"市": 1}, {"搜索": 1}, {"库": 1}, {"bar": 4}], "doc_len": 31}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 2}, {"长江": 1}, {"解析": 1}, {"123.456123.456": 1}, {"abcfoo": 1}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"abc": 3}, {"大桥": 1}, {"foo": 1}, {"数据": 1}, {"索引": 6}, {"引擎": 3}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 1}, {"市": 2}, {"搜索": 3}, {"库": 1}, {"bar": 2}], "doc_len": 38}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"榁": 1}, {"南京": 5}, {"123.456": 2}, {"长江": 1}, {"abcfoo": 1}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"大桥": 1}, {"foo": 1}, {"数据": 1}, {"索引": 2}, {"数据库": 1}, {"南京市": 5}, {"长江大桥": 1}, {"雼": 1}, {"市": 4}, {"市数": 1}, {"库": 1}, {"bar": 2}], "doc_len": 33}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 2}, {"解析": 1}, {"foo-bar": 1}, {"搜索引擎": 1}, {"何": 1}, {"大桥": 2}, {"foo": 1}, {"数据": 3}, {"索引": 4}, {"引擎": 1}, {"数据库": 3}, {"长江大桥": 2}, {"搜索": 1}, {"库": 3}, {"嬵": 1}, {"迒": 1}, {"bar": 1}], "doc_len": 29}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"迮": 1}, {"abc123.456": 1}, {"南京": 2}, {"123.456": 1}, {"长江": 1}, {"解析": 1}, {"女": 1}, {"foo-bar": 2}, {"搜索引擎": 2}, {"abc": 3}, {"大桥": 1}, {"鈋": 1}, {"foo": 2}, {"数据": 1}, {"索引": 6}, {"引擎": 2}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 1}, {"市": 2}, {"搜索": 2}, {"库": 1}, {"bar": 2}], "doc_len": 39}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 2}, {"解析": 1}, {"搜索引擎": 4}, {"abc": 1}, {"大桥": 2}, {"数据": 1}, {"索引": 4}, {"引擎": 4}, {"数据库": 1}, {"长江大桥": 2}, {"搜索": 4}, {"桥长": 1}, {"库": 1}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"长江": 2}, {"搜索引擎": 2}, {"解析": 2}, {"长江大桥": 2}, {"桥长": 1}, {"大桥": 2}, {"引擎": 2}, {"搜索": 2}, {"索引": 2}], "doc_len": 18}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"数据": 1}, {"南京": 2}, {"搜索引擎": 1}, {"库": 1}, {"壉": 1}, {"数据库": 1}, {"南京市": 2}, {"引擎": 1}, {"搜索": 1}, {"鱧": 1}, {"市": 2}, {"索引": 2}], "doc_len": 17}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"溵": 1}, {"南京": 2}, {"爗": 1}, {"长江": 1}, {"foo-bar": 2}, {"搜索引擎": 4}, {"abc": 2}, {"大桥": 1}, {"foo": 3}, {"数据": 4}, {"索引": 7}, {"引擎": 4}, {"数据库": 4}, {"foo-barabcfoo-bar": 1}, {"barabcfoo": 1}, {"南京市": 2}, {"长江大桥": 1}, {"市": 2}, {"搜索": 4}, {"库": 4}, {"bar": 3}], "doc_len": 54}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 2}, {"涖": 1}, {"123.456": 1}, {"长江": 2}, {"解析": 5}, {"123.456123.456": 1}, {"foo-bar": 2}, {"搜索引擎": 1}, {"大桥": 2}, {"foo": 2}, {"詪": 1}, {"索引": 3}, {"引擎": 1}, {"南京市": 2}, {"长江大桥": 2}, {"市": 2}, {"搜索": 1}, {"臰": 1}, {"bar": 2}], "doc_len": 34}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"数据": 1}, {"搜索引擎": 1}, {"库": 1}, {"数据库": 1}, {"引擎": 1}, {"搜索": 1}, {"索引": 2}], "doc_len": 8}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 1}, {"123.456": 2}, {"长江": 1}, {"崤": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"大桥": 1}, {"foo": 1}, {"数据": 1}, {"㚸": 1}, {"索引": 6}, {"緫": 1}, {"引擎": 3}, {"数据库": 1}, {"南京市": 1}, {"长江大桥": 1}, {"市": 1}, {"搜索": 3}, {"库": 1}, {"bar": 1}], "doc_len": 32}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 1}, {"南京": 1}, {"长江大桥": 1}, {"大桥": 1}, {"南京市": 1}, {"市": 1}], "doc_len": 6}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"南京": 1}, {"搜索引擎": 1}, {"解析": 2}, {"南京市": 1}, {"引擎": 1}, {"搜索": 1}, {"市": 1}, {"索引": 2}], "doc_len": 11}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"蚧": 1}, {"南京": 2}, {"123.456": 1}, {"长江": 1}, {"解析": 7}, {"123.456123.456": 1}, {"foo-bar": 1}, {"搜索引擎": 3}, {"abc": 2}, {"大桥": 1}, {"foo": 1}, {"索引": 3}, {"引擎": 3}, {"南京市": 2}, {"长江大桥": 1}, {"市": 2}, {"搜索": 3}, {"䤀": 1}, {"bar": 1}], "doc_len": 37}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 2}, {"abc": 2}, {"abc123.456": 1}, {"长江": 2}, {"搜索引擎": 2}, {"解析": 1}, {"长江大桥": 2}, {"桥长": 1}, {"大桥": 2}, {"引擎": 2}, {"bar": 1}, {"foo": 1}, {"foo-bar": 1}, {"搜索": 2}, {"索引": 5}], "doc_len": 27}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"南京": 2}, {"市长": 1}, {"长江": 3}, {"解析": 1}, {"abcfoo": 1}, {"abcfoo-bar": 1}, {"foo-bar": 1}, {"搜索引擎": 1}, {"大桥": 3}, {"foo": 1}, {"数据": 1}, {"索引": 2}, {"引擎": 1}, {"数据库": 1}, {"南京市": 2}, {"长江大桥": 3}, {"市": 1}, {"搜索": 1}, {"移": 1}, {"库": 1}, {"bar": 2}], "doc_len": 31}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"数据": 1}, {"南京": 2}, {"库": 1}, {"解析": 1}, {"数据库": 1}, {"南京市": 2}, {"bar": 1}, {"foo": 1}, {"foo-bar": 1}, {"市": 2}, {"索引": 1}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456": 1}, {"abc": 2}, {"南京": 1}, {"搜索引擎": 4}, {"解析": 1}, {"南京市": 1}, {"引擎": 4}, {"bar": 1}, {"foo": 1}, {"錾": 1}, {"foo-bar": 1}, {"搜索": 4}, {"123.456abc": 1}, {"市": 1}, {"索引": 4}], "doc_len": 28}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 3}, {"解析": 3}, {"㚷": 1}, {"foo-bar": 2}, {"搜索引擎": 1}, {"大桥": 3}, {"foo": 3}, {"数据": 1}, {"索引": 5}, {"引擎": 1}, {"数据库": 1}, {"玗": 1}, {"㶝": 1}, {"foo-barfoo-bar": 1}, {"长江大桥": 3}, {"搜索": 1}, {"barfoo": 1}, {"库": 1}, {"bar": 3}], "doc_len": 36}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"㔨": 1}, {"数据": 1}, {"南京": 1}, {"搜索引擎": 1}, {"库": 1}, {"解析": 1}, {"数据库": 1}, {"南京市": 1}, {"引擎": 1}, {"搜索": 1}, {"市": 1}, {"豻": 1}, {"索引": 1}], "doc_len": 13}
+select tokenize(convert(X'e7a094e7a9b6e7949fe591bde8b5b7e6ba90e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5e4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"生命": 1}, {"四五": 1}, {"大桥": 1}, {"五小": 1}, {"长江大桥": 1}, {"五小时": 1}, {"市长": 1}, {"起源": 1}, {"一二三四五": 1}, {"南京市": 1}, {"研究生": 1}, {"南京": 1}, {"二三": 1}, {"研究": 1}, {"小时": 1}, {"长江": 1}], "doc_len": 16}
+select tokenize(convert(X'e695b0e68daee5ba93e585a8e69687e7b4a2e5bc95e680a7e883bde58886e8af8de599a8e4b8ade58d8ee4babae6b091e585b1e5928ce59bbd' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"中华": 1}, {"性能": 1}, {"人民共和国": 1}, {"库": 1}, {"索引": 1}, {"共和": 1}, {"中华人民": 1}, {"华人": 1}, {"国": 1}, {"数据": 1}, {"中华人民共和国": 1}, {"数据库": 1}, {"全文索引": 1}, {"人民": 1}, {"分词": 1}, {"共和国": 1}, {"器": 1}, {"分词器": 1}, {"全文": 1}], "doc_len": 19}
+select tokenize(convert(X'414243203132332e34352041422d3132332040736f6d65626f647920e4b8ade69687e6b58be8af95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"ab": 1}, {"abc": 1}, {"中文": 1}, {"ab-123": 1}, {"123": 1}, {"测试": 1}, {"somebody": 1}, {"123.45": 1}], "doc_len": 8}
+select tokenize(convert(X'' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'00090a20213f23' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'f0a08080f0a0aeb7f0a08081f09f988020c3a9c39f20c4b07374616e62756c2053747261c39f65' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"stra": 1}, {"stanbul": 1}, {"e": 1}], "doc_len": 3}
+select tokenize(convert(X'e4b880e9bea5e9bea6e39080e4b6bfe38080efbca1efbca2efbca3efbc91efbc92efbc93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"龥": 1}, {"龦": 1}, {"ａｂｃ": 1}, {"ａｂｃ１２３": 1}, {"１２３": 1}, {"䶿": 1}, {"㐀": 1}, {"一": 1}], "doc_len": 8}
+select tokenize(convert(X'f09f9880666f6f2d626172e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"foo-bar": 1}, {"foo": 1}, {"bar": 1}, {"解析": 1}], "doc_len": 4}
+select tokenize(convert(X'414243e995bfe6b19fe5a4a7e6a1a5414243e78b85e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e897a500e5a2a93132332e34353620cea900204142433132332e343536e7b4a2e5bc953132332e3435363132332e34353620f09f988041424320e695b0e68daee5ba93e5989a414243e8a7a3e69e90e7b4a2e5bc9520' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"123.456123.456": 1}, {"长江": 2}, {"库": 1}, {"索引": 2}, {"长江大桥": 2}, {"墩": 1}, {"大桥": 2}, {"解析": 1}, {"foo": 1}, {"123.456": 2}, {"foo-bar": 1}, {"abc": 5}, {"bar": 1}, {"藥": 1}, {"嘚": 1}, {"数据库": 1}, {"数据": 1}, {"狅": 1}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b8ade8a7a3e69e90e8a7a3e69e90e7b4a2e5bc95f09f9880e7b4a2e5bc95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"縭": 1}, {"库": 1}, {"引擎": 1}, {"索引": 3}, {"搜索引擎": 1}, {"数据": 1}, {"数据库": 1}, {"搜索": 1}, {"解析": 2}], "doc_len": 12}
+select tokenize(convert(X'666f6f2d626172e9b2a0e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e5a19a2000e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e9000e58d97e4baace5b882e8a7a3e69e9000' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"大桥": 2}, {"库": 1}, {"引擎": 1}, {"索引": 2}, {"foo-bar": 2}, {"foo": 2}, {"搜索引擎": 1}, {"长江大桥": 2}, {"数据": 1}, {"南京市": 1}, {"数据库": 1}, {"bar": 2}, {"搜索": 1}, {"南京": 1}, {"塚": 1}, {"解析": 2}, {"鲠": 1}, {"长江": 2}], "doc_len": 27}
+select tokenize(convert(X'666f6f2d626172e8a7a3e69e90cea9e695b0e68daee5ba93e58d97e4baace5b882e6b78ce6909ce7b4a2e5bc95e6938e3132332e343536f09f9880666f6f2d62617220414243e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e8a7a3e69e90f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"abc": 1}, {"引擎": 2}, {"库": 2}, {"淌": 1}, {"123.456": 1}, {"索引": 2}, {"foo-bar": 2}, {"foo": 2}, {"搜索引擎": 2}, {"数据": 2}, {"南京市": 1}, {"数据库": 2}, {"bar": 2}, {"搜索": 2}, {"南京": 1}, {"解析": 2}], "doc_len": 28}
+select tokenize(convert(X'e7b4a2e5bc95e695b0e68daee5ba93e7b4a2e5bc95cea9f09f9880e6909ce7b4a2e5bc95e6938ee58d97e4baace5b88220e58d97e4baace5b882e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 3}, {"引擎": 1}, {"库": 1}, {"索引": 3}, {"搜索引擎": 1}, {"数据": 1}, {"南京市": 3}, {"数据库": 1}, {"搜索": 1}, {"南京": 3}], "doc_len": 18}
+select tokenize(convert(X'cea9e995bfe6b19fe5a4a7e6a1a541424320e995bfe6b19fe5a4a7e6a1a5e4b98a20666f6f2d62617200e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e00e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882cea941424320f09f9880e995bfe6b19fe5a4a7e6a1a520666f6f2d626172e8a7a3e69e90f09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e695b0e68daee5ba9300e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"搜索": 1}, {"搜索引擎": 1}, {"引擎": 1}, {"索引": 1}, {"数据": 1}, {"abc": 2}, {"南京": 3}, {"南京市": 3}, {"市": 2}, {"foo": 2}, {"长江大桥": 8}, {"解析": 2}, {"乊": 1}, {"大桥": 8}, {"市数": 1}, {"长江": 8}, {"foo-bar": 2}, {"桥长": 1}, {"数据库": 1}, {"bar": 2}], "doc_len": 52}
+select tokenize(convert(X'e58d97e4baace5b8823132332e343536f09f9880e995bfe6b19fe5a4a7e6a1a54142433132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e003132332e343536666f6f2d626172e8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea9e58d97e4baace5b8823132332e343536e995bfe6b19fe5a4a7e6a1a5e695b0e68daee5ba930020e7b4a2e5bc954142433132332e3435363132332e3435363132332e343536cea9e8a7a3e69e90666f6f2d626172e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"123.456": 4}, {"搜索": 4}, {"搜索引擎": 4}, {"引擎": 4}, {"索引": 5}, {"123.456foo-bar": 1}, {"数据": 1}, {"abc": 2}, {"南京": 2}, {"南京市": 2}, {"市": 2}, {"abc123.456": 1}, {"foo": 2}, {"长江大桥": 2}, {"解析": 3}, {"大桥": 2}, {"长江": 2}, {"123.456123.456123.456": 1}, {"foo-bar": 1}, {"数据库": 1}, {"bar": 2}, {"abc123.456123.456123.456": 1}], "doc_len": 50}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e88e96e585a43132332e343536e7b4a2e5bc95e8a7a3e69e9020e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93cea900e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"兤": 1}, {"市": 1}, {"大桥": 2}, {"库": 1}, {"引擎": 1}, {"莖": 1}, {"索引": 2}, {"123.456": 1}, {"搜索引擎": 1}, {"长江大桥": 2}, {"数据": 1}, {"南京市": 1}, {"数据库": 1}, {"搜索": 1}, {"南京": 1}, {"解析": 1}, {"长江": 2}], "doc_len": 21}
+select tokenize(convert(X'e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e58d97e4baace5b882e58d97e4baace5b882cea9e4a5abe58d97e4baace5b882e58cade4be91cea920666f6f2d62617200' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 3}, {"侑": 1}, {"引擎": 1}, {"foo-bar": 1}, {"索引": 2}, {"foo": 1}, {"搜索引擎": 1}, {"匭": 1}, {"䥫": 1}, {"南京市": 3}, {"bar": 1}, {"搜索": 1}, {"南京": 3}], "doc_len": 20}
+select tokenize(convert(X'00e690a8' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"搨": 1}], "doc_len": 1}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9500003132332e343536e695b0e68daee5ba93cea9e695b0e68daee5ba93414243e695b0e68daee5ba9300f09f9880e6beae00203132332e343536cea9e995bfe6b19fe5a4a7e6a1a5e8938be695b0e68daee5ba9320e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 2}, {"库": 4}, {"索引": 2}, {"搜索": 1}, {"长江大桥": 2}, {"大桥": 2}, {"解析": 1}, {"搜索引擎": 1}, {"123.456": 2}, {"澮": 1}, {"abc": 1}, {"引擎": 1}, {"蓋": 1}, {"数据库": 4}, {"数据": 4}], "doc_len": 29}
+select tokenize(convert(X'e695b0e68daee5ba9300cea9e695b0e68daee5ba9320' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 2}, {"数据": 2}, {"数据库": 2}], "doc_len": 6}
+select tokenize(convert(X'cea9e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ef09f9880e6909ce7b4a2e5bc95e6938ee8b18ce695b0e68daee5ba93e8a7a3e69e90e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f988020cea9414243e7b4a2e5bc95e7b4a2e5bc95e8a7a3e69e90e6909ce7b4a2e5bc95e6938e20e8a7a3e69e90e4b6bee7b4a2e5bc95e7a58ee8a7a3e69e9000e5948f20666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e98c9de58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a5414243' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"唏": 1}, {"长江": 2}, {"库": 1}, {"南京市": 2}, {"索引": 7}, {"䶾": 1}, {"搜索": 4}, {"豌": 1}, {"长江大桥": 2}, {"大桥": 2}, {"解析": 5}, {"南京": 2}, {"錝": 1}, {"搜索引擎": 4}, {"foo": 1}, {"市长": 1}, {"foo-bar": 1}, {"abc": 2}, {"引擎": 4}, {"bar": 1}, {"祎": 1}, {"数据库": 1}, {"市": 1}, {"数据": 1}], "doc_len": 49}
+select tokenize(convert(X'e7b4a2e5bc95f09f9880e6909ce7b4a2e5bc95e6938e00414243e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e414243e6909ce7b4a2e5bc95e6938ee59986' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"引擎": 4}, {"索引": 5}, {"搜索引擎": 4}, {"搜索": 4}, {"噆": 1}], "doc_len": 20}
+select tokenize(convert(X'e8a7a3e69e9020e8a7a3e69e9000e6a1af414243e695b0e68daee5ba93666f6f2d6261724142433132332e343536e4a083e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"库": 2}, {"123.456": 1}, {"foo": 1}, {"数据": 2}, {"barabc": 1}, {"䠃": 1}, {"数据库": 2}, {"解析": 2}, {"foo-barabc123.456": 1}, {"桯": 1}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e6909ce7b4a2e5bc95e6938ef09f98803132332e343536e6909ce7b4a2e5bc95e6938ee8a7a3e69e903132332e34353600e7b4a2e5bc95414243e6b8a63132332e343536e695b0e68daee5ba933132332e343536e7b4a2e5bc95e7b4a2e5bc95414243' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"渦": 1}, {"索引": 6}, {"搜索": 3}, {"解析": 1}, {"搜索引擎": 3}, {"123.456": 4}, {"abc": 2}, {"引擎": 3}, {"数据库": 1}, {"数据": 1}], "doc_len": 26}
+select tokenize(convert(X'4142433132332e343536e6909ce7b4a2e5bc95e6938ee695b0e68daee5ba93e7b4a2e5bc95cea9e58d97e4baace5b882e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e00e7b4a2e5bc95e695b0e68daee5ba934142433132332e34353600e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 2}, {"长江": 1}, {"库": 2}, {"南京市": 1}, {"索引": 6}, {"搜索": 3}, {"长江大桥": 1}, {"大桥": 1}, {"南京": 1}, {"搜索引擎": 3}, {"123.456": 2}, {"abc": 2}, {"引擎": 3}, {"数据库": 2}, {"市": 1}, {"数据": 2}], "doc_len": 33}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e20e8bcbc20e7ba8de995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a53132332e343536414243e995bfe6b19fe5a4a7e6a1a5e49ea6e58d97e4baace5b8822041424320e695b0e68daee5ba933132332e343536e6bfb5cea90020414243e58d97e4baace5b882414243e58d97e4baace5b882e58d97e4baace5b88220f09f98803132332e343536' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"桥长": 1}, {"长江": 3}, {"库": 1}, {"輼": 1}, {"南京市": 4}, {"123.456abc": 1}, {"索引": 1}, {"䞦": 1}, {"搜索": 1}, {"长江大桥": 3}, {"大桥": 3}, {"南京": 4}, {"搜索引擎": 1}, {"123.456": 3}, {"abc": 4}, {"纍": 1}, {"引擎": 1}, {"濵": 1}, {"数据库": 1}, {"数据": 1}, {"市": 4}], "doc_len": 41}
+select tokenize(convert(X'20e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938ee3b981e88796e8bb99e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e39fa2cea920e78180e995bfe6b19fe5a4a7e6a1a520e695b0e68daee5ba93e5a3923132332e343536e7b4a2e5bc95e695b0e68daee5ba93cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 3}, {"库": 2}, {"索引": 3}, {"臖": 1}, {"搜索": 1}, {"㟢": 1}, {"长江大桥": 3}, {"㹁": 1}, {"大桥": 3}, {"解析": 2}, {"軙": 1}, {"壒": 1}, {"搜索引擎": 1}, {"123.456": 1}, {"引擎": 1}, {"灀": 1}, {"数据库": 2}, {"数据": 2}], "doc_len": 30}
+select tokenize(convert(X'20e58d97e4baace5b882414243e8a3bb666f6f2d626172e6909ce7b4a2e5bc95e6938ee5a1a0666f6f2d626172e58d97e4baace5b88220666f6f2d626172e8a7a3e69e90e9bca8e6909ce7b4a2e5bc95e6938ee7b4a2e5bc9520e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5666f6f2d626172e7b4a2e5bc953132332e34353600' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 1}, {"南京市": 2}, {"索引": 5}, {"搜索": 3}, {"塠": 1}, {"长江大桥": 1}, {"大桥": 1}, {"解析": 1}, {"南京": 2}, {"搜索引擎": 3}, {"foo": 4}, {"123.456": 1}, {"鼨": 1}, {"foo-bar": 4}, {"abc": 1}, {"引擎": 3}, {"bar": 4}, {"裻": 1}, {"市": 2}], "doc_len": 41}
+select tokenize(convert(X'cea9cea93132332e343536e7b4a2e5bc95e7b4a2e5bc953132332e343536666f6f2d62617220666f6f2d626172e58d97e4baace5b882e6909ce7b4a2e5bc95e6938e666f6f2d626172e4b08acea90041424300666f6f2d626172e7a2ac414243f09f9880e695b0e68daee5ba93e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"南京市": 1}, {"索引": 3}, {"碬": 1}, {"搜索": 1}, {"123.456foo-bar": 1}, {"解析": 1}, {"南京": 1}, {"搜索引擎": 1}, {"foo": 4}, {"123.456": 2}, {"abc": 2}, {"foo-bar": 3}, {"引擎": 1}, {"bar": 4}, {"数据库": 1}, {"䰊": 1}, {"数据": 1}, {"市": 1}], "doc_len": 31}
+select tokenize(convert(X'cea900e58d97e4baace5b882e7b4a2e5bc9500414243e6909ce7b4a2e5bc95e6938ef09f9880e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882e7b4a2e5bc953132332e3435363132332e343536e695b0e68daee5ba93666f6f2d626172e7b4a2e5bc95f09f9880414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90414243cea9414243e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"长江": 1}, {"库": 1}, {"abcfoo": 1}, {"南京市": 2}, {"索引": 6}, {"搜索": 3}, {"长江大桥": 1}, {"大桥": 1}, {"解析": 1}, {"南京": 2}, {"搜索引擎": 3}, {"foo": 1}, {"foo-bar": 1}, {"abc": 3}, {"引擎": 3}, {"bar": 2}, {"abcfoo-bar": 1}, {"数据库": 1}, {"数据": 1}, {"市": 2}], "doc_len": 38}
+select tokenize(convert(X'3132332e343536e7b4a2e5bc95203132332e343536e995bfe6b19fe5a4a7e6a1a520e58d97e4baace5b882e6a681e7b4a2e5bc95e58d97e4baace5b882e58d97e4baace5b882e695b0e68daee5ba93e58d97e4baace5b8820020cea9414243666f6f2d62617200666f6f2d62617200e58d97e4baace5b882e99bbcf09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"雼": 1}, {"长江": 1}, {"库": 1}, {"abcfoo": 1}, {"南京市": 5}, {"索引": 2}, {"市数": 1}, {"长江大桥": 1}, {"大桥": 1}, {"南京": 5}, {"foo": 1}, {"123.456": 2}, {"foo-bar": 1}, {"bar": 2}, {"abcfoo-bar": 1}, {"榁": 1}, {"数据库": 1}, {"数据": 1}, {"市": 4}], "doc_len": 33}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5e4bd95e6909ce7b4a2e5bc95e6938ef09f9880e5acb5e695b0e68daee5ba93e8a7a3e69e90e7b4a2e5bc95e7b4a2e5bc9520e695b0e68daee5ba9320e995bfe6b19fe5a4a7e6a1a5e8bf92e695b0e68daee5ba93e7b4a2e5bc95666f6f2d626172' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"迒": 1}, {"长江": 2}, {"库": 3}, {"索引": 4}, {"搜索": 1}, {"长江大桥": 2}, {"嬵": 1}, {"大桥": 2}, {"解析": 1}, {"搜索引擎": 1}, {"foo": 1}, {"foo-bar": 1}, {"何": 1}, {"引擎": 1}, {"bar": 1}, {"数据库": 3}, {"数据": 3}], "doc_len": 29}
+select tokenize(convert(X'20cea9e6909ce7b4a2e5bc95e6938e666f6f2d626172e7b4a2e5bc95414243e695b0e68daee5ba93f09f9880e8bfaee58d97e4baace5b882e9888bcea9e8a7a3e69e90e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee4b7b84142433132332e34353600e7b4a2e5bc95cea9cea9e7b4a2e5bc95414243f09f9880e7b4a2e5bc95e5a5b3e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"长江": 1}, {"库": 1}, {"迮": 1}, {"南京市": 2}, {"索引": 6}, {"搜索": 2}, {"长江大桥": 1}, {"大桥": 1}, {"解析": 1}, {"南京": 2}, {"搜索引擎": 2}, {"foo": 2}, {"123.456": 1}, {"abc": 3}, {"foo-bar": 2}, {"引擎": 2}, {"女": 1}, {"bar": 2}, {"数据库": 1}, {"鈋": 1}, {"市": 2}, {"数据": 1}], "doc_len": 39}
+select tokenize(convert(X'e5b9ae' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"幮": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5f09f9880f09f9880cea9cea92020e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938e414243e695b0e68daee5ba93f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"桥长": 1}, {"长江": 2}, {"库": 1}, {"索引": 4}, {"搜索": 4}, {"长江大桥": 2}, {"大桥": 2}, {"解析": 1}, {"搜索引擎": 4}, {"abc": 1}, {"引擎": 4}, {"数据库": 1}, {"数据": 1}], "doc_len": 28}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938e00cea9f09f9880cea9e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e6909ce7b4a2e5bc95e6938e414243e8a7a3e69e90e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"大桥": 2}, {"引擎": 2}, {"索引": 2}, {"搜索引擎": 2}, {"长江大桥": 2}, {"桥长": 1}, {"搜索": 2}, {"解析": 2}, {"长江": 2}], "doc_len": 18}
+select tokenize(convert(X'e5a389e6909ce7b4a2e5bc95e6938ee9b1a7e695b0e68daee5ba93414243e58d97e4baace5b882cea9e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 2}, {"abc": 1}, {"库": 1}, {"引擎": 1}, {"索引": 2}, {"搜索引擎": 1}, {"数据": 1}, {"壉": 1}, {"南京市": 2}, {"数据库": 1}, {"搜索": 1}, {"南京": 2}, {"鱧": 1}], "doc_len": 17}
+select tokenize(convert(X'414243e6909ce7b4a2e5bc95e6938e41424320e6bab5f09f988000666f6f2d626172414243666f6f2d626172e7b4a2e5bc95e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95e695b0e68daee5ba93666f6f2d626172e6909ce7b4a2e5bc95e6938e000020e7b4a2e5bc95e6909ce7b4a2e5bc95e6938e666f6f2d626172e695b0e68daee5ba93e58d97e4baace5b882e6909ce7b4a2e5bc95e6938ee58d97e4baace5b882f09f9880e78897e695b0e68daee5ba93e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 1}, {"库": 4}, {"南京市": 2}, {"索引": 7}, {"搜索": 4}, {"foo-barabcfoo-bar": 1}, {"爗": 1}, {"长江大桥": 1}, {"大桥": 1}, {"barabcfoo": 1}, {"溵": 1}, {"南京": 2}, {"搜索引擎": 4}, {"foo": 3}, {"foo-bar": 2}, {"abc": 2}, {"引擎": 4}, {"bar": 3}, {"数据库": 4}, {"市": 2}, {"数据": 4}], "doc_len": 54}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172cea9666f6f2d626172e6b696e8a7a3e69e90e7b4a2e5bc95e887b0e8a7a3e69e90e8a7a3e69e90e995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b882f09f9880e7b4a2e5bc95e58d97e4baace5b8823132332e343536e8a9aacea9e8a7a3e69e90e8a7a3e69e90203132332e3435363132332e343536e6909ce7b4a2e5bc95e6938ecea9f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"长江": 2}, {"詪": 1}, {"南京市": 2}, {"索引": 3}, {"搜索": 1}, {"长江大桥": 2}, {"大桥": 2}, {"解析": 5}, {"南京": 2}, {"搜索引擎": 1}, {"foo": 2}, {"123.456": 1}, {"foo-bar": 2}, {"引擎": 1}, {"bar": 2}, {"臰": 1}, {"涖": 1}, {"市": 2}], "doc_len": 34}
+select tokenize(convert(X'cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ef09f9880e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"库": 1}, {"引擎": 1}, {"索引": 2}, {"搜索引擎": 1}, {"数据": 1}, {"数据库": 1}, {"搜索": 1}], "doc_len": 8}
+select tokenize(convert(X'20e695b0e68daee5ba93e995bfe6b19fe5a4a7e6a1a5cea9e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee7b7abe7b4a2e5bc95e7b4a2e5bc95e39ab8666f6f2d626172203132332e343536e6909ce7b4a2e5bc95e6938e3132332e343536e58d97e4baace5b882e5b4a4e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"緫": 1}, {"长江": 1}, {"库": 1}, {"南京市": 1}, {"索引": 6}, {"搜索": 3}, {"长江大桥": 1}, {"㚸": 1}, {"大桥": 1}, {"南京": 1}, {"搜索引擎": 3}, {"foo": 1}, {"123.456": 2}, {"foo-bar": 1}, {"引擎": 3}, {"崤": 1}, {"bar": 1}, {"数据库": 1}, {"市": 1}, {"数据": 1}], "doc_len": 32}
+select tokenize(convert(X'f09f9880f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(convert(X'e58d97e4baace5b88200e995bfe6b19fe5a4a7e6a1a5f09f9880' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"大桥": 1}, {"长江大桥": 1}, {"南京市": 1}, {"南京": 1}, {"长江": 1}], "doc_len": 6}
+select tokenize(convert(X'20e8a7a3e69e90e7b4a2e5bc95e6909ce7b4a2e5bc95e6938ee58d97e4baace5b8823132332e3435362000e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"引擎": 1}, {"123.456": 1}, {"索引": 2}, {"搜索引擎": 1}, {"南京市": 1}, {"搜索": 1}, {"南京": 1}, {"解析": 2}], "doc_len": 11}
+select tokenize(convert(X'cea9e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e58d97e4baace5b8823132332e343536e8a7a3e69e90e8a7a3e69e90e58d97e4baace5b882e8a7a3e69e9000cea9cea9e8a7a3e69e90e8a7a3e69e90e89aa7414243cea9e8a7a3e69e9020414243f09f9880e4a48020e6909ce7b4a2e5bc95e6938ee8a7a3e69e90666f6f2d62617220cea93132332e3435363132332e343536' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123.456123.456": 1}, {"长江": 1}, {"南京市": 2}, {"索引": 3}, {"搜索": 3}, {"蚧": 1}, {"长江大桥": 1}, {"大桥": 1}, {"解析": 7}, {"南京": 2}, {"䤀": 1}, {"搜索引擎": 3}, {"foo": 1}, {"123.456": 1}, {"foo-bar": 1}, {"abc": 2}, {"引擎": 3}, {"bar": 1}, {"市": 2}], "doc_len": 37}
+select tokenize(convert(X'cea9e8a7a3e69e90' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"解析": 1}], "doc_len": 1}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee7b4a2e5bc954142433132332e343536e995bfe6b19fe5a4a7e6a1a5e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc95666f6f2d626172e8a7a3e69e90414243e7b4a2e5bc953132332e343536f09f9880f09f9880e6909ce7b4a2e5bc95e6938e' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc123.456": 1}, {"abc": 2}, {"大桥": 2}, {"引擎": 2}, {"foo-bar": 1}, {"123.456": 2}, {"索引": 5}, {"foo": 1}, {"搜索引擎": 2}, {"长江大桥": 2}, {"桥长": 1}, {"bar": 1}, {"搜索": 2}, {"解析": 1}, {"长江": 2}], "doc_len": 27}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5cea900e58d97e4baace5b882e995bfe6b19fe5a4a7e6a1a500200020666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7a7bbf09f988020e58d97e4baace5b88200414243666f6f2d626172e6909ce7b4a2e5bc95e6938ee7b4a2e5bc95e8a7a3e69e90e695b0e68daee5ba93' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 3}, {"库": 1}, {"abcfoo": 1}, {"南京市": 2}, {"索引": 2}, {"搜索": 1}, {"长江大桥": 3}, {"大桥": 3}, {"解析": 1}, {"南京": 2}, {"移": 1}, {"搜索引擎": 1}, {"foo": 1}, {"市长": 1}, {"foo-bar": 1}, {"引擎": 1}, {"bar": 2}, {"abcfoo-bar": 1}, {"数据库": 1}, {"数据": 1}, {"市": 1}], "doc_len": 31}
+select tokenize(convert(X'e695b0e68daee5ba933132332e343536e58d97e4baace5b882e8a7a3e69e90f09f9880cea9666f6f2d62617200e7b4a2e5bc95e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 2}, {"库": 1}, {"索引": 1}, {"foo-bar": 1}, {"123.456": 1}, {"foo": 1}, {"数据": 1}, {"南京市": 2}, {"bar": 1}, {"数据库": 1}, {"南京": 2}, {"解析": 1}], "doc_len": 15}
+select tokenize(convert(X'e6909ce7b4a2e5bc95e6938ee6909ce7b4a2e5bc95e6938e666f6f2d626172e6909ce7b4a2e5bc95e6938ee8a7a3e69e90e6909ce7b4a2e5bc95e6938ecea920414243203132332e343536414243e98cbee58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"abc": 2}, {"引擎": 4}, {"123.456": 1}, {"foo-bar": 1}, {"索引": 4}, {"123.456abc": 1}, {"foo": 1}, {"搜索引擎": 4}, {"錾": 1}, {"南京市": 1}, {"bar": 1}, {"搜索": 4}, {"南京": 1}, {"解析": 1}], "doc_len": 28}
+select tokenize(convert(X'e995bfe6b19fe5a4a7e6a1a5666f6f2d626172e995bfe6b19fe5a4a7e6a1a5e7b4a2e5bc9500e7b4a2e5bc95e8a7a3e69e90666f6f2d626172666f6f2d626172e3b69d666f6f2d626172e8a7a3e69e90cea9e6909ce7b4a2e5bc95e6938ee995bfe6b19fe5a4a7e6a1a5e39ab7f09f988000e7b4a2e5bc95e78e9700e8a7a3e69e9000e695b0e68daee5ba93e7b4a2e5bc95' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"长江": 3}, {"库": 1}, {"barfoo": 1}, {"索引": 5}, {"搜索": 1}, {"长江大桥": 3}, {"大桥": 3}, {"解析": 3}, {"㚷": 1}, {"搜索引擎": 1}, {"foo": 3}, {"㶝": 1}, {"foo-bar": 2}, {"引擎": 1}, {"bar": 3}, {"玗": 1}, {"数据库": 1}, {"foo-barfoo-bar": 1}, {"数据": 1}], "doc_len": 36}
+select tokenize(convert(X'20e6909ce7b4a2e5bc95e6938ee8b1bb00e8a7a3e69e90e695b0e68daee5ba93e394a8e58d97e4baace5b882' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"市": 1}, {"库": 1}, {"引擎": 1}, {"索引": 1}, {"搜索引擎": 1}, {"豻": 1}, {"数据": 1}, {"南京市": 1}, {"数据库": 1}, {"搜索": 1}, {"南京": 1}, {"㔨": 1}, {"解析": 1}], "doc_len": 13}
+select tokenize('the and for 是的了', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"了": 1}, {"是的": 1}, {"and": 1}, {"for": 1}, {"the": 1}], "doc_len": 5}
+select tokenize('the and for 是的了', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"了": 1}, {"是的": 1}, {"and": 1}, {"for": 1}, {"the": 1}], "doc_len": 5}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"鿿": 1}, {"鿾": 1}, {"caf": 1}, {"字": 1}, {"abc123": 1}, {"丁": 1}, {"中文": 1}, {"abc": 1}, {"一": 1}, {"stanbul": 1}, {"漢": 1}], "doc_len": 11}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 1}, {"字": 1}, {"中文": 1}, {"stanbul": 1}, {"漢": 1}, {"鿾": 1}, {"caf": 1}, {"abc123": 1}, {"鿿": 1}, {"一": 1}, {"丁": 1}], "doc_len": 11}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens;
+tokens
+{"tokens": [{"丁": 1}, {"abc": 1}, {"鿾": 1}, {"abc123": 1}, {"中文": 1}, {"caf": 1}, {"漢": 1}, {"字": 1}, {"鿿": 1}, {"stanbul": 1}, {"一": 1}], "doc_len": 11}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"123": 1}, {"鿿": 1}, {"鿾": 1}, {"caf": 1}, {"字": 1}, {"abc123": 1}, {"丁": 1}, {"中文": 1}, {"abc": 2}, {"一": 1}, {"stanbul": 1}, {"漢": 1}], "doc_len": 13}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"abc": 2}, {"字": 1}, {"中文": 1}, {"123": 1}, {"stanbul": 1}, {"漢": 1}, {"鿾": 1}, {"caf": 1}, {"abc123": 1}, {"鿿": 1}, {"一": 1}, {"丁": 1}], "doc_len": 13}
+select tokenize(convert(X'e4b7bf20e4b88020e4b88120e9bfbe20e9bfbf20ea808020e6bca2e5ad9741424331323320616263e4b8ade6968720434146c38920c4b07374616e62756c20cea320cf83' using utf8mb4) collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+{"tokens": [{"丁": 1}, {"abc": 2}, {"鿾": 1}, {"abc123": 1}, {"中文": 1}, {"123": 1}, {"caf": 1}, {"漢": 1}, {"字": 1}, {"鿿": 1}, {"stanbul": 1}, {"一": 1}], "doc_len": 13}

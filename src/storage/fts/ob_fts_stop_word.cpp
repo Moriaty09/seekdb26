@@ -180,12 +180,25 @@ int ObAddWord::casedown_word(const ObFTWord &src, ObFTWord &dst)
     ret = OB_INVALID_ARGUMENT;
   } else if (flag_.casedown()) {
     ObString dst_str;
-    if (OB_FAIL(ObCharset::tolower(
-                    word_meta_.get_collation_type(),
-                    src.get_word().get_string(),
-                    dst_str,
-                    allocator_))) {
+    const ObString src_str = src.get_word().get_string();
+    const ObCollationType coll = word_meta_.get_collation_type();
+    // U+4E00..U+9FFF has no case mappings. Recognize well-formed UTF-8
+    // basic CJK words without decoding them again in the case converter.
+    // Still copy into allocator_: map keys must outlive the token iterator.
+    bool basic_cjk = (coll == CS_TYPE_UTF8MB4_GENERAL_CI || coll == CS_TYPE_UTF8MB4_BIN)
+        && src_str.length() % 3 == 0;
+    const unsigned char *bytes = reinterpret_cast<const unsigned char *>(src_str.ptr());
+    for (int64_t i = 0; basic_cjk && i < src_str.length(); i += 3) {
+      basic_cjk = bytes[i] >= 0xe4 && bytes[i] <= 0xe9
+          && (bytes[i + 1] & 0xc0) == 0x80 && (bytes[i + 2] & 0xc0) == 0x80
+          && (bytes[i] != 0xe4 || bytes[i + 1] >= 0xb8);
+    }
+    if (basic_cjk) {
+      ret = ob_write_string(allocator_, src_str, dst_str);
     } else {
+      ret = ObCharset::tolower(coll, src_str, dst_str, allocator_);
+    }
+    if (OB_SUCC(ret)) {
       ObFTWord tmp(dst_str.length(), dst_str.ptr(), word_meta_);
       dst = tmp;
     }
