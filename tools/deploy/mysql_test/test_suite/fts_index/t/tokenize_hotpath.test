@@ -1,0 +1,9 @@
+# Preserve token frequencies and stopword collation across hot-path optimizations.
+select tokenize('The the THE café CAFÉ database database 中文数据库', 'beng', '[{"output":"all"}]') as token_result;
+select tokenize('The the THE café CAFÉ database database 中文数据库', 'ik', '[{"output":"all"}]') as token_result;
+select tokenize(_utf8mb4'a an the THE café CAFÉ a an 中文' collate utf8mb4_bin, 'space', '[{"output":"all"}]') as token_result;
+select tokenize(_utf8mb4'a an the THE café CAFÉ a an 中文' collate utf8mb4_general_ci, 'space', '[{"output":"all"}]') as token_result;
+select tokenize('数据库数据库全文索引全文索引 the THE oceanbase OceanBase', 'ik', '[{"output":"all"}]') as token_result;
+# Overlapping dictionary prefixes retain output order in both IK modes.
+select tokenize('研究生命起源南京市长江大桥一二三四五小时', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as token_result;
+select tokenize('研究生命起源南京市长江大桥一二三四五小时', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as token_result;

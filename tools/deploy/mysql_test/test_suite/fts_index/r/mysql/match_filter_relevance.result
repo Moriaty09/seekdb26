@@ -1,0 +1,87 @@
+drop database if exists fts_filter_relevance;
+create database fts_filter_relevance;
+use fts_filter_relevance;
+create table docs (id int primary key, body text,
+fulltext index ft_body(body) with parser beng);
+insert into docs values
+(1, 'database database performance'),
+(2, 'database audit'),
+(3, 'performance audit audit'),
+(4, 'unrelated document'), (5, null), (6, ''), (7, 'the and');
+select count(*) as hits from docs where match(body) against('database performance');
+hits
+3
+select count(*) as hits from docs where match(body) against('database performance') > 0;
+hits
+3
+select count(*) as hits from docs where 0 < match(body) against('database performance');
+hits
+3
+select count(*) as hits from docs where match(body) against('database performance') > 2;
+hits
+1
+select count(*) as hits from docs where not match(body) against('database performance');
+hits
+4
+select count(*) as hits from docs where match(body) against('database performance') or id = 4;
+hits
+4
+select count(*) as hits from docs where match(body) against('missing');
+hits
+0
+select count(*) as hits from docs force index(primary) where match(body) against('database performance');
+hits
+3
+select id, round(match(body) against('database performance'), 8) as score
+from docs where match(body) against('database performance') order by id;
+id	score
+1	2.45473280
+2	1.17203121
+3	1.10484471
+select round(sum(match(body) against('database performance')), 8) as score_sum
+from docs where match(body) against('database performance');
+score_sum
+4.73160872
+select id from docs where match(body) against('database performance');
+id
+1
+2
+3
+select id from docs where match(body) against('database performance') limit 2;
+id
+1
+2
+select id from docs where match(body) against('database performance')
+order by match(body) against('database performance') desc, id limit 2;
+id
+1
+2
+select id from docs where match(body) against('database performance') order by id limit 2;
+id
+1
+2
+prepare filtered from 'select count(*) as hits from docs where match(body) against(?) > ?';
+set @query = 'database performance';
+set @threshold = 0;
+execute filtered using @query, @threshold;
+hits
+3
+set @threshold = 2;
+execute filtered using @query, @threshold;
+hits
+1
+set @threshold = 0;
+execute filtered using @query, @threshold;
+hits
+3
+deallocate prepare filtered;
+select count(*) as hits from docs where match(body) against('+database -audit' in boolean mode);
+hits
+1
+select count(*) as hits from docs where match(body) against('database testtoken000 testtoken001 testtoken002 testtoken003 testtoken004 testtoken005 testtoken006 testtoken007 testtoken008 testtoken009 testtoken010 testtoken011 testtoken012 testtoken013 testtoken014 testtoken015 testtoken016 testtoken017 testtoken018 testtoken019 testtoken020 testtoken021 testtoken022 testtoken023 testtoken024 testtoken025 testtoken026 testtoken027 testtoken028 testtoken029 testtoken030 testtoken031 testtoken032 testtoken033 testtoken034 testtoken035 testtoken036 testtoken037 testtoken038 testtoken039 testtoken040 testtoken041 testtoken042 testtoken043 testtoken044 testtoken045 testtoken046 testtoken047 testtoken048 testtoken049 testtoken050 testtoken051 testtoken052 testtoken053 testtoken054 testtoken055 testtoken056 testtoken057 testtoken058 testtoken059 testtoken060 testtoken061 testtoken062 testtoken063 testtoken064 testtoken065 testtoken066 testtoken067 testtoken068 testtoken069 testtoken070 testtoken071 testtoken072 testtoken073 testtoken074 testtoken075 testtoken076 testtoken077 testtoken078 testtoken079 testtoken080 testtoken081 testtoken082 testtoken083 testtoken084 testtoken085 testtoken086 testtoken087 testtoken088 testtoken089 testtoken090 testtoken091 testtoken092 testtoken093 testtoken094 testtoken095 testtoken096 testtoken097 testtoken098 testtoken099 testtoken100 testtoken101 testtoken102 testtoken103 testtoken104 testtoken105 testtoken106 testtoken107 testtoken108 testtoken109 testtoken110 testtoken111 testtoken112 testtoken113 testtoken114 testtoken115 testtoken116 testtoken117 testtoken118 testtoken119 testtoken120 testtoken121 testtoken122 testtoken123 testtoken124 testtoken125 testtoken126 testtoken127 testtoken128 testtoken129 testtoken130 testtoken131 testtoken132 testtoken133 testtoken134 testtoken135 testtoken136 testtoken137 testtoken138 testtoken139 testtoken140 testtoken141 testtoken142 testtoken143 testtoken144 testtoken145 testtoken146 testtoken147 testtoken148 testtoken149 testtoken150 testtoken151 testtoken152 testtoken153 testtoken154 testtoken155 testtoken156 testtoken157 testtoken158 testtoken159 testtoken160 testtoken161 testtoken162 testtoken163 testtoken164 testtoken165 testtoken166 testtoken167 testtoken168 testtoken169 testtoken170 testtoken171 testtoken172 testtoken173 testtoken174 testtoken175 testtoken176 testtoken177 testtoken178 testtoken179 testtoken180 testtoken181 testtoken182 testtoken183 testtoken184 testtoken185 testtoken186 testtoken187 testtoken188 testtoken189 testtoken190 testtoken191 testtoken192 testtoken193 testtoken194 testtoken195 testtoken196 testtoken197 testtoken198 testtoken199 testtoken200 testtoken201 testtoken202 testtoken203 testtoken204 testtoken205 testtoken206 testtoken207 testtoken208 testtoken209 testtoken210 testtoken211 testtoken212 testtoken213 testtoken214 testtoken215 testtoken216 testtoken217 testtoken218 testtoken219 testtoken220 testtoken221 testtoken222 testtoken223 testtoken224 testtoken225 testtoken226 testtoken227 testtoken228 testtoken229 testtoken230 testtoken231 testtoken232 testtoken233 testtoken234 testtoken235 testtoken236 testtoken237 testtoken238 testtoken239 testtoken240 testtoken241 testtoken242 testtoken243 testtoken244 testtoken245 testtoken246 testtoken247 testtoken248 testtoken249 testtoken250 testtoken251 testtoken252 testtoken253 testtoken254 testtoken255 testtoken256 testtoken257 testtoken258 testtoken259 testtoken260 testtoken261 testtoken262 testtoken263 testtoken264 testtoken265 testtoken266 testtoken267 testtoken268 testtoken269 testtoken270 testtoken271 testtoken272 testtoken273 testtoken274 testtoken275 testtoken276 testtoken277 testtoken278 testtoken279 testtoken280 testtoken281 testtoken282 testtoken283 testtoken284 testtoken285 testtoken286 testtoken287 testtoken288 testtoken289 testtoken290 testtoken291 testtoken292 testtoken293 testtoken294 testtoken295 testtoken296 testtoken297 testtoken298 testtoken299');
+hits
+2
+select count(*) as hits from docs where match(body) against('database testtoken000 testtoken001 testtoken002 testtoken003 testtoken004 testtoken005 testtoken006 testtoken007 testtoken008 testtoken009 testtoken010 testtoken011 testtoken012 testtoken013 testtoken014 testtoken015 testtoken016 testtoken017 testtoken018 testtoken019 testtoken020 testtoken021 testtoken022 testtoken023 testtoken024 testtoken025 testtoken026 testtoken027 testtoken028 testtoken029 testtoken030 testtoken031 testtoken032 testtoken033 testtoken034 testtoken035 testtoken036 testtoken037 testtoken038 testtoken039 testtoken040 testtoken041 testtoken042 testtoken043 testtoken044 testtoken045 testtoken046 testtoken047 testtoken048 testtoken049 testtoken050 testtoken051 testtoken052 testtoken053 testtoken054 testtoken055 testtoken056 testtoken057 testtoken058 testtoken059 testtoken060 testtoken061 testtoken062 testtoken063 testtoken064 testtoken065 testtoken066 testtoken067 testtoken068 testtoken069 testtoken070 testtoken071 testtoken072 testtoken073 testtoken074 testtoken075 testtoken076 testtoken077 testtoken078 testtoken079 testtoken080 testtoken081 testtoken082 testtoken083 testtoken084 testtoken085 testtoken086 testtoken087 testtoken088 testtoken089 testtoken090 testtoken091 testtoken092 testtoken093 testtoken094 testtoken095 testtoken096 testtoken097 testtoken098 testtoken099 testtoken100 testtoken101 testtoken102 testtoken103 testtoken104 testtoken105 testtoken106 testtoken107 testtoken108 testtoken109 testtoken110 testtoken111 testtoken112 testtoken113 testtoken114 testtoken115 testtoken116 testtoken117 testtoken118 testtoken119 testtoken120 testtoken121 testtoken122 testtoken123 testtoken124 testtoken125 testtoken126 testtoken127 testtoken128 testtoken129 testtoken130 testtoken131 testtoken132 testtoken133 testtoken134 testtoken135 testtoken136 testtoken137 testtoken138 testtoken139 testtoken140 testtoken141 testtoken142 testtoken143 testtoken144 testtoken145 testtoken146 testtoken147 testtoken148 testtoken149 testtoken150 testtoken151 testtoken152 testtoken153 testtoken154 testtoken155 testtoken156 testtoken157 testtoken158 testtoken159 testtoken160 testtoken161 testtoken162 testtoken163 testtoken164 testtoken165 testtoken166 testtoken167 testtoken168 testtoken169 testtoken170 testtoken171 testtoken172 testtoken173 testtoken174 testtoken175 testtoken176 testtoken177 testtoken178 testtoken179 testtoken180 testtoken181 testtoken182 testtoken183 testtoken184 testtoken185 testtoken186 testtoken187 testtoken188 testtoken189 testtoken190 testtoken191 testtoken192 testtoken193 testtoken194 testtoken195 testtoken196 testtoken197 testtoken198 testtoken199 testtoken200 testtoken201 testtoken202 testtoken203 testtoken204 testtoken205 testtoken206 testtoken207 testtoken208 testtoken209 testtoken210 testtoken211 testtoken212 testtoken213 testtoken214 testtoken215 testtoken216 testtoken217 testtoken218 testtoken219 testtoken220 testtoken221 testtoken222 testtoken223 testtoken224 testtoken225 testtoken226 testtoken227 testtoken228 testtoken229 testtoken230 testtoken231 testtoken232 testtoken233 testtoken234 testtoken235 testtoken236 testtoken237 testtoken238 testtoken239 testtoken240 testtoken241 testtoken242 testtoken243 testtoken244 testtoken245 testtoken246 testtoken247 testtoken248 testtoken249 testtoken250 testtoken251 testtoken252 testtoken253 testtoken254 testtoken255 testtoken256 testtoken257 testtoken258 testtoken259 testtoken260 testtoken261 testtoken262 testtoken263 testtoken264 testtoken265 testtoken266 testtoken267 testtoken268 testtoken269 testtoken270 testtoken271 testtoken272 testtoken273 testtoken274 testtoken275 testtoken276 testtoken277 testtoken278 testtoken279 testtoken280 testtoken281 testtoken282 testtoken283 testtoken284 testtoken285 testtoken286 testtoken287 testtoken288 testtoken289 testtoken290 testtoken291 testtoken292 testtoken293 testtoken294 testtoken295 testtoken296 testtoken297 testtoken298 testtoken299') > 0;
+hits
+2
+drop database fts_filter_relevance;

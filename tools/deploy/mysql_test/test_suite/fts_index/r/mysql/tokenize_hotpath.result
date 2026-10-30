@@ -1,0 +1,21 @@
+select tokenize('The the THE café CAFÉ database database 中文数据库', 'beng', '[{"output":"all"}]') as token_result;
+token_result
+{"tokens": [{"café": 2}, {"中文数据库": 1}, {"database": 2}], "doc_len": 5}
+select tokenize('The the THE café CAFÉ database database 中文数据库', 'ik', '[{"output":"all"}]') as token_result;
+token_result
+{"tokens": [{"caf": 2}, {"database": 2}, {"数据库": 1}, {"中文": 1}, {"the": 3}], "doc_len": 9}
+select tokenize(_utf8mb4'a an the THE café CAFÉ a an 中文' collate utf8mb4_bin, 'space', '[{"output":"all"}]') as token_result;
+token_result
+{"tokens": [{"café": 2}], "doc_len": 2}
+select tokenize(_utf8mb4'a an the THE café CAFÉ a an 中文' collate utf8mb4_general_ci, 'space', '[{"output":"all"}]') as token_result;
+token_result
+{"tokens": [{"café": 2}], "doc_len": 2}
+select tokenize('数据库数据库全文索引全文索引 the THE oceanbase OceanBase', 'ik', '[{"output":"all"}]') as token_result;
+token_result
+{"tokens": [{"oceanbase": 2}, {"数据库": 2}, {"全文索引": 2}, {"the": 2}], "doc_len": 8}
+select tokenize('研究生命起源南京市长江大桥一二三四五小时', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as token_result;
+token_result
+{"tokens": [{"长江大桥": 1}, {"研究": 1}, {"起源": 1}, {"南京市": 1}, {"小时": 1}, {"生命": 1}, {"一二三四五": 1}], "doc_len": 7}
+select tokenize('研究生命起源南京市长江大桥一二三四五小时', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as token_result;
+token_result
+{"tokens": [{"长江大桥": 1}, {"市长": 1}, {"研究生": 1}, {"研究": 1}, {"五小时": 1}, {"起源": 1}, {"南京市": 1}, {"南京": 1}, {"五小": 1}, {"小时": 1}, {"二三": 1}, {"生命": 1}, {"长江": 1}, {"四五": 1}, {"一二三四五": 1}, {"大桥": 1}], "doc_len": 16}

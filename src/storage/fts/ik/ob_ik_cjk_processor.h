@@ -18,6 +18,7 @@
 #define _OCEANBASE_STORAGE_FTS_IK_OB_IK_CJK_PROCESSOR_H_
 
 #include "lib/allocator/ob_allocator.h"
+#include "lib/container/ob_se_array.h"
 #include "storage/fts/dict/ob_ft_dict.h"
 #include "storage/fts/ik/ob_ik_processor.h"
 
@@ -30,7 +31,7 @@ class ObIKCJKProcessor : public ObIIKProcessor
 {
 public:
   ObIKCJKProcessor(const ObIFTDict &dict_main, ObIAllocator &alloc)
-      : hits_(alloc), dict_main_(dict_main), cjk_start_(-1), cjk_end_(-1)
+      : hits_(OB_MALLOC_NORMAL_BLOCK_SIZE, alloc), dict_main_(dict_main), cjk_start_(-1), cjk_end_(-1)
   {
   }
   ~ObIKCJKProcessor() override { hits_.reset(); }
@@ -42,7 +43,7 @@ public:
                  const ObFTCharUtil::CharType type) override;
 
 private:
-  ObList<ObDATrieHit, ObIAllocator> hits_;
+  ObSEArray<ObDATrieHit, 8, ObIAllocator&> hits_;
   const ObIFTDict &dict_main_;
   int64_t cjk_start_;
   int64_t cjk_end_;

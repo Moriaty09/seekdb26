@@ -12088,6 +12088,9 @@ int ObLogPlan::prepare_text_retrieval_lookup(const ObIArray<ObRawExpr *> &lookup
                                                    lookup_index_ids.at(i),
                                                    curr_match_expr,
                                                    tr_info))) {
+    } else if (FALSE_IT(tr_info.need_calc_relevance_ = true)) {
+      // Only a primary retrieval scan may omit scores; lookup/merge consumers
+      // also need to distinguish nonmatching candidate rows.
     } else if (OB_FAIL(table_scan->get_lookup_tr_infos().push_back(tr_info))) {
     }
   }
@@ -12128,6 +12131,9 @@ int ObLogPlan::prepare_text_retrieval_match_score(const ObIArray<ObRawExpr *> &m
     } else if (prev_match_expr != curr_match_expr && FALSE_IT(column_boost_idx = 0)) {
     } else if (FALSE_IT(prev_match_expr = curr_match_expr)) {
     } else if (FALSE_IT(tr_info.column_boost_idx_ = column_boost_idx)) {
+    } else if (FALSE_IT(tr_info.need_calc_relevance_ = true)) {
+      // Only a primary retrieval scan may omit scores; lookup/merge consumers
+      // also need to distinguish nonmatching candidate rows.
     } else if (OB_FAIL(table_scan->get_match_tr_infos().push_back(tr_info))) {
     }
   }
@@ -12159,6 +12165,9 @@ int ObLogPlan::prepare_text_retrieval_merge(const ObIArray<ObRawExpr *> &merge_m
                                                    merge_index_ids.at(i),
                                                    curr_match_expr,
                                                    tr_info))) {
+    } else if (FALSE_IT(tr_info.need_calc_relevance_ = true)) {
+      // Only a primary retrieval scan may omit scores; lookup/merge consumers
+      // also need to distinguish nonmatching candidate rows.
     } else if (OB_FAIL(table_scan->get_merge_tr_infos().push_back(tr_info))) {
     }
   }
@@ -12173,6 +12182,57 @@ int ObLogPlan::prepare_text_retrieval_merge(const ObIArray<ObRawExpr *> &merge_m
     }
     if (OB_FAIL(table_scan->set_is_skip_rowkey_doc(doc_rowkey_tid == OB_INVALID_ID))) {
     }
+  }
+  return ret;
+}
+
+// A natural-language MATCH used only as a boolean predicate does not need
+// document-frequency aggregation or BM25 projection. Examine every semantic
+// root, including the implicit relevance ORDER BY installed by preprocessing.
+static int check_filter_only_match(ObExecContext *exec_ctx,
+                                   const ObDMLStmt *stmt,
+                                   ObMatchFunRawExpr *match_expr,
+                                   bool &need_score)
+{
+  int ret = OB_SUCCESS;
+  need_score = true;
+  ObSEArray<ObSelectStmt *, 4> children;
+  ObSEArray<ObRawExpr *, 16> exprs;
+  bool has_positive_filter = false;
+  if (nullptr != stmt) {
+    const ObIArray<ObRawExpr *> &filters = stmt->get_condition_exprs();
+    for (int64_t i = 0; !has_positive_filter && i < filters.count(); ++i) {
+      const ObRawExpr *filter = filters.at(i);
+      has_positive_filter = nullptr != filter && T_OP_BOOL == filter->get_expr_type()
+                            && filter->get_param_count() == 1
+                            && filter->get_param_expr(0) == match_expr;
+    }
+  }
+  if (OB_ISNULL(exec_ctx) || OB_ISNULL(stmt) || OB_ISNULL(match_expr)) {
+    // Keep scoring when the semantic context is unavailable.
+  } else if (!has_positive_filter || !stmt->is_select_stmt() || match_expr->is_es_match()
+             || NATURAL_LANGUAGE_MODE != match_expr->get_mode_flag()
+             || !match_expr->get_columns_boosts().empty()) {
+    // Boolean-search weights and ES boosts may affect membership as well as score.
+  } else if (OB_FAIL(stmt->get_child_stmts(children))) {
+  } else if (!children.empty()) {
+    // Correlated consumers may refer to MATCH through execution parameters.
+  } else if (OB_FAIL(stmt->get_relation_exprs(exprs))) {
+  } else {
+    bool referenced = false;
+    need_score = false;
+    for (int64_t i = 0; OB_SUCC(ret) && !need_score && i < exprs.count(); ++i) {
+      bool contains_match = false;
+      if (OB_FAIL(ObRawExprUtils::find_expr(exprs.at(i), match_expr, contains_match))) {
+      } else if (contains_match) {
+        referenced = true;
+        const ObRawExpr *expr = exprs.at(i);
+        need_score = T_OP_BOOL != expr->get_expr_type() || expr->get_param_count() != 1
+                     || expr->get_param_expr(0) != match_expr;
+      }
+    }
+    // Do not infer filter-only use from an absent or optimizer-only reference.
+    need_score = need_score || !referenced;
   }
   return ret;
 }
@@ -12194,7 +12254,6 @@ int ObLogPlan::prepare_text_retrieval_info(const uint64_t ref_table_id,
   uint64_t inv_idx_tid = OB_INVALID_ID;
   ObSEArray<ObAuxTableMetaInfo, 4> index_infos;
   bool need_calc_relevance = true;
-  ObSEArray<ObExprConstraint, 2> constraints;
   uint64_t docid_col_id = OB_INVALID_ID;
   if (OB_ISNULL(match_against) || OB_ISNULL(get_stmt()) || OB_ISNULL(get_optimizer_context().get_query_ctx())) {
     ret = OB_INVALID_ARGUMENT;
@@ -12261,18 +12320,12 @@ int ObLogPlan::prepare_text_retrieval_info(const uint64_t ref_table_id,
     }
   }
   if (OB_SUCC(ret)) {
-    /*
-    if (OB_FAIL(ObTransformUtils::check_need_calc_match_score(get_optimizer_context().get_exec_ctx(),
+    if (OB_FAIL(check_filter_only_match(get_optimizer_context().get_exec_ctx(),
                                                               get_stmt(),
                                                               match_against,
-                                                              need_calc_relevance,
-                                                              constraints))) {
+                                                              need_calc_relevance))) {
       LOG_WARN("failed to check need calc relevance", K(ret));
-    } else if (!need_calc_relevance &&
-               OB_FAIL(append_array_no_dup(get_optimizer_context().get_query_ctx()->all_expr_constraints_, constraints))) {
-      LOG_WARN("failed to append array no dup", K(ret));
     }
-    */
     tr_info.match_expr_ = match_against;
     tr_info.inv_idx_tid_ = inv_idx_tid;
     tr_info.fwd_idx_tid_ = fwd_idx_tid;
