@@ -2016,6 +2016,11 @@ int ObSelectResolver::resolve_star(const ParseNode *node)
   } else {
     /* won't be here */
   }
+  if (OB_SUCC(ret)) {
+    for (int64_t i = 0; OB_SUCC(ret) && i < select_stmt->get_select_item_size(); ++i) {
+      OZ (record_user_read_columns(select_stmt->get_select_item(i).expr_));
+    }
+  }
   return ret;
 }
 
@@ -3254,6 +3259,9 @@ int ObSelectResolver::resolve_column_ref_expr(
   }
   if (OB_SUCC(ret) && OB_FAIL(resolve_column_ref_in_all_namespace(q_name, real_ref_expr))) {
     LOG_WARN_IGNORE_COL_NOTFOUND(ret, "resolve column ref in all namespace failed", K(ret));
+  }
+  if (OB_SUCC(ret)) {
+    OZ (record_user_read_columns(real_ref_expr));
   }
   return ret;
 }

@@ -373,6 +373,7 @@ private:
   common::ObTimer deadlock_event_clear_task_timer_;
   common::ObTimer purge_recyclebin_task_timer_;
   common::ObTimer ai_column_worker_timer_;
+  common::ObTimer ai_column_worker_peer_timer_;
 
   // async timer tasks
   ObLoadDDLTask load_ddl_task_; // repeat on failure and cancel on success
@@ -380,6 +381,7 @@ private:
 
   ObPurgeRecyclebinTask purge_recyclebin_task_;     // periodic schedule
   ObAIColumnWorkerTask ai_column_worker_task_;
+  ObAIColumnWorkerTask ai_column_worker_peer_task_;
   // for set_config
   ObLatch set_config_lock_;
 

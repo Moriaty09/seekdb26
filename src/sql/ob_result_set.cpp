@@ -27,6 +27,8 @@
 #include "sql/monitor/show_trace/ob_show_trace.h"
 #include "sql/engine/table/ob_table_scan_op.h"
 #include "share/ob_ddl_checksum.h"
+#include "query/session/ob_inner_sql_connection_access.h"
+#include "common/mysqlclient/ob_mysql_result.h"
 
 using namespace oceanbase::sql;
 using namespace oceanbase::common;
@@ -41,6 +43,120 @@ namespace sql
 {
 namespace
 {
+class AIReadSessionGuard
+{
+public:
+  explicit AIReadSessionGuard(ObSQLSessionInfo &session)
+      : session_(session), was_inner_(session.is_inner()), type_(session.get_session_type())
+  {
+    session_.set_inner_session();
+  }
+  ~AIReadSessionGuard()
+  {
+    if (was_inner_) {
+      session_.set_inner_session();
+    } else {
+      session_.set_user_session();
+    }
+    session_.set_session_type(type_);
+  }
+private:
+  ObSQLSessionInfo &session_;
+  bool was_inner_;
+  ObSQLSessionInfo::SessionType type_;
+};
+
+OB_NOINLINE int check_ai_table_readiness(uint64_t table_id, const ObIArray<uint64_t> &cids,
+                             ObSQLSessionInfo &session)
+{
+  int ret = OB_SUCCESS;
+  {
+    ObSqlString metadata_sql;
+    if (!cids.empty()) {
+      OZ (metadata_sql.assign_fmt(
+          "SELECT a.column_id,CONCAT('SELECT 1 FROM `',"
+          "REPLACE(d.database_name,'`','``'),'`.`',REPLACE(t.table_name,'`','``'),"
+          "'` WHERE COALESCE(`__ai_',REPLACE(a.column_name,'`','``'),"
+          "'_state`,0)<>2 LIMIT 1') readiness_sql "
+          "FROM oceanbase.__all_ai_column a "
+          "JOIN oceanbase.__all_table t ON t.table_id=a.table_id "
+          "JOIN oceanbase.__all_database d ON d.database_id=t.database_id "
+          "WHERE a.table_id=%lu AND a.column_id IN (", table_id));
+      for (int64_t i = 0; OB_SUCC(ret) && i < cids.count(); ++i) {
+        OZ (metadata_sql.append_fmt("%s%lu", i == 0 ? "" : ",", cids.at(i)));
+      }
+      OZ (metadata_sql.append(")"));
+      HEAP_VAR(ObMySQLProxy::MySQLResult, metadata) {
+      if (OB_SUCC(ret)) {
+        OZ (GCTX.sql_proxy_->read(metadata, metadata_sql.ptr()));
+      }
+      sqlclient::ObMySQLResult *rows = metadata.get_result();
+      if (OB_SUCC(ret) && nullptr == rows) {
+        ret = OB_ERR_UNEXPECTED;
+      }
+      while (OB_SUCC(ret) && OB_SUCC(ret = rows->next())) {
+        uint64_t column_id = OB_INVALID_ID;
+        ObString readiness_sql;
+        EXTRACT_INT_FIELD_MYSQL(*rows, "column_id", column_id, uint64_t);
+        OZ (rows->get_varchar("readiness_sql", readiness_sql));
+        // Use the caller's transaction, while allowing the internal query to
+        // resolve hidden state columns and bypass recursive strict checks.
+        AIReadSessionGuard session_guard(session);
+        sqlclient::ObISQLConnectionGuard connection;
+        HEAP_VAR(ObMySQLProxy::MySQLResult, readiness) {
+        OZ (query::ObInnerSQLConnectionAccess::create_connection_with_external_session(
+            &session, connection));
+        if (OB_SUCC(ret) && nullptr == connection.get_ptr()) {
+          ret = OB_ERR_UNEXPECTED;
+        }
+        if (OB_SUCC(ret)) {
+          OZ (connection.get_ptr()->execute_read(readiness_sql, readiness, false));
+        }
+        if (OB_SUCC(ret)) {
+          if (nullptr == readiness.get_result()) {
+            ret = OB_ERR_UNEXPECTED;
+          } else {
+            const int next_ret = readiness.get_result()->next();
+            if (OB_SUCCESS == next_ret) {
+              ret = OB_AI_COLUMN_NOT_READY;
+              LOG_USER_ERROR(OB_AI_COLUMN_NOT_READY, table_id, column_id);
+            } else if (OB_ITER_END != next_ret) {
+              ret = next_ret;
+            }
+          }
+        }
+        }
+      }
+      if (OB_ITER_END == ret) {
+        ret = OB_SUCCESS;
+      }
+      }
+    }
+  }
+  return ret;
+}
+
+OB_NOINLINE int check_ai_plan_readiness(const ObPhysicalPlan &plan, ObSQLSessionInfo &session)
+{
+  int ret = OB_SUCCESS;
+  const auto &refs = plan.get_user_read_column_refs();
+  ObSEArray<uint64_t, 8> checked_tables;
+  for (int64_t i = 0; OB_SUCC(ret) && i < refs.count(); ++i) {
+    const uint64_t table_id = refs.at(i).table_id_;
+    if (!has_exist_in_array(checked_tables, table_id)) {
+      ObSEArray<uint64_t, 8> cids;
+      OZ (checked_tables.push_back(table_id));
+      for (int64_t j = i; OB_SUCC(ret) && j < refs.count(); ++j) {
+        if (refs.at(j).table_id_ == table_id) {
+          OZ (cids.push_back(refs.at(j).column_id_));
+        }
+      }
+      OZ (check_ai_table_readiness(table_id, cids, session));
+    }
+  }
+  return ret;
+}
+
 int find_table_scan_table_id(const ObOpSpec *spec, uint64_t &table_id)
 {
   int ret = OB_SUCCESS;
@@ -136,6 +252,15 @@ OB_INLINE int ObResultSet::open_plan()
     LOG_ERROR("invalid physical plan", K(physical_plan_));
   } else {
     has_top_limit_ = physical_plan_->has_top_limit();
+    // Check on every execution, including cached plans, before opening any
+    // operator that could modify data. Internal readiness SQL must not recurse.
+    bool strict_ai_read = false;
+    if (!my_session_.is_inner()) {
+      OZ (my_session_.get_sys_variable(SYS_VAR_AI_COLUMN_STRICT_READ, strict_ai_read));
+      if (OB_SUCC(ret) && strict_ai_read) {
+        OZ (check_ai_plan_readiness(*physical_plan_, my_session_));
+      }
+    }
     // PX admission is done in do_open_plan (right before execute_plan), not here.
     if (OB_SUCC(ret)) {
       if (THIS_WORKER.is_timeout()) {

@@ -1,0 +1,59 @@
+drop database if exists ai_column_strict_scope;
+create database ai_column_strict_scope;
+use ai_column_strict_scope;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('strict_scope_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('strict_scope_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('strict_scope_model', '{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('strict_scope_ep', '{"ai_model_name":"strict_scope_model","url":"http://127.0.0.1:19126/v1/chat/completions","access_key":"scope-key","provider":"openai","request_model_name":"mock-complete"}');
+create table docs(id int primary key, content varchar(100), result varchar(400) AI COLUMN (AI_COMPLETE('strict_scope_model', content)) WITH(sync_mode='async', max_retries=0));
+insert into docs(id, content) values (1,'scope-one');
+select 1 = 1 as initial_ready;
+initial_ready
+1
+create view ready_view as select id, result as generated_value from docs;
+create view expression_view as select id, concat(result, '!') as computed_value from ready_view join docs using(id);
+create view filtered_view as select id from docs where result is not null;
+set session ai_column_strict_read = on;
+prepare cached_read from 'select result is not null as cached_ready from docs where id = 1';
+execute cached_read;
+cached_ready
+1
+start transaction;
+update docs set content = 'scope-two' where id = 1;
+execute cached_read;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select generated_value from ready_view where 0;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select count(*) = 1 as normal_column_read_in_transaction from docs where id = 1;
+normal_column_read_in_transaction
+1
+rollback;
+execute cached_read;
+cached_ready
+1
+select generated_value is not null as rollback_restores_view_read from ready_view;
+rollback_restores_view_read
+1
+update docs set content = 'scope-three' where id = 1;
+execute cached_read;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select generated_value from ready_view where id = 999;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select id from ready_view;
+id
+1
+select id from expression_view;
+id
+1
+select computed_value from expression_view where 0;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select id from filtered_view where 0;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+deallocate prepare cached_read;
+set session ai_column_strict_read = off;
+drop view expression_view, filtered_view, ready_view;
+drop table docs;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('strict_scope_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('strict_scope_model');
+drop database ai_column_strict_scope;
+use test;

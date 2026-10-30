@@ -183,6 +183,7 @@ public:
   inline void set_view_ref_id(uint64_t ref_id) { view_ref_id_ = ref_id; }
   inline uint64_t get_view_ref_id() const { return view_ref_id_; }
   inline ObStmtScope get_current_scope() const { return current_scope_; }
+  int record_user_read_columns(const ObRawExpr *expr);
   inline void set_parent_namespace_resolver(ObDMLResolver *parent_namespace_resolver)
   { parent_namespace_resolver_ = parent_namespace_resolver; }
   inline ObDMLResolver *get_parent_namespace_resolver() { return parent_namespace_resolver_; }

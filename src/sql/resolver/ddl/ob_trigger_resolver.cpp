@@ -791,13 +791,27 @@ int ObTriggerSourceBuilder::generate_simple(const ObTriggerInfo &trigger_info,
     OZ (ObSQLUtils::convert_sql_text_to_schema_for_storing(alloc, dtc_params, *execute_str));
     OX (LOG_DEBUG("TRIGGER", K(*execute_str)));
   }
-  OX (calculate_source_sizes(trigger_info, base_object_database, base_object_name, spec_size, body_size));
+  ObSqlString escaped_database, escaped_table;
+  const char delimiter = MODE_DELIMITER;
+  auto escape_name = [&](const ObString &name, ObSqlString &escaped) -> int {
+    int result = OB_SUCCESS;
+    for (int64_t i = 0; OB_SUCCESS == result && i < name.length(); ++i) {
+      result = escaped.append(name.ptr() + i, 1);
+      if (OB_SUCCESS == result && name.ptr()[i] == delimiter) {
+        result = escaped.append(name.ptr() + i, 1);
+      }
+    }
+    return result;
+  };
+  OZ (escape_name(base_object_database, escaped_database));
+  OZ (escape_name(base_object_name, escaped_table));
+  OX (calculate_source_sizes(trigger_info, escaped_database.string(), escaped_table.string(), spec_size, body_size));
   if (BODY_ONLY != type) {
-    OZ (fill_package_spec(trigger_info, base_object_database, base_object_name,
+    OZ (fill_package_spec(trigger_info, escaped_database.string(), escaped_table.string(),
                           spec_size, spec_source, alloc));
   }
   if (SPEC_ONLY != type) {
-    OZ (fill_package_body(trigger_info, base_object_database, base_object_name,
+    OZ (fill_package_body(trigger_info, escaped_database.string(), escaped_table.string(),
                           body_size, trigger_ctx, body_source, alloc));
   }
   OX (LOG_INFO("TRIGGER", K(spec_source), K(body_source)));
@@ -986,27 +1000,44 @@ int ObTriggerSourceBuilder::build_procedure_source(
   int64_t buf_len = 0;
   int64_t pos = 0;
   char delimiter = MODE_DELIMITER;
+  ObSqlString escaped_db_buf, escaped_table_buf, escaped_trigger_buf;
+  auto escape_name = [&](const ObString &name, ObSqlString &escaped) -> int {
+    int result = OB_SUCCESS;
+    for (int64_t i = 0; OB_SUCCESS == result && i < name.length(); ++i) {
+      result = escaped.append(name.ptr() + i, 1);
+      if (OB_SUCCESS == result && name.ptr()[i] == delimiter) {
+        result = escaped.append(name.ptr() + i, 1);
+      }
+    }
+    return result;
+  };
+  OZ (escape_name(base_object_database, escaped_db_buf));
+  OZ (escape_name(base_object_name, escaped_table_buf));
+  OZ (escape_name(trigger_info.get_trigger_name(), escaped_trigger_buf));
+  const ObString escaped_db = escaped_db_buf.string();
+  const ObString escaped_table = escaped_table_buf.string();
+  const ObString escaped_trigger = escaped_trigger_buf.string();
   int32_t param_new_inout_len = trigger_info.has_after_row_point() ? 2 : 5; // IN or INOUT
   OV (OB_NOT_NULL(parse_node.str_value_) && parse_node.str_len_ > 0);
   OX (tg_body.assign_ptr(parse_node.str_value_, static_cast<int32_t>(parse_node.str_len_)));
   // OZ (ObSQLUtils::convert_sql_text_to_schema_for_storing(*alloc, dtc_params, tg_body));
   if (OB_SUCC(ret)) {
-    proc_params_size = trigger_info.get_trigger_name().length() +
-                       base_object_database.length() * 2 +
-                       base_object_name.length() * 2 +
+    proc_params_size = escaped_trigger.length() +
+                       escaped_db.length() * 2 +
+                       escaped_table.length() * 2 +
                        param_new_inout_len;
     proc_size = proc_params_size + tg_body.length() + STRLEN(TRIGGER_PROCEDURE_MYSQL);
     buf = static_cast<char *>(allocator.alloc(proc_size));
     buf_len = proc_size;
     OV (OB_NOT_NULL(buf), OB_ALLOCATE_MEMORY_FAILED);
     OZ (BUF_PRINTF(TRIGGER_PROCEDURE_MYSQL,
-                   delimiter, trigger_info.get_trigger_name().length(),
-                   trigger_info.get_trigger_name().ptr(), delimiter,
-                   delimiter, base_object_database.length(), base_object_database.ptr(), delimiter,
-                   delimiter, base_object_name.length(), base_object_name.ptr(), delimiter,
+                   delimiter, escaped_trigger.length(),
+                   escaped_trigger.ptr(), delimiter,
+                   delimiter, escaped_db.length(), escaped_db.ptr(), delimiter,
+                   delimiter, escaped_table.length(), escaped_table.ptr(), delimiter,
                    param_new_inout_len, trigger_info.has_after_row_point() ? "IN" : "INOUT",
-                   delimiter, base_object_database.length(), base_object_database.ptr(), delimiter,
-                   delimiter, base_object_name.length(), base_object_name.ptr(), delimiter,
+                   delimiter, escaped_db.length(), escaped_db.ptr(), delimiter,
+                   delimiter, escaped_table.length(), escaped_table.ptr(), delimiter,
                    tg_body.length(), tg_body.ptr()));
     OX (procedure_source.assign_ptr(buf, static_cast<int32_t>(pos)));
   }

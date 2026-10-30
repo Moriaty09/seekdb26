@@ -1,0 +1,41 @@
+drop database if exists vector_null_transitions;
+create database vector_null_transitions;
+use vector_null_transitions;
+create table docs(id bigint primary key, emb vector(4));
+insert into docs values (1, '[0,0,0,0]'), (2, NULL), (3, '[20,0,0,0]');
+create vector index vi on docs(emb)
+with(distance=l2, type=hnsw, lib=vsag, m=10,
+ef_construction=12, ef_search=40);
+insert into docs values (4, NULL), (5, NULL);
+update docs set emb = NULL where id in (2, 4, 5);
+delete from docs where id = 5;
+select count(*) = 2 and sum(id = 2 or id = 4) = 0 as null_vectors_not_indexed
+from (select id from docs order by l2_distance(emb, [0,0,0,0]) approximate limit 10) ann;
+null_vectors_not_indexed
+1
+update docs set emb = '[10,0,0,0]' where id = 2;
+update docs set emb = '[30,0,0,0]' where id = 4;
+select count(*) = 4 as null_vectors_become_searchable
+from (select id from docs order by l2_distance(emb, [0,0,0,0]) approximate limit 10) ann;
+null_vectors_become_searchable
+1
+select count(*) = 1 and sum(id = 2) = 1 as regenerated_nearest_vector
+from (select id from docs order by l2_distance(emb, [10,0,0,0]) approximate limit 1) ann;
+regenerated_nearest_vector
+1
+start transaction;
+update docs set emb = NULL where id = 2;
+delete from docs where id = 2;
+rollback;
+select count(*) = 1 and sum(id = 2) = 1 as rollback_restores_deleted_vector
+from (select id from docs order by l2_distance(emb, [10,0,0,0]) approximate limit 1) ann;
+rollback_restores_deleted_vector
+1
+update docs set emb = NULL where id = 2;
+delete from docs where id = 2;
+insert into docs values (2, '[10,0,0,0]');
+select count(*) = 1 and sum(id = 2) = 1 as reinsertion_after_null_delete
+from (select id from docs order by l2_distance(emb, [10,0,0,0]) approximate limit 1) ann;
+reinsertion_after_null_delete
+1
+drop database vector_null_transitions;

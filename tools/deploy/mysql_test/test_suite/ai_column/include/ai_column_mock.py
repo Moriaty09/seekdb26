@@ -186,7 +186,9 @@ def serve(port):
                     )
                 }
             else:
-                if "base-10 integer" in system_text:
+                if "malformed-json" in user_text and "valid JSON value" in system_text:
+                    content = "{invalid JSON"
+                elif "base-10 integer" in system_text:
                     content = "7"
                 elif "valid JSON value" in system_text:
                     content = json.dumps(
@@ -250,6 +252,14 @@ def assert_events(port, assertion):
         ok = (
             any("slow-old" in event["user"] for event in events)
             and any("fast-new" in event["user"] for event in events)
+        )
+    elif assertion == "mixed-once":
+        failed = [event for event in events if event["user"] == "malformed-json"]
+        recovered = [event for event in events if event["user"] == "lease-recovery"]
+        ok = (
+            sum("valid JSON value" in event["system"] for event in failed) == 3
+            and sum("valid JSON value" not in event["system"] for event in failed) == 1
+            and len(recovered) == 2
         )
     elif assertion == "embedding":
         ok = any(event["path"].endswith("/embeddings") for event in events)

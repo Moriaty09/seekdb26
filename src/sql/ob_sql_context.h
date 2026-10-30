@@ -547,6 +547,20 @@ public:
   TO_STRING_KV(K(stmt_type_));
 };
 
+// References written by the user, before optimizer pruning and DML index
+// maintenance add/remove expressions. Used by column-level strict AI reads.
+struct StatementColumnRef
+{
+  OB_UNIS_VERSION(1);
+public:
+  StatementColumnRef() : table_id_(common::OB_INVALID_ID), column_id_(common::OB_INVALID_ID) {}
+  StatementColumnRef(uint64_t table_id, uint64_t column_id)
+      : table_id_(table_id), column_id_(column_id) {}
+  uint64_t table_id_;
+  uint64_t column_id_;
+  TO_STRING_KV(K_(table_id), K_(column_id));
+};
+
 struct ObQueryCtx
 {
 public:
@@ -594,6 +608,7 @@ public:
 
   void reset()
   {
+    user_read_column_refs_.reset();
     question_marks_count_ = 0;
     calculable_items_.reset();
     fetch_cur_time_ = true;
@@ -689,6 +704,7 @@ public:
   int64_t anonymous_view_count_;
   // record all system variables or user variables in this statement
   common::ObSArray<ObVarInfo, common::ModulePageAllocator, true> variables_;
+  common::ObSEArray<StatementColumnRef, 8> user_read_column_refs_;
   common::ObSArray<ObPCConstParamInfo, common::ModulePageAllocator, true> all_plan_const_param_constraints_;
   common::ObSArray<ObPCConstParamInfo, common::ModulePageAllocator, true> all_possible_const_param_constraints_;
   common::ObSArray<ObPCParamEqualInfo, common::ModulePageAllocator, true> all_equal_param_constraints_;

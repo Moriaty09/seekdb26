@@ -60,7 +60,7 @@ ObCreateTableExecutor::~ObCreateTableExecutor()
 {
 }
 
-int ObCreateTableExecutor::create_ai_column_dml_triggers(
+static int create_ai_column_dml_triggers_impl(
     ObSQLSessionInfo *session,
     const obcall::ObCreateTableArg &create_table_arg,
     const uint64_t table_id)
@@ -75,6 +75,21 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
   common::sqlclient::ObISQLConnection *conn = NULL;
   common::sqlclient::ObISQLConnectionGuard conn_guard;
   int64_t affected_rows = 0;
+  auto append_pending_state = [&](ObSqlString &sql, const obcall::ObAIColumnDef &def) -> int {
+    int tmp_ret = OB_SUCCESS;
+    const char *suffixes[] = {"state", "request"};
+    for (int i = 0; OB_SUCCESS == tmp_ret && i < 2; ++i) {
+      ObSqlString name;
+      if (OB_SUCCESS != (tmp_ret = name.append_fmt("__ai_%.*s_%s", def.column_name_.length(),
+                                                  def.column_name_.ptr(), suffixes[i]))) {
+      } else if (OB_SUCCESS != (tmp_ret = sql.append("SET NEW."))) {
+      } else if (OB_SUCCESS != (tmp_ret = ObResolverUtils::append_escaped_identifier(sql, name.string()))) {
+      } else {
+        tmp_ret = sql.append(i == 0 ? "=0; " : "=@__ai_request_id; ");
+      }
+    }
+    return tmp_ret;
+  };
   auto append_rowkey_predicate = [&](ObSqlString &sql, const char *row_alias) -> int {
     int tmp_ret = sql.append("CONCAT(");
     for (int64_t j = 0; OB_SUCCESS == tmp_ret && j < rowkey_info.get_size(); ++j) {
@@ -146,7 +161,8 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
 
   for (int64_t i = 0; OB_SUCC(ret) && i < create_table_arg.ai_column_defs_.count(); ++i) {
     const obcall::ObAIColumnDef &def = create_table_arg.ai_column_defs_.at(i);
-    if (OB_FAIL(trigger_sql.append(
+    if (OB_FAIL(append_pending_state(trigger_sql, def))) {
+    } else if (OB_FAIL(trigger_sql.append(
           "INSERT INTO `oceanbase`.`__all_ai_column_task`"
           "(`task_id`,`table_id`,`column_id`,`request_id`,`rowkey_predicate`,"
           "`state`,`retry_count`,`eligible_ts`,`lease_owner`,`lease_expire_ts`,"
@@ -204,9 +220,14 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
   }
   for (int64_t i = 0; OB_SUCC(ret) && i < create_table_arg.ai_column_defs_.count(); ++i) {
     const obcall::ObAIColumnDef &def = create_table_arg.ai_column_defs_.at(i);
-    bool has_condition = false;
-    if (OB_FAIL(update_trigger_sql.append("IF "))) {
-    }
+    bool has_condition = true;
+    ObSqlString request_name;
+    OZ (request_name.append_fmt("__ai_%.*s_request", def.column_name_.length(), def.column_name_.ptr()));
+    OZ (update_trigger_sql.append("IF NOT (OLD."));
+    OZ (ObResolverUtils::append_escaped_identifier(update_trigger_sql, request_name.string()));
+    OZ (update_trigger_sql.append(" <=> NEW."));
+    OZ (ObResolverUtils::append_escaped_identifier(update_trigger_sql, request_name.string()));
+    OZ (update_trigger_sql.append(")"));
     // Primary-key changes must move the task to the new row identity.
     for (int64_t j = 0; OB_SUCC(ret) && j < rowkey_info.get_size(); ++j) {
       uint64_t id = OB_INVALID_ID;
@@ -268,6 +289,7 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
                "%lu AND `column_id`=%lu AND `rowkey_predicate`=", table_id, def.column_id_))) {
     } else if (OB_SUCC(ret) && OB_FAIL(append_rowkey_predicate(update_trigger_sql, "OLD"))) {
     } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append("; "))) {
+    } else if (OB_SUCC(ret) && OB_FAIL(append_pending_state(update_trigger_sql, def))) {
     } else if (OB_SUCC(ret) && OB_FAIL(append_task_insert(update_trigger_sql, def, "NEW"))) {
     } else if (OB_SUCC(ret) && OB_FAIL(update_trigger_sql.append("END IF; "))) {
     }
@@ -295,6 +317,99 @@ int ObCreateTableExecutor::create_ai_column_dml_triggers(
   if (OB_FAIL(ret)) {
     LOG_WARN("failed to create AI column DML trigger", K(ret), K(table_id),
              K(use_sql), K(trigger_sql), K(update_trigger_sql), K(delete_trigger_sql));
+  }
+  return ret;
+}
+
+int ObCreateTableExecutor::create_ai_column_dml_triggers(
+    ObSQLSessionInfo *session, const obcall::ObCreateTableArg &arg, const uint64_t table_id)
+{
+  return create_ai_column_dml_triggers_impl(session, arg, table_id);
+}
+
+// Rebuild the row triggers from all durable definitions after adding a column.
+// Only the newly added columns receive fresh requests during the backfill.
+static int install_added_ai_columns(ObSQLSessionInfo &session, ObAlterTableStmt &stmt)
+{
+  int ret = OB_SUCCESS;
+  ObArenaAllocator allocator("AIColumnAlter");
+  ObSchemaGetterGuard schema_guard;
+  const ObTableSchema *schema = NULL;
+  OZ (GCTX.schema_service_->get_runtime_schema_guard(schema_guard));
+  OZ (schema_guard.get_table_schema(stmt.get_org_database_name(),
+                                   stmt.get_org_table_name(), false, schema));
+  CK (NULL != schema);
+  HEAP_VAR(obcall::ObCreateTableArg, create_arg) {
+    if (OB_SUCC(ret)) {
+      OZ (create_arg.schema_.assign(*schema));
+      OZ (ob_write_string(allocator, stmt.get_org_database_name(), create_arg.db_name_));
+    }
+    ObSqlString metadata_sql;
+    if (OB_SUCC(ret)) {
+      OZ (metadata_sql.assign_fmt("SELECT column_id,column_name,dependency_column_ids "
+                                 "FROM oceanbase.__all_ai_column WHERE table_id=%lu ORDER BY column_id",
+                                 schema->get_table_id()));
+    }
+    HEAP_VAR(ObMySQLProxy::MySQLResult, result) {
+      OZ (GCTX.sql_proxy_->read(result, metadata_sql.ptr()));
+      sqlclient::ObMySQLResult *rows = result.get_result();
+      CK (NULL != rows);
+      while (OB_SUCC(ret) && OB_SUCC(ret = rows->next())) {
+        obcall::ObAIColumnDef def;
+        ObString name, dependencies;
+        EXTRACT_INT_FIELD_MYSQL(*rows, "column_id", def.column_id_, uint64_t);
+        OZ (rows->get_varchar("column_name", name));
+        OZ (rows->get_varchar("dependency_column_ids", dependencies));
+        OZ (ob_write_string(allocator, name, def.column_name_));
+        OZ (ob_write_string(allocator, dependencies, def.dependency_column_ids_));
+        OZ (create_arg.ai_column_defs_.push_back(def));
+      }
+      if (OB_ITER_END == ret) { ret = OB_SUCCESS; }
+    }
+    sqlclient::ObISQLConnectionGuard connection;
+    OZ (query::ObInnerSQLConnectionAccess::create_connection_with_external_session(&session, connection));
+    CK (NULL != connection.get_ptr());
+    int64_t affected = 0;
+    const char *suffixes[] = {"ins", "upd", "del"};
+    for (int i = 0; OB_SUCC(ret) && i < 3; ++i) {
+      ObSqlString drop, trigger_name;
+      const ObTriggerInfo *trigger = NULL;
+      OZ (trigger_name.append_fmt("__ai_%lu_%s", schema->get_table_id(), suffixes[i]));
+      OZ (schema_guard.get_trigger_info(schema->get_database_id(), trigger_name.string(), trigger));
+      if (OB_SUCC(ret) && NULL != trigger) {
+        OZ (drop.append("DROP TRIGGER "));
+        OZ (ObResolverUtils::append_escaped_identifier(drop, stmt.get_org_database_name()));
+        OZ (drop.append("."));
+        OZ (ObResolverUtils::append_escaped_identifier(drop, trigger_name.string()));
+        OZ (connection.get_ptr()->execute_write(drop.ptr(), affected, true));
+      }
+    }
+    if (OB_SUCC(ret)) {
+      OZ (create_ai_column_dml_triggers_impl(&session, create_arg, schema->get_table_id()));
+    }
+    ObSqlString backfill;
+    OZ (backfill.append("UPDATE "));
+    OZ (ObResolverUtils::append_escaped_identifier(backfill, stmt.get_org_database_name()));
+    OZ (backfill.append("."));
+    OZ (ObResolverUtils::append_escaped_identifier(backfill, stmt.get_org_table_name()));
+    OZ (backfill.append(" SET "));
+    const auto &added = stmt.get_alter_table_arg().ai_column_defs_;
+    for (int64_t i = 0; OB_SUCC(ret) && i < added.count(); ++i) {
+      ObSqlString request_name;
+      OZ (request_name.append_fmt("__ai_%.*s_request", added.at(i).column_name_.length(),
+                                  added.at(i).column_name_.ptr()));
+      if (i > 0) { OZ (backfill.append(",")); }
+      OZ (ObResolverUtils::append_escaped_identifier(backfill, request_name.string()));
+      OZ (backfill.append("=UUID()"));
+    }
+    if (OB_SUCC(ret)) {
+      const bool was_inner = session.is_inner();
+      const auto session_type = session.get_session_type();
+      session.set_inner_session();
+      ret = connection.get_ptr()->execute_write(backfill.ptr(), affected, true);
+      if (was_inner) { session.set_inner_session(); } else { session.set_user_session(); }
+      session.set_session_type(session_type);
+    }
   }
   return ret;
 }
@@ -997,6 +1112,106 @@ int ObAlterTableExecutor::alter_table_exchange_partition_rpc(obcall::ObExchangeP
 int ObAlterTableExecutor::execute(ObExecContext &ctx, ObAlterTableStmt &stmt)
 {
   int ret = OB_SUCCESS;
+  if (!stmt.ai_retry_column_.empty()) {
+    ObSqlString sql;
+    ObSqlString state_name;
+    ObSqlString request_name;
+    ObSqlString status_expr;
+    OZ (state_name.append_fmt("__ai_%.*s_state", stmt.ai_retry_column_.length(), stmt.ai_retry_column_.ptr()));
+    OZ (request_name.append_fmt("__ai_%.*s_request", stmt.ai_retry_column_.length(), stmt.ai_retry_column_.ptr()));
+    OZ (status_expr.append("(CASE "));
+    OZ (ObResolverUtils::append_escaped_identifier(status_expr, state_name.string()));
+    OZ (status_expr.append(" WHEN 2 THEN 'READY' WHEN 3 THEN 'FAILED' ELSE 'PENDING' END)"));
+    OZ (sql.append("UPDATE "));
+    OZ (ObResolverUtils::append_escaped_identifier(sql, stmt.get_org_database_name()));
+    OZ (sql.append("."));
+    OZ (ObResolverUtils::append_escaped_identifier(sql, stmt.get_org_table_name()));
+    OZ (sql.append(" SET "));
+    OZ (ObResolverUtils::append_escaped_identifier(sql, request_name.string()));
+    OZ (sql.append("=UUID()"));
+    // Changing the request token runs the same transactional invalidation and
+    // task-enqueue trigger as a dependency update.  Other AI columns retain
+    // their request tokens and results.
+    const ObString &predicate = stmt.ai_retry_predicate_;
+    const bool backslash_escapes = 0 == (ctx.get_my_session()->get_sql_mode() & SMO_NO_BACKSLASH_ESCAPES);
+    if (!predicate.empty()) {
+      OZ (sql.append(" WHERE "));
+      for (int64_t pos = 0; OB_SUCC(ret) && pos < predicate.length();) {
+        const int64_t start = pos;
+        const char ch = predicate.ptr()[pos];
+        if (ch == '\'' || ch == '"' || ch == '`') {
+          ++pos;
+          while (pos < predicate.length()) {
+            const char next = predicate.ptr()[pos++];
+            if (next == '\\' && ch != '`' && backslash_escapes && pos < predicate.length()) {
+              ++pos;
+            } else if (next == ch) {
+              if (pos < predicate.length() && predicate.ptr()[pos] == ch) {
+                ++pos;
+              } else {
+                break;
+              }
+            }
+          }
+          OZ (sql.append(predicate.ptr() + start, pos - start));
+        } else if (ch == '#' || (ch == '-' && pos + 2 < predicate.length()
+                   && predicate.ptr()[pos + 1] == '-' && predicate.ptr()[pos + 2] <= ' ')) {
+          while (pos < predicate.length() && predicate.ptr()[pos] != '\n') { ++pos; }
+          OZ (sql.append(predicate.ptr() + start, pos - start));
+        } else if (ch == '/' && pos + 1 < predicate.length() && predicate.ptr()[pos + 1] == '*') {
+          pos += 2;
+          while (pos + 1 < predicate.length()
+                 && !(predicate.ptr()[pos] == '*' && predicate.ptr()[pos + 1] == '/')) { ++pos; }
+          pos = MIN(pos + 2, static_cast<int64_t>(predicate.length()));
+          OZ (sql.append(predicate.ptr() + start, pos - start));
+        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_' || static_cast<unsigned char>(ch) >= 128) {
+          ++pos;
+          while (pos < predicate.length()) {
+            const char c = predicate.ptr()[pos];
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                || (c >= '0' && c <= '9') || c == '_' || c == '$' || static_cast<unsigned char>(c) >= 128) {
+              ++pos;
+            } else {
+              break;
+            }
+          }
+          const ObString word(pos - start, predicate.ptr() + start);
+          if (0 == word.case_compare("status")) {
+            OZ (sql.append(status_expr.string()));
+          } else {
+            OZ (sql.append(word));
+          }
+        } else {
+          ++pos;
+          OZ (sql.append(predicate.ptr() + start, 1));
+        }
+      }
+    }
+    struct RetrySessionScope {
+      explicit RetrySessionScope(ObSQLSessionInfo &session)
+          : session_(session), inner_(session.is_inner()), type_(session.get_session_type())
+      { session_.set_inner_session(); }
+      ~RetrySessionScope()
+      {
+        if (inner_) { session_.set_inner_session(); } else { session_.set_user_session(); }
+        session_.set_session_type(type_);
+      }
+      ObSQLSessionInfo &session_;
+      bool inner_;
+      ObSQLSessionInfo::SessionType type_;
+    } session_scope(*ctx.get_my_session());
+    common::sqlclient::ObISQLConnectionGuard conn_guard;
+    common::sqlclient::ObISQLConnection *conn = NULL;
+    int64_t affected_rows = 0;
+    OZ (query::ObInnerSQLConnectionAccess::create_connection_with_external_session(ctx.get_my_session(), conn_guard));
+    if (OB_SUCC(ret) && OB_ISNULL(conn = conn_guard.get_ptr())) {
+      ret = OB_INNER_STAT_ERROR;
+    }
+    if (OB_SUCC(ret)) {
+      OZ (conn->execute_write(sql.ptr(), affected_rows, true));
+    }
+    return ret;
+  }
   ObSqlExecutorCtx *task_exec_ctx = NULL;
   obcall::ObAlterTableArg &alter_table_arg = stmt.get_alter_table_arg();
   obcall::ObExchangePartitionArg &exchange_partition_arg = stmt.get_exchange_partition_arg();
@@ -1109,6 +1324,9 @@ int ObAlterTableExecutor::execute(ObExecContext &ctx, ObAlterTableStmt &stmt)
             *ctx.get_query_runtime_environment(), ctx.local_command_service(), is_support_cancel))) {
         }
       }
+    }
+    if (OB_SUCC(ret) && !alter_table_arg.ai_column_defs_.empty()) {
+      OZ (install_added_ai_columns(*my_session, stmt));
     }
     char table_info_buffer[256];
     snprintf(table_info_buffer, sizeof(table_info_buffer), "table_id:%ld, hidden_table_id:%ld", 

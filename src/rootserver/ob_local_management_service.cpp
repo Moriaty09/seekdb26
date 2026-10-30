@@ -16,6 +16,7 @@
 
 #define USING_LOG_PREFIX RS
 
+#include "query/command/ob_root_service_serialization.h"
 #include "config_bridge.h"
 #include "share/config/ob_config_helper.h"
 #include "lib/stat/ob_diagnostic_info_guard.h"
@@ -57,6 +58,7 @@
 #include "parallel_ddl/ob_drop_table_helper.h" // ObDropTableHelper
 #include "rootserver/ob_ai_model_ddl_service.h"
 #include "lib/utility/ob_print_utils.h"     // databuff_printf
+#include "lib/utility/utility.h"
 #include "share/ob_ex_rpc.h"
 
 namespace oceanbase
@@ -103,10 +105,12 @@ ObLocalManagementService::ObLocalManagementService()
     deadlock_event_clear_task_timer_(),
     purge_recyclebin_task_timer_(),
     ai_column_worker_timer_(),
+    ai_column_worker_peer_timer_(),
     load_ddl_task_(*this),
     deadlock_event_clear_task_(*this),
     purge_recyclebin_task_(*this),
     ai_column_worker_task_(*this),
+    ai_column_worker_peer_task_(*this),
     snapshot_manager_(),
     core_meta_table_version_(0),
     baseline_schema_version_(0),
@@ -162,6 +166,8 @@ int ObLocalManagementService::init(ObConfigManager &config_mgr,
     FLOG_WARN("init local purge recyclebin task timer failed", KR(ret));
   } else if (OB_FAIL(ai_column_worker_timer_.init("AIColWorker", ObMemAttr("AIColWorker")))) {
     FLOG_WARN("init AI column worker timer failed", KR(ret));
+  } else if (OB_FAIL(ai_column_worker_peer_timer_.init("AIColWorker2", ObMemAttr("AIColWorker")))) {
+    FLOG_WARN("init AI column peer worker timer failed", KR(ret));
   } else if (OB_FAIL(root_minor_freeze_.init())) {
     // init root minor freeze
     FLOG_WARN("init root_minor_freeze_ failed", KR(ret));
@@ -205,6 +211,7 @@ void ObLocalManagementService::destroy()
   deadlock_event_clear_task_timer_.destroy();
   purge_recyclebin_task_timer_.destroy();
   ai_column_worker_timer_.destroy();
+  ai_column_worker_peer_timer_.destroy();
   FLOG_INFO("task timer destroy");
 
   if (OB_SUCC(ret)) {
@@ -239,6 +246,8 @@ int ObLocalManagementService::start_service()
       FLOG_WARN("purge recyclebin task timer start failed", KR(ret));
     } else if (OB_FAIL(ai_column_worker_timer_.start())) {
       FLOG_WARN("AI column worker timer start failed", KR(ret));
+    } else if (OB_FAIL(ai_column_worker_peer_timer_.start())) {
+      FLOG_WARN("AI column peer worker timer start failed", KR(ret));
     }
   }
 
@@ -325,6 +334,7 @@ int ObLocalManagementService::stop()
       deadlock_event_clear_task_timer_.stop();
       purge_recyclebin_task_timer_.stop();
       ai_column_worker_timer_.stop();
+      ai_column_worker_peer_timer_.stop();
       FLOG_INFO("task timer stop");
       max_id_cache_mgr_.reset();
       FLOG_INFO("max id cache mgr reset");
@@ -346,6 +356,7 @@ void ObLocalManagementService::wait()
   if (deadlock_event_clear_task_timer_.inited()) { deadlock_event_clear_task_timer_.wait(); }
   if (purge_recyclebin_task_timer_.inited()) { purge_recyclebin_task_timer_.wait(); }
   if (ai_column_worker_timer_.inited()) { ai_column_worker_timer_.wait(); }
+  if (ai_column_worker_peer_timer_.inited()) { ai_column_worker_peer_timer_.wait(); }
   FLOG_INFO("task timer exit success");
   THE_ADMIN_JOB_TABLE.reset_max_job_id();
   int64_t cost = ObTimeUtility::current_time() - start_time;
@@ -1291,9 +1302,34 @@ int ObLocalManagementService::parallel_drop_table(const ObDropTableArg &arg, ObD
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parallel_ddl_pre_check_())) {
   } else {
-    ObDropTableHelper drop_table_helper(schema_service_, arg, res);
-    if (OB_FAIL(drop_table_helper.init(ddl_service_))) {
-    } else if (OB_FAIL(drop_table_helper.execute())) {
+    bool has_ai_columns = false;
+    ObSchemaGetterGuard guard;
+    OZ (schema_service_->get_runtime_schema_guard(guard));
+    for (int64_t i = 0; OB_SUCC(ret) && !has_ai_columns && i < arg.tables_.count(); ++i) {
+      const ObTableSchema *table = NULL;
+      const ObTableItem &item = arg.tables_.at(i);
+      OZ (guard.get_table_schema(item.database_name_, item.table_name_, false, table));
+      if (OB_SUCC(ret) && NULL != table) {
+        for (auto column = table->column_begin(); !has_ai_columns && column != table->column_end(); ++column) {
+          if (NULL != *column && (*column)->is_hidden()) {
+            const ObString &name = (*column)->get_column_name_str();
+            has_ai_columns = name.length() > 5 && 0 == STRNCMP(name.ptr(), "__ai_", 5);
+          }
+        }
+      }
+    }
+    auto execute_drop = [&]() -> int {
+      int result = OB_SUCCESS;
+      ObDropTableHelper helper(schema_service_, arg, res);
+      if (OB_SUCCESS == (result = helper.init(ddl_service_))) {
+        result = helper.execute();
+      }
+      return result;
+    };
+    if (OB_SUCC(ret)) {
+      // Normal tables retain parallel DDL. AI tables share the publication
+      // lock because DROP removes their queue rows within the DDL transaction.
+      ret = has_ai_columns ? query::serialize_root_service_call(execute_drop) : execute_drop();
     }
   }
   int64_t cost = ObTimeUtility::current_time() - begin_time;
@@ -1928,144 +1964,281 @@ void ObLocalManagementService::ObAIColumnWorkerTask::runTimerTask()
 int ObLocalManagementService::process_ai_column_tasks()
 {
   int ret = OB_SUCCESS;
-  ObSqlString select_sql;
-  ObSqlString update_sql;
-  ObSqlString finish_sql;
-  ObSqlString history_sql;
-  ObSqlString task_filter;
-  int64_t affected_rows = 0;
-  uint64_t table_id = OB_INVALID_ID;
-  int64_t retry_count = 0;
-  int64_t max_retries = 0;
-  ObString request_id;
-  ObString rowkey_predicate;
-  ObString database_name;
-  ObString table_name;
-  ObString assignments;
-
+  const char *phase = "read runnable task";
+  int64_t affected = 0;
+  ObSqlString select_sql, claim_sql, source_sql, complete_sql, filter;
+  ObSqlString request_filter, owner_sql;
+  // Avoid metadata joins and housekeeping writes when no AI work exists.
+  HEAP_VAR(ObMySQLProxy::MySQLResult, queue_res) {
+    sqlclient::ObMySQLResult *queue_row = NULL;
+    if (OB_FAIL(sql_proxy_.read(queue_res, "SELECT task_id FROM oceanbase.__all_ai_column_task LIMIT 1"))) {
+    } else if (OB_ISNULL(queue_row = queue_res.get_result())) {
+      ret = OB_ERR_UNEXPECTED;
+    } else {
+      ret = queue_row->next();
+    }
+  }
+  if (OB_SUCCESS != ret) { return ret; }
+  // Cancel obsolete definitions before selecting runnable work.
+  OZ (sql_proxy_.write("DELETE FROM oceanbase.__all_ai_column_task WHERE NOT EXISTS "
+      "(SELECT 1 FROM oceanbase.__all_ai_column a "
+      "JOIN oceanbase.__all_table t ON t.table_id=a.table_id "
+      "JOIN oceanbase.__all_database d ON d.database_id=t.database_id "
+      "WHERE d.in_recyclebin=0 AND d.database_name<>'__recyclebin' AND "
+      "a.table_id=__all_ai_column_task.table_id AND a.column_id=__all_ai_column_task.column_id "
+      "AND a.definition_version=__all_ai_column_task.definition_version)", affected));
   OZ (select_sql.assign(
-      "SELECT q.table_id,q.request_id,q.rowkey_predicate,"
-      "MAX(q.retry_count) retry_count,MAX(a.max_retries) max_retries,"
-      "d.database_name,t.table_name,"
-      "GROUP_CONCAT(CONCAT('`',a.column_name,'`=(',a.normalized_expr,')') "
-      "ORDER BY q.column_id SEPARATOR ',') assignments "
-      "FROM oceanbase.__all_ai_column_task q "
-      "JOIN oceanbase.__all_ai_column a "
-      "ON a.table_id=q.table_id AND a.column_id=q.column_id "
+      "SELECT q.task_id,q.table_id,q.column_id,q.request_id,q.definition_version,"
+      "q.rowkey_predicate,q.retry_count,a.max_retries,a.normalized_expr,"
+      "REPLACE(d.database_name,'`','``') db_name,REPLACE(t.table_name,'`','``') tbl_name,"
+      "REPLACE(a.column_name,'`','``') col_name,UUID() owner "
+      "FROM oceanbase.__all_ai_column_task q JOIN oceanbase.__all_ai_column a "
+      "ON a.table_id=q.table_id AND a.column_id=q.column_id AND a.definition_version=q.definition_version "
       "JOIN oceanbase.__all_table t ON t.table_id=q.table_id "
       "JOIN oceanbase.__all_database d ON d.database_id=t.database_id "
-      "WHERE q.eligible_ts<=NOW(6) AND q.request_id=("
-      "SELECT request_id FROM oceanbase.__all_ai_column_task "
-      "WHERE eligible_ts<=NOW(6) ORDER BY task_id LIMIT 1) "
-      "GROUP BY q.table_id,q.request_id,q.rowkey_predicate,"
-      "d.database_name,t.table_name LIMIT 1"));
-
+      "WHERE d.in_recyclebin=0 AND d.database_name<>'__recyclebin' AND q.eligible_ts<=NOW(6) AND (q.state IN (0,3) OR (q.state=1 AND q.lease_expire_ts<NOW(6))) "
+      "ORDER BY q.task_id LIMIT 1"));
   HEAP_VAR(ObMySQLProxy::MySQLResult, res) {
-    sqlclient::ObMySQLResult *result = NULL;
+    sqlclient::ObMySQLResult *row = NULL;
     if (OB_FAIL(ret)) {
     } else if (OB_FAIL(sql_proxy_.read(res, select_sql.ptr()))) {
-    } else if (OB_ISNULL(result = res.get_result())) {
+    } else if (OB_ISNULL(row = res.get_result())) {
       ret = OB_ERR_UNEXPECTED;
-    } else if (OB_FAIL(result->next())) {
+    } else if (OB_FAIL(row->next())) {
+      if (OB_ITER_END == ret) { ret = OB_SUCCESS; }
     } else {
-      EXTRACT_INT_FIELD_MYSQL(*result, "table_id", table_id, uint64_t);
-      EXTRACT_INT_FIELD_MYSQL(*result, "retry_count", retry_count, int64_t);
-      EXTRACT_INT_FIELD_MYSQL(*result, "max_retries", max_retries, int64_t);
-      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "request_id", request_id);
-      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "rowkey_predicate", rowkey_predicate);
-      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "database_name", database_name);
-      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "table_name", table_name);
-      EXTRACT_VARCHAR_FIELD_MYSQL(*result, "assignments", assignments);
-      if (OB_SUCC(ret)) {
-        OZ (update_sql.assign_fmt(
-            "UPDATE `%.*s`.`%.*s` SET %.*s WHERE %.*s",
-            database_name.length(), database_name.ptr(),
-            table_name.length(), table_name.ptr(),
-            assignments.length(), assignments.ptr(),
-            rowkey_predicate.length(), rowkey_predicate.ptr()));
-        OZ (task_filter.assign_fmt(
-            "table_id=%lu AND request_id='%.*s' AND rowkey_predicate='%.*s'",
-            table_id, request_id.length(), request_id.ptr(),
-            rowkey_predicate.length(), rowkey_predicate.ptr()));
+      int64_t task_id = 0, definition_version = 0, retries = 0, max_retries = 0;
+      ObString request, predicate, expression, db, table, column, owner;
+      EXTRACT_INT_FIELD_MYSQL(*row, "task_id", task_id, int64_t);
+      EXTRACT_INT_FIELD_MYSQL(*row, "definition_version", definition_version, int64_t);
+      EXTRACT_INT_FIELD_MYSQL(*row, "retry_count", retries, int64_t);
+      EXTRACT_INT_FIELD_MYSQL(*row, "max_retries", max_retries, int64_t);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "request_id", request);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "rowkey_predicate", predicate);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "normalized_expr", expression);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "db_name", db);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "tbl_name", table);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "col_name", column);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*row, "owner", owner);
+      OZ (sql_append_hex_escape_str(request, request_filter));
+      OZ (sql_append_hex_escape_str(owner, owner_sql));
+      OZ (claim_sql.assign_fmt("UPDATE oceanbase.__all_ai_column_task SET state=1,lease_owner=%s,"
+          "lease_expire_ts=DATE_ADD(NOW(6),INTERVAL 120 SECOND) WHERE task_id=%ld AND definition_version=%ld "
+          "AND request_id=%s AND (state IN (0,3) OR (state=1 AND lease_expire_ts<NOW(6)))",
+          owner_sql.ptr(), task_id, definition_version, request_filter.ptr()));
+      OZ (sql_proxy_.write(claim_sql.ptr(), affected));
+      if (OB_SUCC(ret) && affected > 0) {
+        OZ (filter.assign_fmt("task_id=%ld AND definition_version=%ld AND request_id=%s AND lease_owner=%s",
+            task_id, definition_version, request_filter.ptr(), owner_sql.ptr()));
+        OZ (source_sql.assign_fmt("SELECT IFNULL(CONCAT('CONVERT(X',CHAR(39),HEX(CAST((%.*s) AS CHAR)),CHAR(39),' USING utf8mb4)'), 'NULL') result_sql FROM `%.*s`.`%.*s` "
+            "WHERE (%.*s) AND `__ai_%.*s_request`=%s", expression.length(), expression.ptr(),
+            db.length(), db.ptr(), table.length(), table.ptr(), predicate.length(), predicate.ptr(),
+            column.length(), column.ptr(), request_filter.ptr()));
+        int execution_ret = ret;
+        ObSqlString payload;
+        if (OB_SUCC(ret)) {
+          HEAP_VAR(ObMySQLProxy::MySQLResult, value_res) {
+            sqlclient::ObMySQLResult *value_row = NULL;
+            execution_ret = sql_proxy_.read(value_res, source_sql.ptr());
+            if (OB_SUCCESS == execution_ret) {
+              if (NULL == (value_row = value_res.get_result())) {
+                execution_ret = OB_ERR_UNEXPECTED;
+              } else if (OB_SUCCESS == (execution_ret = value_row->next())) {
+                ObString value;
+                execution_ret = value_row->get_varchar("result_sql", value);
+                if (OB_SUCCESS == execution_ret) { execution_ret = sql_append_hex_escape_str(value, payload); }
+              }
+            }
+          }
+        }
+        if (OB_ITER_END == execution_ret) {
+          OZ (complete_sql.assign_fmt("DELETE FROM oceanbase.__all_ai_column_task WHERE %s", filter.ptr()));
+        } else if (OB_SUCCESS == execution_ret) {
+          OZ (complete_sql.assign_fmt("UPDATE oceanbase.__all_ai_column_task SET state=2,input_payload=%s,"
+              "lease_owner='',lease_expire_ts=NULL,last_error='' WHERE %s", payload.ptr(), filter.ptr()));
+        } else {
+          OZ (complete_sql.assign_fmt("UPDATE oceanbase.__all_ai_column_task SET state=%d,retry_count=retry_count+%d,"
+              "lease_owner='',lease_expire_ts=NULL,eligible_ts=DATE_ADD(NOW(6),INTERVAL 500000 MICROSECOND),"
+              "last_error='AI expression execution failed (%d)' WHERE %s",
+              retries >= max_retries ? 4 : 3, retries >= max_retries ? 0 : 1, execution_ret, filter.ptr()));
+        }
+        OZ (sql_proxy_.write(complete_sql.ptr(), affected));
       }
     }
   }
-
-  if (OB_ITER_END == ret) {
-    // An empty queue is the normal steady state for the periodic worker.
-  } else if (OB_SUCC(ret)) {
-    // Publish the result and retire its task in the same transaction.  In
-    // particular, a failed queue deletion must not leave a committed result
-    // whose model invocation will be repeated on the next timer tick.
-    ObMySQLTransaction publish_trans;
-    if (OB_FAIL(publish_trans.start(&sql_proxy_))) {
-      return ret;
-    }
-    const int execute_ret = publish_trans.write(update_sql.ptr(), affected_rows);
-    if (OB_SUCCESS != execute_ret) {
-      LOG_WARN("execute AI column expression failed", KR(execute_ret), K(update_sql),
-               K(retry_count), K(max_retries));
-    }
-    const bool row_updated = OB_SUCCESS == execute_ret && affected_rows > 0;
-    if (!row_updated) {
-      if (OB_FAIL(publish_trans.end(false))) {
-        return ret;
-      }
-    }
-    if (row_updated || (OB_SUCCESS != execute_ret && retry_count >= max_retries)) {
-      // Keep terminal outcomes after removing runnable tasks.  A NULL result
-      // alone cannot distinguish a failed invocation from a successful one.
-      OZ (history_sql.assign_fmt(
-          "INSERT INTO oceanbase.__all_ai_column_task_history "
-          "(task_id,schema_version,is_deleted,table_id,column_id,request_id,"
-          "rowkey_predicate,state,retry_count,eligible_ts,lease_owner,lease_expire_ts,"
-          "definition_version,input_payload,last_error) "
-          "SELECT task_id,definition_version,0,table_id,column_id,request_id,"
-          "rowkey_predicate,%d,retry_count,eligible_ts,lease_owner,lease_expire_ts,"
-          "definition_version,input_payload,'%s' "
-          "FROM oceanbase.__all_ai_column_task WHERE %s",
-          row_updated ? 2 : 3,
-          row_updated ? "" : "AI expression execution failed", task_filter.ptr()));
-      OZ (finish_sql.assign_fmt(
-          "DELETE FROM oceanbase.__all_ai_column_task "
-          "WHERE %s", task_filter.ptr()));
+  phase = "find terminal group";
+  // Only publish groups whose individual invocations have all reached a terminal
+  // outcome. Successful invocations survive retries and process restarts.
+  ObSqlString group_sql, group_filter;
+  OZ (group_sql.assign("SELECT q.table_id,q.request_id,q.rowkey_predicate FROM oceanbase.__all_ai_column_task q "
+      "WHERE q.state IN (2,4) AND NOT EXISTS (SELECT 1 FROM oceanbase.__all_ai_column_task p "
+      "WHERE p.table_id=q.table_id AND p.request_id=q.request_id AND p.rowkey_predicate=q.rowkey_predicate "
+      "AND p.state NOT IN (2,4)) ORDER BY q.task_id LIMIT 1"));
+  HEAP_VAR(ObMySQLProxy::MySQLResult, group_res) {
+    sqlclient::ObMySQLResult *group_row = NULL;
+    if (OB_FAIL(ret)) {
+    } else if (OB_FAIL(sql_proxy_.read(group_res, group_sql.ptr()))) {
+    } else if (OB_ISNULL(group_row = group_res.get_result())) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (OB_FAIL(group_row->next())) {
+      if (OB_ITER_END == ret) { ret = OB_SUCCESS; }
     } else {
-      OZ (finish_sql.assign_fmt(
-          "UPDATE oceanbase.__all_ai_column_task "
-          "SET state=%d,retry_count=retry_count+%d,"
-          "eligible_ts=DATE_ADD(NOW(6),INTERVAL 500000 MICROSECOND),"
-          "last_error='AI expression execution failed' "
-          "WHERE %s",
-          OB_SUCCESS == execute_ret ? 0 : 3,
-          OB_SUCCESS == execute_ret ? 0 : 1,
-          task_filter.ptr()));
+      uint64_t table_id = 0;
+      ObString request, predicate;
+      EXTRACT_INT_FIELD_MYSQL(*group_row, "table_id", table_id, uint64_t);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*group_row, "request_id", request);
+      EXTRACT_VARCHAR_FIELD_MYSQL(*group_row, "rowkey_predicate", predicate);
+      OZ (group_filter.assign_fmt("table_id=%lu AND request_id=", table_id));
+      OZ (sql_append_hex_escape_str(request, group_filter));
+      OZ (group_filter.append(" AND rowkey_predicate="));
+      OZ (sql_append_hex_escape_str(predicate, group_filter));
     }
-    if (OB_SUCC(ret)) {
-      if (row_updated) {
-        OZ (publish_trans.write(history_sql.ptr(), affected_rows));
-        OZ (publish_trans.write(finish_sql.ptr(), affected_rows));
-      } else if (!history_sql.empty()) {
-        // Final failure status and queue cleanup must also commit together.
-        ObMySQLTransaction failure_trans;
-        OZ (failure_trans.start(&sql_proxy_));
-        OZ (failure_trans.write(history_sql.ptr(), affected_rows));
-        OZ (failure_trans.write(finish_sql.ptr(), affected_rows));
-        if (failure_trans.is_started()) {
-          const int end_ret = failure_trans.end(OB_SUCC(ret));
-          if (OB_SUCC(ret)) {
-            ret = end_ret;
+  }
+  if (OB_SUCC(ret) && !group_filter.empty()) {
+    // DDL takes this mutex before deleting queue rows. Use the same order for
+    // the short publication transaction, after all external calls have ended.
+    ret = query::serialize_root_service_call([&]() -> int {
+      phase = "lock terminal group";
+      ObMySQLTransaction trans;
+      ObSqlString lock_sql, conversion_retry_sql;
+      OZ (trans.start(&sql_proxy_));
+      // FOR UPDATE applies only to the queue. Locking schema rows in the same
+      // query would invert DROP/ALTER's schema-lock then row-lock ordering.
+      OZ (lock_sql.assign_fmt("SELECT q.task_id,q.state,q.retry_count,"
+          "(SELECT a.max_retries FROM oceanbase.__all_ai_column a WHERE a.table_id=q.table_id "
+          "AND a.column_id=q.column_id AND a.definition_version=q.definition_version) max_retries,"
+          "q.input_payload,q.rowkey_predicate,q.request_id,"
+          "(SELECT REPLACE(d.database_name,'`','``') FROM oceanbase.__all_database d "
+          "WHERE d.database_id=(SELECT t.database_id FROM oceanbase.__all_table t "
+          "WHERE t.table_id=q.table_id)) db_name,"
+          "(SELECT REPLACE(t.table_name,'`','``') FROM oceanbase.__all_table t "
+          "WHERE t.table_id=q.table_id) tbl_name,"
+          "(SELECT REPLACE(a.column_name,'`','``') FROM oceanbase.__all_ai_column a "
+          "WHERE a.table_id=q.table_id AND a.column_id=q.column_id "
+          "AND a.definition_version=q.definition_version) col_name "
+          "FROM oceanbase.__all_ai_column_task q WHERE %s ORDER BY q.task_id FOR UPDATE",
+          group_filter.ptr()));
+      struct CachedColumnResult {
+        int64_t id_, state_, retries_, max_retries_;
+        ObString db_, table_, column_, payload_, predicate_, request_;
+      };
+      ObArenaAllocator publication_allocator(ObMemAttr("AIColPublish"));
+      ObSEArray<CachedColumnResult, 4> completed;
+      HEAP_VAR(ObMySQLProxy::MySQLResult, task_res) {
+        sqlclient::ObMySQLResult *task = NULL;
+        if (OB_FAIL(ret)) {
+        } else if (OB_FAIL(trans.read(task_res, lock_sql.ptr()))) {
+        } else if (OB_ISNULL(task = task_res.get_result())) {
+          ret = OB_ERR_UNEXPECTED;
+        } else {
+          while (OB_SUCC(ret)) {
+            const int next_ret = task->next();
+            if (OB_ITER_END == next_ret) {
+              break;
+            } else if (OB_SUCCESS != next_ret) {
+              ret = next_ret;
+              break;
+            }
+            int64_t id = 0, state = 0, retry_count = 0, max_retries = 0;
+            ObString db, table, column, payload, predicate, request;
+            EXTRACT_INT_FIELD_MYSQL(*task, "task_id", id, int64_t);
+            EXTRACT_INT_FIELD_MYSQL(*task, "state", state, int64_t);
+            EXTRACT_INT_FIELD_MYSQL(*task, "retry_count", retry_count, int64_t);
+            EXTRACT_INT_FIELD_MYSQL(*task, "max_retries", max_retries, int64_t);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "db_name", db);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "tbl_name", table);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "col_name", column);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "input_payload", payload);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "rowkey_predicate", predicate);
+            EXTRACT_VARCHAR_FIELD_MYSQL(*task, "request_id", request);
+            CachedColumnResult entry;
+            entry.id_ = id;
+            entry.state_ = state;
+            entry.retries_ = retry_count;
+            entry.max_retries_ = max_retries;
+            OZ (ob_write_string(publication_allocator, db, entry.db_));
+            OZ (ob_write_string(publication_allocator, table, entry.table_));
+            OZ (ob_write_string(publication_allocator, column, entry.column_));
+            OZ (ob_write_string(publication_allocator, payload, entry.payload_));
+            OZ (ob_write_string(publication_allocator, predicate, entry.predicate_));
+            OZ (ob_write_string(publication_allocator, request, entry.request_));
+            OZ (completed.push_back(entry));
           }
         }
-      } else {
-        OZ (sql_proxy_.write(finish_sql.ptr(), affected_rows));
+        task_res.reset();
       }
-    }
-    if (row_updated) {
-      const int end_ret = publish_trans.end(OB_SUCC(ret));
-      if (OB_SUCC(ret)) {
-        ret = end_ret;
+      // Close the SELECT result before reusing the transaction connection for
+      // writes. Row locks remain held until the group publication commits.
+      phase = "publish column results";
+      for (int64_t i = 0; OB_SUCC(ret) && i < completed.count(); ++i) {
+        const CachedColumnResult &entry = completed.at(i);
+        const int64_t id = entry.id_, retry_count = entry.retries_, max_retries = entry.max_retries_;
+        int64_t state = entry.state_;
+        const ObString &db = entry.db_, &table = entry.table_, &column = entry.column_;
+        const ObString &payload = entry.payload_, &predicate = entry.predicate_, &request = entry.request_;
+        ObSqlString row_filter, publish, outcome;
+        if (state != 2 && state != 4) {
+          ret = OB_STATE_NOT_MATCH;
+        } else if (state == 4) {
+          state = 3;
+        }
+        OZ (row_filter.assign_fmt("(%.*s) AND `__ai_%.*s_request`=", predicate.length(), predicate.ptr(), column.length(), column.ptr()));
+        OZ (sql_append_hex_escape_str(request, row_filter));
+        OZ (publish.assign_fmt("UPDATE `%.*s`.`%.*s` SET `%.*s`=%.*s,`__ai_%.*s_state`=%ld WHERE %s",
+            db.length(), db.ptr(), table.length(), table.ptr(), column.length(), column.ptr(),
+            state == 2 ? payload.length() : 4, state == 2 ? payload.ptr() : "NULL", column.length(), column.ptr(), state, row_filter.ptr()));
+        if (OB_SUCC(ret)) {
+          int write_ret = trans.write(publish.ptr(), affected);
+          if (write_ret == OB_TRY_LOCK_ROW_CONFLICT || write_ret == OB_TRANSACTION_SET_VIOLATION
+              || write_ret == OB_TRANS_NEED_ROLLBACK || write_ret == OB_DEAD_LOCK || write_ret == OB_TIMEOUT) {
+            ret = write_ret;
+          } else if (write_ret != OB_SUCCESS && state == 2 && retry_count < max_retries) {
+            // Roll back all unpublished columns, retaining their cached results.
+            // Only the invalid result is recomputed on the next attempt.
+            OZ (conversion_retry_sql.assign_fmt(
+                "UPDATE oceanbase.__all_ai_column_task SET state=3,retry_count=retry_count+1,"
+                "eligible_ts=DATE_ADD(NOW(6),INTERVAL 500000 MICROSECOND),"
+                "last_error='AI result conversion failed (%d)' WHERE task_id=%ld AND state=2",
+                write_ret, id));
+            if (OB_SUCC(ret)) { ret = OB_EAGAIN; }
+          } else if (write_ret != OB_SUCCESS && state == 2) {
+            // The failed SQL statement has rolled itself back. Clear the proxy's
+            // sticky error before recording this column's terminal failure.
+            trans.reset_last_error();
+            state = 3;
+            OZ (publish.assign_fmt("UPDATE `%.*s`.`%.*s` SET `%.*s`=NULL,`__ai_%.*s_state`=3 WHERE %s",
+                db.length(), db.ptr(), table.length(), table.ptr(), column.length(), column.ptr(), column.length(), column.ptr(), row_filter.ptr()));
+            OZ (trans.write(publish.ptr(), affected));
+          } else {
+            ret = write_ret;
+          }
+        }
+        OZ (outcome.assign_fmt("UPDATE oceanbase.__all_ai_column_task SET state=%ld WHERE task_id=%ld", state, id));
+        OZ (trans.write(outcome.ptr(), affected));
       }
-    }
+      if (OB_SUCC(ret)) { phase = "archive terminal group"; }
+      ObSqlString history, remove;
+      OZ (history.assign_fmt("INSERT INTO oceanbase.__all_ai_column_task_history "
+          "(task_id,schema_version,is_deleted,table_id,column_id,request_id,rowkey_predicate,state,retry_count,"
+          "eligible_ts,lease_owner,lease_expire_ts,definition_version,input_payload,last_error) "
+          "SELECT task_id,definition_version,0,table_id,column_id,request_id,rowkey_predicate,state,retry_count,"
+          "eligible_ts,lease_owner,lease_expire_ts,definition_version,input_payload,last_error "
+          "FROM oceanbase.__all_ai_column_task WHERE %s", group_filter.ptr()));
+      OZ (remove.assign_fmt("DELETE FROM oceanbase.__all_ai_column_task WHERE %s", group_filter.ptr()));
+      OZ (trans.write(history.ptr(), affected));
+      OZ (trans.write(remove.ptr(), affected));
+      if (trans.is_started()) {
+        const int end_ret = trans.end(OB_SUCC(ret));
+        if (OB_SUCC(ret)) { ret = end_ret; }
+      }
+      if (OB_EAGAIN == ret && !conversion_retry_sql.empty()) {
+        ret = sql_proxy_.write(conversion_retry_sql.ptr(), affected);
+      }
+      return ret;
+    });
+  }
+  if (OB_SUCCESS != ret && OB_ITER_END != ret) {
+    LOG_WARN("AI column worker operation failed", KR(ret), K(phase), K(group_filter));
   }
   return ret;
 }
@@ -2103,6 +2276,14 @@ int ObLocalManagementService::start_timer_tasks()
     }
   }
 
+  if (OB_SUCC(ret) && !ai_column_worker_peer_timer_.task_exist(ai_column_worker_peer_task_)) {
+    const int64_t interval = 100 * 1000L;
+    if (OB_FAIL(ai_column_worker_peer_timer_.schedule(
+            ai_column_worker_peer_task_, interval, true, true))) {
+      LOG_WARN("schedule AI column peer worker failed", KR(ret));
+    }
+  }
+
   LOG_INFO("start all timer tasks finish", K(ret));
   return ret;
 }
@@ -2117,6 +2298,7 @@ int ObLocalManagementService::stop_timer_tasks()
     deadlock_event_clear_task_timer_.cancel_task(deadlock_event_clear_task_);
     purge_recyclebin_task_timer_.cancel_task(purge_recyclebin_task_);
     ai_column_worker_timer_.cancel_task(ai_column_worker_task_);
+    ai_column_worker_peer_timer_.cancel_task(ai_column_worker_peer_task_);
   }
 
   //stop other timer tasks here

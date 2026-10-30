@@ -27,6 +27,33 @@ using namespace share;
 using namespace share::schema;
 namespace sql
 {
+static int check_insert_ai_assignment(ObSchemaChecker &checker, ObInsertStmt &stmt,
+                                      const ObColumnRefRawExpr &expr)
+{
+  int ret = OB_SUCCESS;
+  const TableItem *table = stmt.get_table_item_by_id(expr.get_table_id());
+  const ObTableSchema *schema = NULL;
+  CK (NULL != table);
+  if (OB_SUCC(ret)) {
+    OZ (checker.get_table_schema(table->get_base_table_item().ref_id_, schema));
+    CK (NULL != schema);
+  }
+  if (OB_SUCC(ret)) {
+    const ColumnItem *item = stmt.get_column_item_by_id(expr.get_table_id(), expr.get_column_id());
+    const uint64_t id = NULL != item && OB_INVALID_ID != item->base_cid_
+        ? item->base_cid_ : expr.get_column_id();
+    const ObColumnSchemaV2 *base_column = schema->get_column_schema(id);
+    const ObString &name = NULL != base_column ? base_column->get_column_name_str() : expr.get_column_name();
+    ObSqlString state_name;
+    OZ (state_name.append_fmt("__ai_%.*s_state", name.length(), name.ptr()));
+    if (OB_SUCC(ret) && NULL != schema->get_column_schema(state_name.string())) {
+      ret = OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED, "direct assignment to an AI COLUMN");
+    }
+  }
+  return ret;
+}
+
 ObInsertResolver::ObInsertResolver(ObResolverParams &params)
 : ObDelUpdResolver(params),
     row_count_(0),
@@ -396,24 +423,12 @@ int ObInsertResolver::resolve_insert_field(const ParseNode &insert_into, TableIt
       OB_FAIL(resolve_insert_columns(insert_into.children_[1], insert_stmt->get_insert_table_info()))) {
   }
 
-  if (OB_SUCC(ret) && 2 == insert_into.num_child_
-      && OB_NOT_NULL(insert_into.children_[1])) {
-    const ObTableSchema *table_schema = NULL;
-    OZ (schema_checker_->get_table_schema(table_item->get_base_table_item().ref_id_, table_schema));
-    if (OB_SUCC(ret) && OB_ISNULL(table_schema)) {
-      ret = OB_ERR_UNEXPECTED;
-    }
+  if (OB_SUCC(ret) && 2 == insert_into.num_child_ && session_info_->is_user_session()) {
     const ObIArray<ObColumnRefRawExpr *> &columns = insert_stmt->get_values_desc();
     for (int64_t i = 0; OB_SUCC(ret) && i < columns.count(); ++i) {
-      ObSqlString state_name;
-      if (OB_ISNULL(columns.at(i))) {
-        ret = OB_ERR_UNEXPECTED;
-      } else if (OB_FAIL(state_name.append_fmt("__ai_%.*s_state",
-                                                columns.at(i)->get_column_name().length(),
-                                                columns.at(i)->get_column_name().ptr()))) {
-      } else if (OB_NOT_NULL(table_schema->get_column_schema(state_name.string()))) {
-        ret = OB_NOT_SUPPORTED;
-        LOG_USER_ERROR(OB_NOT_SUPPORTED, "direct assignment to an AI COLUMN");
+      CK (NULL != columns.at(i));
+      if (OB_SUCC(ret)) {
+        OZ (check_insert_ai_assignment(*schema_checker_, *insert_stmt, *columns.at(i)));
       }
     }
   }
@@ -453,6 +468,8 @@ int ObInsertResolver::resolve_insert_assign(const ParseNode &assign_list)
         if (OB_ISNULL(assign.column_expr_)) {
           ret = OB_ERR_UNEXPECTED;
           LOG_WARN("invalid assignment variable", K(i), K(j), K(assign));
+        } else if (session_info_->is_user_session()
+                   && OB_FAIL(check_insert_ai_assignment(*schema_checker_, *insert_stmt, *assign.column_expr_))) {
         } else if (assign.is_duplicated_) {
           ret = OB_ERR_FIELD_SPECIFIED_TWICE;
           ObCStringHelper helper;
@@ -1059,6 +1076,17 @@ int ObInsertResolver::resolve_insert_update_assignment(const ParseNode *node, Ob
   } else if (FALSE_IT(is_resolve_insert_update_ = true)) {
     //do nothing
   } else if (OB_FAIL(ObDelUpdResolver::resolve_insert_update_assignment(node, table_info))) {
+  }
+  if (OB_SUCC(ret) && session_info_->is_user_session()) {
+    for (int64_t i = 0; OB_SUCC(ret) && i < table_info.assignments_.count(); ++i) {
+      const ObAssignment &assign = table_info.assignments_.at(i);
+      if (!assign.is_implicit_) {
+        CK (NULL != assign.column_expr_);
+        if (OB_SUCC(ret)) {
+          OZ (check_insert_ai_assignment(*schema_checker_, *insert_stmt, *assign.column_expr_));
+        }
+      }
+    }
   }
   return ret;
 }

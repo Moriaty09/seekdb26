@@ -1,0 +1,63 @@
+drop database if exists `ai_column_mixed``terminal`;
+create database `ai_column_mixed``terminal`;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('mixed_terminal_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('mixed_terminal_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('mixed_terminal_model',
+'{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('mixed_terminal_ep',
+'{"ai_model_name":"mixed_terminal_model","url":"http://127.0.0.1:19124/v1/chat/completions","access_key":"mixed-key","provider":"openai","request_model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('mixed_terminal_embed');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('mixed_terminal_embed',
+'{"type":"dense_embedding","model_name":"mock-embed"}');
+create table `ai_column_mixed``terminal`.`do``cs`(
+id varchar(100) primary key,
+content varchar(200),
+good varchar(400) AI COLUMN (AI_COMPLETE('mixed_terminal_model',content)) WITH (sync_mode='async',max_retries=0),
+bad json AI COLUMN (AI_COMPLETE('mixed_terminal_model',content)) WITH (sync_mode='async',max_retries=2),
+null_result vector(4) AI COLUMN (AI_EMBED('mixed_terminal_embed',NULLIF(content,content))) WITH (sync_mode='async',max_retries=0)
+);
+insert into `ai_column_mixed``terminal`.`do``cs`(id,content) values('quote''and\\slash','malformed-json');
+select good='mock:malformed-json' as successful_column_retained,
+bad is null as conversion_failure_null,
+null_result is null as successful_null
+from `ai_column_mixed``terminal`.`do``cs`;
+successful_column_retained	conversion_failure_null	successful_null
+1	1	1
+set session ai_column_strict_read=on;
+select good is not null as good_ready, null_result is null as null_ready
+from `ai_column_mixed``terminal`.`do``cs`;
+good_ready	null_ready
+1	1
+select bad from `ai_column_mixed``terminal`.`do``cs`;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+set session ai_column_strict_read=off;
+select count(*)=0 as tasks_retired from oceanbase.__all_ai_column_task q
+join oceanbase.__all_table t on t.table_id=q.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id
+where d.database_name='ai_column_mixed`terminal';
+tasks_retired
+1
+select sum(q.state=2)=2 as successful_history,sum(q.state=3)=1 as failed_history
+from oceanbase.__all_ai_column_task_history q
+join oceanbase.__all_table t on t.table_id=q.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id
+where d.database_name='ai_column_mixed`terminal';
+successful_history	failed_history
+1	1
+begin;
+insert into `ai_column_mixed``terminal`.`do``cs`(id,content) values('lease-row','lease-recovery');
+update oceanbase.__all_ai_column_task q
+join oceanbase.__all_table t on t.table_id=q.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id
+set q.state=1,q.lease_owner='lost-worker',q.lease_expire_ts=date_sub(now(6),interval 1 second)
+where d.database_name='ai_column_mixed`terminal';
+commit;
+select good='mock:lease-recovery' and bad is not null as expired_lease_recovered
+from `ai_column_mixed``terminal`.`do``cs` where id='lease-row';
+expired_lease_recovered
+1
+mock_mixed_once=ok
+drop database `ai_column_mixed``terminal`;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('mixed_terminal_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('mixed_terminal_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('mixed_terminal_embed');

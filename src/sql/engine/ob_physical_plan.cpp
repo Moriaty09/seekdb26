@@ -43,6 +43,7 @@ ObPhysicalPlan::ObPhysicalPlan(MemoryContext &mem_context /* = CURRENT_CONTEXT *
     autoinc_params_(allocator_),
     stmt_need_privs_(allocator_),
     vars_(allocator_),
+    user_read_column_refs_(allocator_),
     sql_expression_factory_(allocator_),
     expr_op_factory_(allocator_),
     literal_stmt_type_(stmt::T_NONE),
@@ -132,6 +133,7 @@ void ObPhysicalPlan::reset()
   autoinc_params_.reset();
   stmt_need_privs_.reset();
   vars_.reset();
+  user_read_column_refs_.reset();
   sql_expression_factory_.destroy();
   expr_op_factory_.destroy();
   literal_stmt_type_ = stmt::T_NONE;
@@ -649,7 +651,8 @@ OB_SERIALIZE_MEMBER(ObPhysicalPlan,
                     need_switch_to_table_lock_worker_,
                     data_complement_gen_doc_id_,
                     px_parallel_rule_,
-                    px_worker_share_plan_enabled_);
+                    px_worker_share_plan_enabled_,
+                    user_read_column_refs_);
 
 int ObPhysicalPlan::set_table_locations(const ObTablePartitionInfoArray &infos,
                                         ObSchemaGetterGuard &schema_guard)

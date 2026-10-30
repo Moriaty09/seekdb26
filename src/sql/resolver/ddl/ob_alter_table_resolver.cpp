@@ -149,6 +149,34 @@ int ObAlterTableResolver::resolve(const ParseNode &parse_tree)
       alter_table_stmt->get_alter_table_arg().alter_table_schema_.set_collation_type(table_schema_->get_collation_type());
     }
     //resolve action list
+    if (OB_SUCC(ret) && NULL != parse_tree.children_[ACTION_LIST]) {
+      const ParseNode *actions = parse_tree.children_[ACTION_LIST];
+      for (int64_t i = 0; OB_SUCC(ret) && i < actions->num_child_; ++i) {
+        const ParseNode *action = actions->children_[i];
+        if (NULL != action && T_RETRY_AI_COLUMN == action->type_) {
+          if (actions->num_child_ != 1) {
+            ret = OB_NOT_SUPPORTED;
+            LOG_USER_ERROR(OB_NOT_SUPPORTED, "combining AI COLUMN RETRY with another ALTER action");
+          } else {
+            const ParseNode *name = action->children_[0];
+            ObString column_name(name->str_len_, name->str_value_);
+            ObSqlString state_name;
+            OZ (state_name.append_fmt("__ai_%.*s_state", column_name.length(), column_name.ptr()));
+            if (OB_SUCC(ret) && NULL == table_schema_->get_column_schema(state_name.string())) {
+              ret = OB_NOT_SUPPORTED;
+              LOG_USER_ERROR(OB_NOT_SUPPORTED, "retrying a column that is not an AI column");
+            }
+            OZ (ob_write_string(*allocator_, column_name, alter_table_stmt->ai_retry_column_));
+            if (OB_SUCC(ret) && NULL != action->children_[1]) {
+              const ParseNode *predicate = action->children_[1];
+              OZ (ob_write_string(*allocator_, ObString(predicate->str_len_, predicate->str_value_),
+                                 alter_table_stmt->ai_retry_predicate_));
+            }
+          }
+          return ret;
+        }
+      }
+    }
     if (OB_SUCCESS == ret && NULL != parse_tree.children_[ACTION_LIST]){
       if (OB_FAIL(resolve_action_list(*(parse_tree.children_[ACTION_LIST])))) {
       } else if (OB_FAIL(set_table_options())) {
@@ -3523,8 +3551,16 @@ int ObAlterTableResolver::resolve_add_column(const ParseNode &node, ObColumnName
               const ObString raw_expr(static_cast<int32_t>(expr->str_len_), expr->str_value_);
               if (alter_column_schema.is_json()) {
                 ObSqlString typed_expr;
-                OZ (typed_expr.append_fmt("%.*s /* Return exactly one valid JSON value */",
-                                          raw_expr.length(), raw_expr.ptr()));
+                OZ (typed_expr.append_fmt(
+                    "%.*s, '{\"__system_prompt\":\"Return exactly one valid JSON value\"}') "
+                    "/* Return exactly one valid JSON value */",
+                    raw_expr.length() - 1, raw_expr.ptr()));
+                OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
+              } else if (alter_column_schema.get_meta_type().is_integer_type()) {
+                ObSqlString typed_expr;
+                OZ (typed_expr.append_fmt(
+                    "%.*s, '{\"__system_prompt\":\"Return exactly one base-10 integer and no other text\"}')",
+                    raw_expr.length() - 1, raw_expr.ptr()));
                 OZ (ob_write_string(*allocator_, typed_expr.string(), ai_def.normalized_expr_));
               } else {
                 ai_def.normalized_expr_ = raw_expr;

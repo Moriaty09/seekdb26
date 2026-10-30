@@ -1,0 +1,68 @@
+# Strict-read references survive view expansion and cached plan execution.
+connection default;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py start 19126
+--disable_warnings
+drop database if exists ai_column_strict_scope;
+--enable_warnings
+create database ai_column_strict_scope;
+use ai_column_strict_scope;
+--error 0,11112
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('strict_scope_ep');
+--error 0,11118
+call DBMS_AI_SERVICE.DROP_AI_MODEL('strict_scope_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('strict_scope_model', '{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('strict_scope_ep', '{"ai_model_name":"strict_scope_model","url":"http://127.0.0.1:19126/v1/chat/completions","access_key":"scope-key","provider":"openai","request_model_name":"mock-complete"}');
+create table docs(id int primary key, content varchar(100), result varchar(400) AI COLUMN (AI_COMPLETE('strict_scope_model', content)) WITH(sync_mode='async', max_retries=0));
+insert into docs(id, content) values (1,'scope-one');
+let $retry = 150;
+let $ready = 0;
+while ($retry)
+{
+  let $ready = `select count(*) = 1 from docs where result is not null`;
+  if ($ready == 1) { let $retry = 0; }
+  if ($ready == 0) { --real_sleep 0.1
+    dec $retry; }
+}
+eval select $ready = 1 as initial_ready;
+create view ready_view as select id, result as generated_value from docs;
+create view expression_view as select id, concat(result, '!') as computed_value from ready_view join docs using(id);
+create view filtered_view as select id from docs where result is not null;
+set session ai_column_strict_read = on;
+prepare cached_read from 'select result is not null as cached_ready from docs where id = 1';
+execute cached_read;
+start transaction;
+update docs set content = 'scope-two' where id = 1;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+execute cached_read;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select generated_value from ready_view where 0;
+select count(*) = 1 as normal_column_read_in_transaction from docs where id = 1;
+rollback;
+execute cached_read;
+select generated_value is not null as rollback_restores_view_read from ready_view;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py stop 19126
+update docs set content = 'scope-three' where id = 1;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+execute cached_read;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select generated_value from ready_view where id = 999;
+select id from ready_view;
+select id from expression_view;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select computed_value from expression_view where 0;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select id from filtered_view where 0;
+deallocate prepare cached_read;
+set session ai_column_strict_read = off;
+drop view expression_view, filtered_view, ready_view;
+drop table docs;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('strict_scope_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('strict_scope_model');
+drop database ai_column_strict_scope;
+use test;

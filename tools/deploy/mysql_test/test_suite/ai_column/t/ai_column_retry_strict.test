@@ -62,6 +62,16 @@ set session ai_column_strict_read = on;
 select id, category from ai_column_retry_strict.docs order by id;
 select count(*) = 3 as ready_label_is_readable
 from ai_column_retry_strict.docs where label is not null;
+# Optimizer pruning must not remove a user reference from strict checking.
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select result from ai_column_retry_strict.docs where 0;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select docs.* from ai_column_retry_strict.docs where 0;
+# Internal DML maintenance reads do not turn ordinary writes into strict reads.
+update ai_column_retry_strict.docs set category = category where id = 2;
+delete from ai_column_retry_strict.docs where id = 999;
 # Strictness is column-wide, not limited to rows selected by the query.
 # Row 2 is READY, but rows 1 and 3 still make RESULT incomplete.
 --replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/

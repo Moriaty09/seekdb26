@@ -1,0 +1,95 @@
+# Adding AI columns must cover existing rows and preserve existing AI rules.
+connection default;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py start 19125
+--disable_warnings
+drop database if exists ai_column_add_backfill;
+--enable_warnings
+create database ai_column_add_backfill;
+--error 0,11112
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('add_backfill_ep');
+--error 0,11118
+call DBMS_AI_SERVICE.DROP_AI_MODEL('add_backfill_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('add_backfill_model', '{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('add_backfill_ep', '{"ai_model_name":"add_backfill_model","url":"http://127.0.0.1:19125/v1/chat/completions","access_key":"backfill-key","provider":"openai","request_model_name":"mock-complete"}');
+create table ai_column_add_backfill.docs(id bigint primary key, content varchar(100));
+insert into ai_column_add_backfill.docs values(1,'first'),(2,'second');
+alter table ai_column_add_backfill.docs add column result varchar(400)
+  AI COLUMN (AI_COMPLETE('add_backfill_model',content)) WITH (sync_mode='async',max_retries=1);
+let $retry = 150;
+let $ready = 0;
+while ($retry)
+{
+  let $ready = `select count(*)=2 from ai_column_add_backfill.docs where result is not null`;
+  if ($ready == 1) { let $retry = 0; }
+  if ($ready == 0) { --real_sleep 0.1
+    dec $retry; }
+}
+select id,result=concat('mock:',content) as existing_row_generated from ai_column_add_backfill.docs order by id;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py reset 19125
+alter table ai_column_add_backfill.docs add column label varchar(400)
+  AI COLUMN (AI_COMPLETE('add_backfill_model',concat('label:',content))) WITH (sync_mode='async',max_retries=1);
+let $retry = 150;
+let $ready = 0;
+while ($retry)
+{
+  let $ready = `select count(*)=2 from ai_column_add_backfill.docs where label is not null`;
+  if ($ready == 1) { let $retry = 0; }
+  if ($ready == 0) { --real_sleep 0.1
+    dec $retry; }
+}
+select id,result=concat('mock:',content) as old_result_preserved,
+  label=concat('mock:label:',content) as added_result_ready
+from ai_column_add_backfill.docs order by id;
+insert into ai_column_add_backfill.docs(id,content) values(3,'third');
+update ai_column_add_backfill.docs set content='changed' where id=1;
+let $retry = 150;
+let $ready = 0;
+while ($retry)
+{
+  let $ready = `select count(*)=3 from ai_column_add_backfill.docs where result is not null and label is not null`;
+  if ($ready == 1) { let $retry = 0; }
+  if ($ready == 0) { --real_sleep 0.1
+    dec $retry; }
+}
+select id,result=concat('mock:',content) as result_current,
+  label=concat('mock:label:',content) as label_current
+from ai_column_add_backfill.docs order by id;
+alter table ai_column_add_backfill.docs add column tags json
+  AI COLUMN (AI_COMPLETE('add_backfill_model',content)) WITH (sync_mode='async',max_retries=1);
+let $retry = 150;
+let $ready = 0;
+while ($retry)
+{
+  let $ready = `select count(*)=3 from ai_column_add_backfill.docs where tags is not null`;
+  if ($ready == 1) { let $retry = 0; }
+  if ($ready == 0) { --real_sleep 0.1
+    dec $retry; }
+}
+select id,json_unquote(json_extract(tags,'$.input'))=content as added_json_typed
+from ai_column_add_backfill.docs order by id;
+# Business SQL cannot supply generated results, including through view aliases.
+--error 1235
+update ai_column_add_backfill.docs set result='manual' where id=1;
+--error 1235
+insert into ai_column_add_backfill.docs set id=4,content='fourth',result='manual';
+--error 1235
+insert into ai_column_add_backfill.docs values(4,'fourth','manual','manual','{}');
+--error 1235
+insert into ai_column_add_backfill.docs(id,content) values(1,'fourth')
+  on duplicate key update result='manual';
+create view ai_column_add_backfill.docs_v as
+  select id,content,result as generated_result,label from ai_column_add_backfill.docs;
+--error 1235
+update ai_column_add_backfill.docs_v set generated_result='manual' where id=1;
+--error 1235
+insert into ai_column_add_backfill.docs_v(id,content,generated_result) values(4,'fourth','manual');
+update ai_column_add_backfill.docs_v set content=content where id=1;
+begin;
+insert into ai_column_add_backfill.docs set id=4,content='ordinary-set';
+select count(*)=1 as ordinary_insert_set_allowed from ai_column_add_backfill.docs where id=4;
+rollback;
+select count(*)=3 as rejected_writes_leave_rows_unchanged from ai_column_add_backfill.docs;
+drop database ai_column_add_backfill;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('add_backfill_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('add_backfill_model');
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py stop 19125

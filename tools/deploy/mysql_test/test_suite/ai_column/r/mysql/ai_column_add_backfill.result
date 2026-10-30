@@ -1,0 +1,67 @@
+drop database if exists ai_column_add_backfill;
+create database ai_column_add_backfill;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('add_backfill_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('add_backfill_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('add_backfill_model', '{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('add_backfill_ep', '{"ai_model_name":"add_backfill_model","url":"http://127.0.0.1:19125/v1/chat/completions","access_key":"backfill-key","provider":"openai","request_model_name":"mock-complete"}');
+create table ai_column_add_backfill.docs(id bigint primary key, content varchar(100));
+insert into ai_column_add_backfill.docs values(1,'first'),(2,'second');
+alter table ai_column_add_backfill.docs add column result varchar(400)
+AI COLUMN (AI_COMPLETE('add_backfill_model',content)) WITH (sync_mode='async',max_retries=1);
+select id,result=concat('mock:',content) as existing_row_generated from ai_column_add_backfill.docs order by id;
+id	existing_row_generated
+1	1
+2	1
+alter table ai_column_add_backfill.docs add column label varchar(400)
+AI COLUMN (AI_COMPLETE('add_backfill_model',concat('label:',content))) WITH (sync_mode='async',max_retries=1);
+select id,result=concat('mock:',content) as old_result_preserved,
+label=concat('mock:label:',content) as added_result_ready
+from ai_column_add_backfill.docs order by id;
+id	old_result_preserved	added_result_ready
+1	1	1
+2	1	1
+insert into ai_column_add_backfill.docs(id,content) values(3,'third');
+update ai_column_add_backfill.docs set content='changed' where id=1;
+select id,result=concat('mock:',content) as result_current,
+label=concat('mock:label:',content) as label_current
+from ai_column_add_backfill.docs order by id;
+id	result_current	label_current
+1	1	1
+2	1	1
+3	1	1
+alter table ai_column_add_backfill.docs add column tags json
+AI COLUMN (AI_COMPLETE('add_backfill_model',content)) WITH (sync_mode='async',max_retries=1);
+select id,json_unquote(json_extract(tags,'$.input'))=content as added_json_typed
+from ai_column_add_backfill.docs order by id;
+id	added_json_typed
+1	1
+2	1
+3	1
+update ai_column_add_backfill.docs set result='manual' where id=1;
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+insert into ai_column_add_backfill.docs set id=4,content='fourth',result='manual';
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+insert into ai_column_add_backfill.docs values(4,'fourth','manual','manual','{}');
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+insert into ai_column_add_backfill.docs(id,content) values(1,'fourth')
+on duplicate key update result='manual';
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+create view ai_column_add_backfill.docs_v as
+select id,content,result as generated_result,label from ai_column_add_backfill.docs;
+update ai_column_add_backfill.docs_v set generated_result='manual' where id=1;
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+insert into ai_column_add_backfill.docs_v(id,content,generated_result) values(4,'fourth','manual');
+ERROR 0A000: direct assignment to an AI COLUMN not supported
+update ai_column_add_backfill.docs_v set content=content where id=1;
+begin;
+insert into ai_column_add_backfill.docs set id=4,content='ordinary-set';
+select count(*)=1 as ordinary_insert_set_allowed from ai_column_add_backfill.docs where id=4;
+ordinary_insert_set_allowed
+1
+rollback;
+select count(*)=3 as rejected_writes_leave_rows_unchanged from ai_column_add_backfill.docs;
+rejected_writes_leave_rows_unchanged
+1
+drop database ai_column_add_backfill;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('add_backfill_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('add_backfill_model');

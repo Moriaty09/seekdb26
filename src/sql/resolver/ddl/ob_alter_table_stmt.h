@@ -35,6 +35,8 @@ public:
   explicit ObAlterTableStmt(common::ObIAllocator *name_pool);
   ObAlterTableStmt();
   virtual ~ObAlterTableStmt();
+  common::ObString ai_retry_column_;
+  common::ObString ai_retry_predicate_;
   int add_column(const share::schema::AlterColumnSchema &column_schema);
   int add_index_arg(obcall::ObIndexArg *index_arg);
   int check_drop_fk_arg_exist(obcall::ObDropForeignKeyArg *drop_fk_arg, bool &has_same_fk_arg);

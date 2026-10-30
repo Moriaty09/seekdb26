@@ -28,6 +28,8 @@ using namespace share::schema;
 namespace sql
 {
 
+OB_SERIALIZE_MEMBER(StatementColumnRef, table_id_, column_id_);
+
 bool LocationConstraint::operator==(const LocationConstraint &other) const {
   return key_ == other.key_ && phy_loc_type_ == other.phy_loc_type_ && constraint_flags_ == other.constraint_flags_ ;
 }

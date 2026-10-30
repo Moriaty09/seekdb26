@@ -37,6 +37,10 @@ int ObCodeGenerator::generate(const ObLogPlan &log_plan,
     phy_plan.set_batch_size(batch_size);
   }
   if (OB_FAIL(ret)) {
+  } else if (OB_NOT_NULL(log_plan.get_stmt()) &&
+             OB_NOT_NULL(log_plan.get_stmt()->get_query_ctx()) &&
+             OB_FAIL(phy_plan.set_user_read_column_refs(
+                 log_plan.get_stmt()->get_query_ctx()->user_read_column_refs_))) {
   } else if (OB_FAIL(generate_exprs(log_plan, phy_plan))) {
   } else if (OB_FAIL(generate_operators(log_plan, phy_plan))) {
   }

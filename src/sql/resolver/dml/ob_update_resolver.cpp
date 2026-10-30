@@ -105,6 +105,39 @@ int ObUpdateResolver::resolve(const ParseNode &parse_tree)
     }
   }
 
+  if (OB_SUCC(ret) && session_info_->is_user_session()) {
+    for (int64_t i = 0; OB_SUCC(ret) && i < tables_assign.count(); ++i) {
+      const ObTableSchema *schema = NULL;
+      const TableItem *item = update_stmt->get_table_item_by_id(tables_assign.at(i).table_id_);
+      if (OB_ISNULL(item)) {
+        ret = OB_ERR_UNEXPECTED;
+      } else {
+        OZ (schema_checker_->get_table_schema(item->get_base_table_item().ref_id_, schema));
+      }
+      for (int64_t j = 0; OB_SUCC(ret) && j < tables_assign.at(i).assignments_.count(); ++j) {
+        const ObAssignment &assign = tables_assign.at(i).assignments_.at(j);
+        if (OB_ISNULL(schema) || OB_ISNULL(assign.column_expr_)) {
+          ret = OB_ERR_UNEXPECTED;
+        } else {
+          const ColumnItem *column_item = update_stmt->get_column_item_by_id(
+              assign.column_expr_->get_table_id(), assign.column_expr_->get_column_id());
+          const uint64_t base_column_id = NULL != column_item
+              && OB_INVALID_ID != column_item->base_cid_
+              ? column_item->base_cid_ : assign.column_expr_->get_column_id();
+          const ObColumnSchemaV2 *base_column = schema->get_column_schema(base_column_id);
+          const ObString &name = NULL != base_column ? base_column->get_column_name_str()
+                                                    : assign.column_expr_->get_column_name();
+          ObSqlString state_name;
+          OZ (state_name.append_fmt("__ai_%.*s_state", name.length(), name.ptr()));
+          if (OB_SUCC(ret) && NULL != schema->get_column_schema(state_name.string())) {
+            ret = OB_NOT_SUPPORTED;
+            LOG_USER_ERROR(OB_NOT_SUPPORTED, "direct assignment to an AI COLUMN");
+          }
+        }
+      }
+    }
+  }
+
   if (OB_SUCC(ret)) {
     // Parse cascading update columns
     if (OB_FAIL(resolve_additional_assignments(tables_assign,

@@ -1864,6 +1864,10 @@ int ObDMLResolver::resolve_basic_column_item(const TableItem &table_item,
     const ObColumnSchemaV2 *col_schema = NULL;
     const ObTableSchema *table_schema = NULL;
     uint64_t tid = table_item.ref_id_;
+    if (session_info_->is_inner() && column_name.length() > 5
+        && 0 == STRNCMP(column_name.ptr(), "__ai_", 5)) {
+      include_hidden = true;
+    }
     if (!include_hidden) {
       if (!ObCharset::case_insensitive_equal(column_name, OB_HIDDEN_PK_INCREMENT_COLUMN_NAME)) {
         //do nothing
@@ -2243,11 +2247,67 @@ void ObDMLResolver::report_user_error_msg(int &ret, const ObRawExpr *root_expr, 
 }
 
 //select resolver has namespace more than one layer, select resolve will overwrite it
+namespace
+{
+int collect_user_read_columns(const ObRawExpr *expr, const ObDMLStmt *stmt,
+                             ObIArray<StatementColumnRef> &refs)
+{
+  int ret = OB_SUCCESS;
+  ObSEArray<ObRawExpr *, 4> columns;
+  if (nullptr == expr || nullptr == stmt) {
+  } else if (OB_FAIL(ObRawExprUtils::extract_column_exprs(expr, columns))) {
+  } else {
+    for (int64_t i = 0; OB_SUCC(ret) && i < columns.count(); ++i) {
+      const auto *column = static_cast<const ObColumnRefRawExpr *>(columns.at(i));
+      const TableItem *table = stmt->get_table_item_by_id(column->get_table_id());
+      const ColumnItem *item = stmt->get_column_item_by_id(
+          column->get_table_id(), column->get_column_id());
+      if (nullptr != table && nullptr != table->ref_query_ &&
+          column->get_column_id() >= OB_APP_MIN_COLUMN_ID &&
+          column->get_column_id() - OB_APP_MIN_COLUMN_ID <
+              table->ref_query_->get_select_item_size()) {
+        // Resolve only the output actually referenced by the outer statement.
+        // This also handles expressions and nested views without base_cid_.
+        OZ (SMART_CALL(collect_user_read_columns(
+            table->ref_query_->get_select_item(
+                column->get_column_id() - OB_APP_MIN_COLUMN_ID).expr_,
+            table->ref_query_, refs)));
+      } else if (nullptr != item && OB_INVALID_ID != item->base_tid_ &&
+                 OB_INVALID_ID != item->base_cid_) {
+        bool found = false;
+        for (int64_t j = 0; !found && j < refs.count(); ++j) {
+          found = refs.at(j).table_id_ == item->base_tid_ &&
+                  refs.at(j).column_id_ == item->base_cid_;
+        }
+        if (!found) {
+          OZ (refs.push_back(StatementColumnRef(item->base_tid_, item->base_cid_)));
+        }
+      }
+    }
+  }
+  return ret;
+}
+}
+
+int ObDMLResolver::record_user_read_columns(const ObRawExpr *expr)
+{
+  int ret = OB_SUCCESS;
+  ObDMLStmt *stmt = get_stmt();
+  // View outputs are definitions, not reads until their caller references them.
+  // Predicates inside a view still count regardless of the selected outputs.
+  if (params_.is_in_view_ && T_FIELD_LIST_SCOPE == current_scope_) {
+  } else if (nullptr != stmt && nullptr != stmt->get_query_ctx()) {
+    OZ (collect_user_read_columns(expr, stmt, stmt->get_query_ctx()->user_read_column_refs_));
+  }
+  return ret;
+}
+
 int ObDMLResolver::resolve_column_ref_expr(const ObQualifiedName &q_name, ObRawExpr *&real_ref_expr)
 {
   int ret = OB_SUCCESS;
   if (OB_FAIL(resolve_table_column_expr(q_name, real_ref_expr))) {
     LOG_WARN_IGNORE_COL_NOTFOUND(ret, "resolve table column failed", K(q_name), K(ret));
+  } else if (OB_FAIL(record_user_read_columns(real_ref_expr))) {
   }
   return ret;
 }
@@ -2945,6 +3005,7 @@ int ObDMLResolver::transfer_using_to_on_expr(JoinedTable *&joined_table)
       } else if (OB_FAIL(b_expr->set_param_exprs(left_expr, right_expr))) {
       } else if (OB_FAIL(b_expr->formalize(session_info_))) {
       } else if (OB_FAIL(cur_table->join_conditions_.push_back(b_expr))) {
+      } else if (OB_FAIL(record_user_read_columns(b_expr))) {
       }
     }
     if (OB_SUCC(ret) && FULL_OUTER_JOIN == cur_table->joined_type_) {
