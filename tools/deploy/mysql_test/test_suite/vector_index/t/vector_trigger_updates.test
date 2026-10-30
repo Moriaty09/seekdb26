@@ -1,0 +1,24 @@
+# A trigger can change an indexed vector absent from the UPDATE assignment list.
+--disable_warnings
+drop database if exists vector_trigger_updates;
+--enable_warnings
+create database vector_trigger_updates;
+use vector_trigger_updates;
+create table docs(id bigint primary key, source vector(4), emb vector(4), note int);
+create trigger copy_vector before update on docs for each row set new.emb = new.source;
+insert into docs values(1, '[0,0,0,0]', '[0,0,0,0]', 0);
+create vector index vi on docs(emb) with(distance=l2,type=hnsw,lib=vsag);
+update docs set source='[10,0,0,0]' where id=1;
+update docs set source='[20,0,0,0]' where id=1;
+select id,emb from docs order by l2_distance(emb,[20,0,0,0]) approximate limit 10;
+update docs set source=NULL where id=1;
+select count(*) as invalidated_count from (select id from docs order by l2_distance(emb,[0,0,0,0]) approximate limit 10) q;
+update docs set source='[30,0,0,0]' where id=1;
+select id,emb from docs order by l2_distance(emb,[30,0,0,0]) approximate limit 10;
+start transaction;
+update docs set source=NULL where id=1;
+rollback;
+select id,emb from docs order by l2_distance(emb,[30,0,0,0]) approximate limit 10;
+update docs set note=1 where id=1;
+select id,emb,note from docs order by l2_distance(emb,[30,0,0,0]) approximate limit 10;
+drop database vector_trigger_updates;

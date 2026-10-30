@@ -51,15 +51,7 @@ int ObVecIndexDMLIterator::generate_domain_rows(const ObChunkDatumStore::StoredR
     if (OB_FAIL(get_vector_index_column_idxs(vec_id_idx, type_idx, vector_idx))) {
     }
     for (int i = 0; OB_SUCC(ret) && i < row_cnt; i++) {
-      const IntFixedArray *projector = is_update
-          ? (is_old_row_ ? &das_ctdef_->old_row_projector_ : &das_ctdef_->new_row_projector_)
-          : row_projector_;
-      if (vector_idx < 0 || vector_idx >= projector->count()) {
-        ret = OB_ERR_UNEXPECTED;
-      } else if (store_row->cells()[projector->at(vector_idx)].is_null()) {
-        // NULL has no vector index entry.  In particular NULL -> vector must
-        // not emit another delete for an already invalidated vector id.
-      } else if (!is_update_ && OB_FAIL(get_vec_data(store_row, vec_id_idx, vector_idx, vec_id, vector))) {
+      if (!is_update_ && OB_FAIL(get_vec_data(store_row, vec_id_idx, vector_idx, vec_id, vector))) {
       } else if (is_update_ && OB_FAIL(get_vec_data_for_update(store_row, vec_id_idx, vector_idx, vec_id, vector))) {
       } else if (OB_FAIL(generate_vec_delta_buff_row(allocator_, store_row, vec_id_idx, type_idx, vector_idx, vec_id, vector, rows_))) {
       }
@@ -86,7 +78,9 @@ int ObVecIndexDMLIterator::get_vec_data(
     // get vec data without lob
     // here expect always has lob header
     vector = store_row->cells()[row_projector_->at(vector_idx)].get_string();
-    if (das_ctdef_->op_type_ == ObDASOpType::DAS_OP_TABLE_DELETE) {
+    if (store_row->cells()[row_projector_->at(vector_idx)].is_null()) {
+      vector.reset();
+    } else if (das_ctdef_->op_type_ == ObDASOpType::DAS_OP_TABLE_DELETE) {
       // do nothing, delete do not need to read vector
     } else if (OB_FAIL(ObTextStringHelper::read_real_string_data(
                                                                 *lob_read_options_,
@@ -125,12 +119,14 @@ int ObVecIndexDMLIterator::get_vec_data_for_update(
     // UPDATE emits an old-id tombstone followed by the new vector. The
     // tombstone stores NULL payload, so loading the old (possibly out-of-row)
     // LOB is unnecessary. AI invalidation must only remove the old id.
-    if (is_old_row_) {
+    const bool new_vector_is_null =
+        store_row->cells()[das_ctdef_->new_row_projector_.at(vector_idx)].is_null();
+    if (is_old_row_ || new_vector_is_null) {
       vector.reset();
     } else {
       vector = store_row->cells()[das_ctdef_->new_row_projector_.at(vector_idx)].get_string();
     }
-    if (!is_old_row_ && OB_FAIL(ObTextStringHelper::read_real_string_data(
+    if (!is_old_row_ && !new_vector_is_null && OB_FAIL(ObTextStringHelper::read_real_string_data(
                                                           *lob_read_options_,
                                                           &allocator_,
                                                           ObLongTextType,
@@ -202,7 +198,7 @@ int ObVecIndexDMLIterator::generate_vec_delta_buff_row(common::ObIAllocator &all
         ret = OB_ERR_UNEXPECTED;
       }
     }
-    if (!is_old_row_) {
+    if (!is_old_row_ && !store_row->cells()[row_projector->at(vector_idx)].is_null()) {
       // obj_arr[vector_idx].set_sql_collection(vector.ptr(), vector.length());
       // obj_arr[vector_idx].set_inrow(); // remove has lob header mark
       obj_arr[vector_idx].set_string(vector);

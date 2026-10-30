@@ -8398,7 +8398,9 @@ int ObDMLResolver::generate_ddl_sample_info_if_needed(TableItem &table_item)
         int tmp_ret = OB_SUCCESS;
         if (OB_SUCCESS != (tmp_ret = upper_insert_resolver_->get_ddl_schema_in_insert_into_select_clause(ddl_table_schema))) {
         } else if (OB_NOT_NULL(ddl_table_schema) &&
-                   (ddl_table_schema->is_fts_index() || ddl_table_schema->is_vec_index())) {
+                   (ddl_table_schema->is_fts_index() || ddl_table_schema->is_fts_doc_word_aux()
+                    || ddl_table_schema->is_rowkey_doc_id() || ddl_table_schema->is_doc_id_rowkey()
+                    || ddl_table_schema->is_vec_index())) {
           sample_info->method_ = SampleInfo::SampleMethod::HYBRID_SAMPLE;
         }
       }

@@ -1,0 +1,39 @@
+drop database if exists fts_aux_sampling;
+create database fts_aux_sampling;
+use fts_aux_sampling;
+create table digits(n int primary key);
+insert into digits values(0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table docs(id bigint primary key, body varchar(200), cn varchar(200));
+insert into docs select a.n*100+b.n*10+c.n,
+if(mod(c.n,2)=0,'database performance','database audit'), '数据库全文索引'
+from digits a cross join digits b cross join digits c;
+create fulltext index fb on docs(body) with parser beng parallel 6;
+create fulltext index fi on docs(cn) with parser ik parallel 6;
+select count(*)=1000 as all_documents from docs where match(body) against('database');
+all_documents
+1
+select count(*)=500 as audit_documents from docs where match(body) against('audit');
+audit_documents
+1
+select count(*)=1000 as chinese_documents from docs where match(cn) against('数据库');
+chinese_documents
+1
+update docs set body='replacement' where id<10;
+select count(*)=990 as updated_documents from docs where match(body) against('database');
+updated_documents
+1
+start transaction;
+delete from docs where id>=10 and id<20;
+rollback;
+select count(*)=990 as rollback_documents from docs where match(body) against('database');
+rollback_documents
+1
+alter table docs drop index fb;
+create fulltext index fb on docs(body) with parser beng parallel 6;
+select count(*)=990 as rebuilt_documents from docs where match(body) against('database');
+rebuilt_documents
+1
+select count(*)=10 as rebuilt_replacements from docs where match(body) against('replacement');
+rebuilt_replacements
+1
+drop database fts_aux_sampling;
