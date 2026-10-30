@@ -289,3 +289,12 @@ IK tokenization is about 3.0% lower and total construction about 5.9% lower in t
 ## Latest FTS follow-up: concrete small-term merger dispatch
 
 Source `3c126f77da5836579e95111982ed0c00b6bae04b` reduces per-posting dispatch in the existing small-term merger and bypasses empty filter calls. AI COLUMN source remains unchanged and officially full-marked. Nine FTS regressions, the original sparse-vector query suite and original AI-vector suite pass. Batch-output rewriting was rejected after a LIMIT regression. Pinned query medians improve by approximately 0.44–3.27%, with shared-host limitations and outliers; no official score is claimed. The latest platform feedback remains 5.098 / 50, and its lower score despite all scored latencies improving requires an unavailable platform baseline to reconcile. See [FTS report](competition_fts_optimization.md) and [submission guide](比赛成果验收与提交指南.md) for exact source, measurements and limitations.
+
+
+## October 31: invocation-private FTS state
+
+Source `5d89f4f86f6a23611b8dae5c24ebd71448418c2c` replaces the private IK arbitration hash map with an ordered inline array and removes bucket latches from invocation-private token-frequency maps. All five map-instantiation sites were inspected and normalized to the shared alias; shared dictionary and stop-word synchronization remains intact. This follows additional upstream container/lifecycle investigation and qualitative GDB sampling. The dictionary-allocator and character-code-cache experiments were rejected and reverted.
+
+The optimized build, ten FTS suites and the original AI vector test pass. Eight concurrent connections produce 2,240 outputs matching the old binary. Controlled expression microbenchmarks improve roughly 1.9–10.7% for IK and 19.4–19.7% for BENG, but the full default SQL benchmark has regressions including BENG tokenization and LIMIT. No official improvement is claimed for this source. Latest official feedback is 5.306 / 50 for the preceding submission; AI remains full-marked. Full measurements and submission details are in the [FTS report](competition_fts_optimization.md) and [submission guide](比赛成果验收与提交指南.md).
+
+A follow-up paired SQL-loop run, reusing the same indexes with SKIP_LOAD=1 and five samples, improves IK/BENG by 13.23% / 19.08%. SELECT 1 also improves and old-version variance is high, so this does not invalidate the full default-run regressions or establish an official score. Both raw diagnostic reports are linked in the FTS report.

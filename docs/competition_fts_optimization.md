@@ -391,3 +391,92 @@ Full unmodified benchmark on normal CPU scheduling: 20,000 rows, 3,000 tokenizat
 | Load (s) | 0.774 | 0.581 |
 
 Hits remain 8001 / 11000 / 7332 / 20. Reports: [before](fts_dispatch_before.txt), [after](fts_dispatch_after.txt). Both reports carry checkout 3f2eccb and preserved dirty state: before executable is 97112d8, after executable contains the change later committed as 3c126f7. These runs are separated in time; construction and tokenization are unchanged by this patch, so their large improvements demonstrate host/run variability and must not be attributed to query dispatch. SELECT 1 slightly regresses. Benchmark scripts, scoring rules and original tests are unchanged.
+
+
+## October 31: private tokenization containers after official 5.306 / 50
+
+Delivered source: `5d89f4f86f6a23611b8dae5c24ebd71448418c2c`. The latest official feedback is **5.306 / 50**, mean improvement `0.053057294090140615`, raw score `10.611458818028122`, following the previous 3c126f7 submission. Compared with the preceding 5.098-point report, English/Chinese/mixed query latencies improve by about 2.02% / 0.97% / 1.72%; LIMIT is almost unchanged and total build time rises from 14.501 to 14.605 s. AI COLUMN remains officially full-marked. No official score is claimed for this new source.
+
+### Further upstream investigation
+
+In addition to keyword search, the public master commit history for `src/storage/fts` was inspected directly. The investigation examined concrete patches rather than assuming their titles implied missing local optimizations:
+
+| Official commit | Finding and use |
+| --- | --- |
+| [87ab54c: Reduce IK Parser Load Time](https://github.com/oceanbase/seekdb/commit/87ab54c3460968bb3c519fe401e04a5d5bec4b35) | Built-in dictionary loading and parallel DAT construction already exist locally. This led to inspection of per-invocation dictionary views; the resulting allocator experiment was rejected. |
+| [bb02772: Simplify ObDDLCtrlSpeedHandle](https://github.com/oceanbase/seekdb/commit/bb02772b817cec6f977b2dae2d4dd40a133a422f) | Its single-item DDL controller is already local. The useful principle is eliminating a general hash container and synchronization when ownership/use does not require them. Applied locally to invocation-private IK arbitration state. |
+| [e43f0e3: lifecycle-bound transaction context caches](https://github.com/oceanbase/seekdb/commit/e43f0e330553020c8fccc4453e4cf54408955887) | Corresponding transaction-cache code is present. Inspected ownership and bounded-reuse design, without changing transaction handling or the accepted AI implementation. |
+| [8c58b9e: Remove hashtable index from memtable](https://github.com/oceanbase/seekdb/commit/8c58b9e56c76649e82fe02fa3924a3b646370faa) | A broad storage/protocol patch; not transplanted as an FTS-only optimization. |
+
+No entire upstream commit was cherry-picked. Retained changes are local extensions informed by the inspected ownership/container designs.
+
+### Evidence and delivered changes
+
+GDB sampling of a separate untimed old-binary run found `ObIKArbitrator::output_result` in hash-table read-latch release, arbitration option allocation, and `ObIKArbitrator::add_chain` in hash insertion. The saved [sample stack](fts_private_profile.txt) records the latter. These are qualitative samples, not a CPU-percentage profile. Debugging and compilation did not overlap timed measurements.
+
+1. Replace the arbitrator's invocation-local hash map with an ordered pointer array, using 16 inline slots and the existing arbitrator arena for overflow. Normal insertion appends; an ordered insertion fallback handles other ordering, and duplicate offsets retain `OB_HASH_EXIST`. Lookup uses binary search. Token-chain optimization, conflict resolution and output behavior are unchanged.
+2. Use `NoPthreadDefendMode` for the local token-frequency map. All five instantiation sites were inspected: TOKENIZE, DML/index row generation, optimizer query tokenization and both retrieval implementations allocate their own maps. Query call sites now use the canonical alias. Shared dictionary/stop-word synchronization and the node allocator's synchronization are not changed.
+
+Rejected experiments: borrowing the caller allocator for dictionary views, and a 16-entry character-code cache. Neither showed convincing aggregate improvement across modes, so both were reverted before the retained patch. Full samples are preserved in [fts_private_measurements.json](fts_private_measurements.json).
+
+### Correctness
+
+The optimized RelWithDebInfo build succeeds. Ten FTS mysqltests and the unchanged original AI vector-index test pass. The new `ik_arbitration_batches` golden was captured on old source 3c126f7 (only its database/test name was subsequently renamed). It covers 512 rows, overlapping words, dictionary ranges, supplementary Unicode, texts exceeding the 1,000-character segmentation boundary, both IK modes, three collations, index construction and rollback. Existing 320-case IK output expectations and original tests are unchanged.
+
+Eight concurrent client connections, with normal multi-CPU server scheduling, each execute 280 TOKENIZE queries in different rotations. Their full output SHA-256 digests match the old binary exactly across all 2,240 results. This checks interleaved parser options and per-call state as well as single-connection equivalence; it is not a thread-sanitizer proof.
+
+### Controlled microbenchmarks
+
+Server pinned to logical CPU 13. IK: BENCHMARK with 10,000 tokenizations, one warm-up and five samples. BENG: 30,000 tokenizations, one warm-up and six samples. Values below are median wall seconds including client startup. Old source was rerun after the new source; the table uses that repeat, not the slower initial Unicode baseline. Physical-core/host interference remains uncontrolled.
+
+| Input | Old 3c126f7 repeat | New | Reduction |
+| --- | ---: | ---: | ---: |
+| IK smart / mixed | 0.817018 | 0.729723 | 10.68% |
+| IK smart / overlap | 0.431337 | 0.423119 | 1.91% |
+| IK smart / Unicode | 0.366558 | 0.348941 | 4.81% |
+| IK max_word / mixed | 0.835959 | 0.747306 | 10.61% |
+| IK max_word / overlap | 0.483741 | 0.463692 | 4.14% |
+| IK max_word / Unicode | 0.371761 | 0.350869 | 5.62% |
+| BENG / mixed | 0.464210 | 0.372560 | 19.74% |
+| BENG / uppercase | 0.271239 | 0.217801 | 19.70% |
+| BENG / Unicode | 0.255669 | 0.206068 | 19.40% |
+
+These isolate repeated expression execution inside SQL, whereas the official benchmark repeatedly executes complete SQL statements. They cannot be substituted for the official scoring metrics.
+
+### Full default benchmark, including regressions
+
+Unmodified benchmark script and default 20,000 rows / 500 batch / 3,000 tokenization rounds / 200 query rounds / three samples / 30 warmups; normal server scheduling. [Before](fts_private_before.txt), [after](fts_private_after.txt).
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| IK all build (s) | 13.341 | 13.269 |
+| IK content build (s) | 10.825 | 11.016 |
+| BENG build (s) | 5.388 | 5.386 |
+| Build total (s) | 29.581 | 29.697 |
+| IK TOKENIZE (ms) | 0.2252 | 0.2230 |
+| BENG TOKENIZE (ms) | 0.1292 | 0.1424 |
+| Chinese query (ms) | 2.9471 | 2.8827 |
+| English query (ms) | 4.4060 | 4.3631 |
+| Mixed query (ms) | 3.3497 | 3.2841 |
+| LIMIT query (ms) | 4.2378 | 4.3000 |
+| SELECT 1 (ms) | 0.0957 | 0.1014 |
+| Raw load (s) | 0.662 | 0.802 |
+
+Hits are unchanged at 8001 / 11000 / 7332 / 20. BENG end-to-end tokenization, IK-content build, total build, LIMIT and SQL/load diagnostics regress in this full pair. Host variability is visible but does not justify discarding negative measurements. A positive official score delta cannot be inferred from the faster microbenchmarks. The reports carry checkout 547f652 and preserved dirty state: baseline executable is 3c126f7; the after executable contains the subsequently committed 5d89f4f. The baseline label `ik_alloc_before` reflects the initial investigation, not a delivered allocator change.
+
+
+### Follow-up paired SQL-loop diagnostic
+
+Because the full pair regressed in BENG, the same benchmark script was rerun sequentially on old and new executables against the same existing 20,000-row indexes, with `SKIP_LOAD=1` and **five samples**. Other iteration/warm-up parameters remain unchanged. This is an explicitly different diagnostic configuration, not a replacement official-score run. [Old](fts_private_sql_before.txt), [new](fts_private_sql_after.txt).
+
+| Metric (ms) | Old | New |
+| --- | ---: | ---: |
+| SELECT 1 | 0.0896 | 0.0818 |
+| IK TOKENIZE | 0.2539 | 0.2203 |
+| BENG TOKENIZE | 0.1551 | 0.1255 |
+| Chinese query | 2.9897 | 2.8889 |
+| English query | 4.4577 | 4.3736 |
+| Mixed query | 3.4002 | 3.3095 |
+| LIMIT query | 4.3851 | 4.3481 |
+
+All hit counts remain unchanged. IK/BENG improve 13.23% / 19.08% in this repeat, but old IK standard deviation is 0.0295 ms versus new 0.0112 ms, and SELECT 1 also improves 8.7%. Thus system variability contributes; the whole improvement cannot be assigned to the patch. In particular, the earlier default full-pair regressions remain visible above. Both reports carry checkout 5d89f4f; their executables are respectively baseline 3c126f7 and delivered 5d89f4f. No score is calculated from this diagnostic.
