@@ -131,3 +131,16 @@ Generated parser/schema outputs and deployment artifacts are not committed.
 The target fork is `Moriaty09/seekdb26`, branch `competition-solutions`.
 For the verified submission commit, test results, and remaining participant
 steps, consult [the acceptance guide](比赛成果验收与提交指南.md).
+
+## Follow-up configuration and vector work
+
+Snapshot `dbbc9263507151484371f7928ce84905e79fdb5d` adds bounded caches for
+validated TOKENIZE defaults and decoded parser configuration, and avoids
+materializing old vector LOB payloads when generating update tombstones.
+New regressions cover parser alternation and validation, 2048-dimensional
+out-of-row vectors, delayed embedding responses, primary-key reuse/moves,
+dimension failures with exactly three requests, queue cleanup and ANN recovery.
+These regressions pass. The original vector EXPLAIN comparison remains 4/15
+versus 2/10; its expected output has not been changed. The latest platform FTS
+score is still zero for the previous submission. The follow-up has no official
+score yet; the full-text report retains both improved and regressed local timings.
