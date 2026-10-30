@@ -324,6 +324,54 @@ ObFTParseHelper::~ObFTParseHelper()
   reset();
 }
 
+namespace
+{
+int parse_cached_fts_property(const ObFTParser &parser,
+                             const common::ObString &name,
+                             const common::ObString &json,
+                             ObFTParserProperty &property)
+{
+  // Index construction and query execution repeatedly parse identical schema
+  // properties. Cache only the decoded configuration, never dictionary data,
+  // tenant resources, input text, or token streams. Exact keys include version.
+  struct Entry
+  {
+    Entry() : name_len_(0), json_len_(0), property_() {}
+    int32_t name_len_;
+    int32_t json_len_;
+    char name_[OB_FT_PARSER_NAME_LENGTH];
+    char json_[1024];
+    ObFTParserProperty property_;
+  };
+  static thread_local Entry entries[8];
+  static thread_local uint32_t next_slot = 0;
+  const bool cacheable = name.length() > 0 && name.length() <= sizeof(entries[0].name_)
+                        && json.length() <= sizeof(entries[0].json_);
+  if (cacheable) {
+    for (const auto &entry : entries) {
+      if (entry.name_len_ == name.length() && entry.json_len_ == json.length()
+          && 0 == MEMCMP(entry.name_, name.ptr(), name.length())
+          && (json.empty() || 0 == MEMCMP(entry.json_, json.ptr(), json.length()))) {
+        property = entry.property_;
+        return OB_SUCCESS;
+      }
+    }
+  }
+  const int ret = property.parse_for_parser_helper(parser, json);
+  if (OB_SUCCESS == ret && cacheable) {
+    Entry &entry = entries[next_slot++ % ARRAYSIZEOF(entries)];
+    MEMCPY(entry.name_, name.ptr(), name.length());
+    if (!json.empty()) { MEMCPY(entry.json_, json.ptr(), json.length()); }
+    // parse_for_parser_helper stores scalar fields and static literal table
+    // names, so this value copy has no dependency on its temporary JSON arena.
+    entry.property_ = property;
+    entry.json_len_ = json.length();
+    entry.name_len_ = name.length();
+  }
+  return ret;
+}
+}
+
 int ObFTParseHelper::init(
     common::ObIAllocator *allocator,
     const common::ObString &parser_name,
@@ -335,7 +383,7 @@ int ObFTParseHelper::init(
   } else if (OB_ISNULL(allocator) || OB_UNLIKELY(parser_name.empty())) {
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parser_name_.parse_from_str(parser_name.ptr(), parser_name.length()))) {
-  } else if (OB_FAIL(parser_property_.parse_for_parser_helper(parser_name_, parser_properties))) {
+  } else if (OB_FAIL(parse_cached_fts_property(parser_name_, parser_name, parser_properties, parser_property_))) {
   } else if (OB_FAIL(parser_name_.get_desc(parser_desc_))) {
   } else if (OB_ISNULL(parser_desc_)) {
     ret = OB_ERR_UNEXPECTED;

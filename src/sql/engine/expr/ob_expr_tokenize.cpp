@@ -375,17 +375,54 @@ int ObExprTokenize::parse_parser_properties(const ObExpr &expr,
 int ObExprTokenize::TokenizeParam::reform_parser_properties(const ObString &properties)
 {
   int ret = OB_SUCCESS;
-  storage::ObFTParserJsonProps parser_properties;
-
-  if (OB_FAIL(parser_properties.init())) {
-  } else if (OB_FAIL(parser_properties.parse_from_valid_str(properties))) {
-    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "parser properties invalid.");
-  } else if (OB_FAIL(parser_properties.rebuild_props_for_ddl(parser_name_,
-                                                             ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                                                             true))) {
-  } else if (OB_FAIL(parser_properties.to_format_json(allocator_, properties_))) {
+  // Normalized defaults depend only on the versioned parser name. Cache the
+  // output of the normal validator, not a second hand-written set of defaults.
+  // Explicit properties always take the validation path. Dictionary contents
+  // and handles are not cached here and are resolved separately on every call.
+  struct DefaultProperties
+  {
+    int32_t name_len_;
+    int32_t json_len_;
+    char name_[storage::OB_FT_PARSER_NAME_LENGTH];
+    char json_[1024];
+  };
+  static thread_local DefaultProperties defaults[8] = {};
+  DefaultProperties *cached = nullptr;
+  DefaultProperties *empty = nullptr;
+  const bool use_defaults = properties.empty();
+  if (use_defaults) {
+    for (auto &entry : defaults) {
+      if (entry.name_len_ == 0 && nullptr == empty) {
+        empty = &entry;
+      } else if (entry.name_len_ == parser_name_.length() &&
+                 0 == MEMCMP(entry.name_, parser_name_.ptr(), entry.name_len_)) {
+        cached = &entry;
+        break;
+      }
+    }
   }
-
+  if (nullptr != cached) {
+    // The caller may yield or evaluate another TOKENIZE before using the JSON.
+    // Own the returned bytes in the invocation allocator, never in TLS storage.
+    OZ (ob_write_string(allocator_, ObString(cached->json_len_, cached->json_), properties_));
+  } else {
+    storage::ObFTParserJsonProps parser_properties;
+    if (OB_FAIL(parser_properties.init())) {
+    } else if (OB_FAIL(parser_properties.parse_from_valid_str(properties))) {
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "parser properties invalid.");
+    } else if (OB_FAIL(parser_properties.rebuild_props_for_ddl(parser_name_,
+                                                               ObCollationType::CS_TYPE_UTF8MB4_BIN,
+                                                               true))) {
+    } else if (OB_FAIL(parser_properties.to_format_json(allocator_, properties_))) {
+    } else if (use_defaults && nullptr != empty &&
+               parser_name_.length() <= sizeof(empty->name_) &&
+               properties_.length() <= sizeof(empty->json_)) {
+      MEMCPY(empty->name_, parser_name_.ptr(), parser_name_.length());
+      MEMCPY(empty->json_, properties_.ptr(), properties_.length());
+      empty->json_len_ = properties_.length();
+      empty->name_len_ = parser_name_.length();
+    }
+  }
   return ret;
 }
 

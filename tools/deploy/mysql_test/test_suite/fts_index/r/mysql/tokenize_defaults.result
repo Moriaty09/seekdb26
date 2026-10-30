@@ -1,0 +1,52 @@
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'space') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'beng') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ik') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库", "全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram') as tokens;
+tokens
+["ab", "ea", "数据", "oc", "库全", "ce", "at", "索引", "se", "12", "da", "ta", "ba", "23", "文索", "全文", "据库", "nb", "an", "as"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram2') as tokens;
+tokens
+["ab", "bas", "ea", "数据", "123", "ean", "oc", "据库全", "库全", "ce", "at", "ase", "库全文", "索引", "se", "12", "oce", "da", "ta", "ba", "23", "全文索", "nba", "文索", "全文", "据库", "ata", "aba", "nb", "数据库", "tab", "an", "dat", "cea", "as", "文索引", "anb"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'IK') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库", "全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'space') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'beng') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ik') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库", "全文索引"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram') as tokens;
+tokens
+["ab", "ea", "数据", "oc", "库全", "ce", "at", "索引", "se", "12", "da", "ta", "ba", "23", "文索", "全文", "据库", "nb", "an", "as"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram2') as tokens;
+tokens
+["ab", "bas", "ea", "数据", "123", "ean", "oc", "据库全", "库全", "ce", "at", "ase", "库全文", "索引", "se", "12", "oce", "da", "ta", "ba", "23", "全文索", "nba", "文索", "全文", "据库", "ata", "aba", "nb", "数据库", "tab", "an", "dat", "cea", "as", "文索引", "anb"]
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'IK') as tokens;
+tokens
+["123", "oceanbase", "database", "数据库", "全文索引"]
+select tokenize('研究生命起源南京市长江大桥', 'ik', '[{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+tokens
+["长江大桥", "市长", "研究生", "研究", "起源", "南京市", "南京", "生命", "长江", "大桥"]
+select tokenize('研究生命起源南京市长江大桥', 'ik') as tokens;
+tokens
+["长江大桥", "研究", "起源", "南京市", "生命"]
+select tokenize('hello world', 'ik', '[{"additional_args":[{"ik_mode":"invalid"}]}]');
+ERROR HY000: Incorrect arguments to the ik_mode should be max_word or smart
+select tokenize('hello world', 'missing_parser');
+ERROR HY000: Function missing_parser is not defined
+select tokenize('', 'beng') as tokens;
+tokens
+[]
+select tokenize('hello hello', 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"hello": 2}], "doc_len": 2}

@@ -1,0 +1,21 @@
+# Default properties must retain validation and remain independent of parser/config.
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'space') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'beng') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ik') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram2') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'IK') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'space') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'beng') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ik') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'ngram2') as tokens;
+select tokenize('数据库全文索引 OceanBase database DATABASE 123', 'IK') as tokens;
+select tokenize('研究生命起源南京市长江大桥', 'ik', '[{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens;
+select tokenize('研究生命起源南京市长江大桥', 'ik') as tokens;
+--error ER_WRONG_ARGUMENTS
+select tokenize('hello world', 'ik', '[{"additional_args":[{"ik_mode":"invalid"}]}]');
+--error ER_FUNCTION_NOT_DEFINED
+select tokenize('hello world', 'missing_parser');
+select tokenize('', 'beng') as tokens;
+select tokenize('hello hello', 'beng', '[{"output":"all"}]') as tokens;
