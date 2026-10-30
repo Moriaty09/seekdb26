@@ -1,0 +1,75 @@
+drop database if exists fts_result_batches;
+create database fts_result_batches;
+use fts_result_batches;
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+select count(*), sum(id), min(id), max(id) from docs where match(body) against('database');
+count(*)	sum(id)	min(id)	max(id)
+1033	534061	1	1033
+select count(*), sum(id) from docs where match(body) against('database') > 0.01;
+count(*)	sum(id)
+1033	534061
+select count(*), sum(score > 0) from (select match(body) against('database') as score from docs where match(body) against('database')) t;
+count(*)	sum(score > 0)
+1033	1033
+select count(*), sum(id), min(id), max(id) from docs where match(body) against('database performance');
+count(*)	sum(id)	min(id)	max(id)
+1033	534061	1	1033
+select count(*), sum(id) from docs where match(body) against('database performance') > 0.01;
+count(*)	sum(id)
+1033	534061
+select count(*), sum(score > 0) from (select match(body) against('database performance') as score from docs where match(body) against('database performance')) t;
+count(*)	sum(score > 0)
+1033	1033
+select count(*), sum(id), min(id), max(id) from docs where match(body) against('+database -audit' in boolean mode);
+count(*)	sum(id)	min(id)	max(id)
+689	356041	1	1033
+select count(*), sum(id) from docs where match(body) against('+database -audit' in boolean mode) > 0.01;
+count(*)	sum(id)
+689	356041
+select count(*), sum(score > 0) from (select match(body) against('+database -audit' in boolean mode) as score from docs where match(body) against('+database -audit' in boolean mode)) t;
+count(*)	sum(score > 0)
+689	689
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 254;
+id
+255
+256
+257
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 255;
+id
+256
+257
+258
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 256;
+id
+257
+258
+259
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 511;
+id
+512
+513
+514
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 1022;
+id
+1023
+1024
+1025
+select id from docs where match(body) against('database') > 0 order by id limit 3 offset 1033;
+id
+select count(*), sum(id) from docs where match(body) against('database performance audit absent');
+count(*)	sum(id)
+1033	534061
+select count(*), sum(id) from docs where match(body) against('database performance') > 1e9;
+count(*)	sum(id)
+0	NULL
+prepare p from 'select count(*), sum(id) from docs where match(body) against(?)';
+set @q='performance';
+execute p using @q;
+count(*)	sum(id)
+689	356041
+set @q='audit';
+execute p using @q;
+count(*)	sum(id)
+344	178020
+deallocate prepare p;
+drop database fts_result_batches;
