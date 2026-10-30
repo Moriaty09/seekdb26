@@ -174,3 +174,30 @@ fails only the EXPLAIN 4/15 versus 2/10 comparison.
 Source snapshot `1aa6bd6e72dd7cf412833c8797224a0fbd0fdc4a` adds a UTF-8 lowercase-ASCII normalization fast path and an AI vector old-read-view regression inspired by upstream `47fa38c`. Upstream bitmap publication, DML skip invalidation, identifier quoting, child DDL error preservation and FTS index-back fixes are already present. No additional AI vector kernel fix was found.
 
 The build and five FTS mysqltests pass, as does the new AI snapshot comparison. A 300-input corpus matches the old binary exactly. Alternating microbenchmarks show about 4.6% faster mixed English and about 2% slower uppercase/Unicode fallbacks in the repeat run; the first run was noisier. The full benchmark regressed in construction and TOKENIZE, with mixed query results. Both sets of observations are retained, not interpreted as an official score improvement. The latest reported official FTS mean improvement is -6.7624%, score zero. The original AI vector EXPLAIN mismatch remains unresolved.
+
+## Trigger VID and FTS auxiliary sampling follow-up
+
+Source `4b1be26c289aab054b0de50af501bbd3a74667aa` fixes vector IDs for implicit BEFORE UPDATE trigger assignments and extends HYBRID_SAMPLE to FTS document-word and bidirectional document-ID auxiliaries. Upstream `666df298` motivated tracing VID regeneration; upstream `f5674430` supplies the existing hybrid-sampling design. These are local extensions, not claims that cherry-picking either commit fixes the competition tasks.
+
+A normal vector table with a BEFORE UPDATE copy trigger reproduced duplicate `10001-D` on the second source update in the previous binary. The new regression passes after the fix, including NULL invalidation, regeneration, rollback and unrelated-column updates. Original AI DDL, DML, worker, retry/strict and vector mysqltests all compare successfully; the original vector case passes twice without editing its expected EXPLAIN. Repeated-vector, delayed-response, snapshot, NULL-transition and large-LOB regressions also pass. NULL delta maintenance records are restored with SQL NULL payloads and safe LOB handling. Conservatively refreshing VID on vector tables with BEFORE UPDATE triggers can add index maintenance for unrelated updates; it does not create extra AI tasks.
+
+FTS auxiliary sampling is exercised by a new parallel=6 index build/update/rollback/rebuild test, whose expected output was recorded before the patch. All six FTS comparisons pass. The default benchmark uses different parallelism, so a timing change in that benchmark cannot by itself establish a benefit from this sampling patch.
+
+The unmodified 20,000-row benchmark ran before and after restarting the same port-11963 instance with the new binary. Reports identify checkout HEAD, while the before executable predates this patch. Both reports retain git_dirty=1 because unrelated local deletions/generated files remain; those deletions are not part of the submitted commit.
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| Build IK all (s) | 13.953 | 18.290 |
+| Build IK content (s) | 16.150 | 11.120 |
+| Build BENG (s) | 8.317 | 5.694 |
+| Build total (s) | 38.439 | 35.129 |
+| TOKENIZE IK (ms) | 0.3003 | 0.2627 |
+| TOKENIZE BENG (ms) | 0.1358 | 0.1486 |
+| Chinese query (ms) | 4.2650 | 3.0990 |
+| English query (ms) | 5.8227 | 4.7294 |
+| Mixed query (ms) | 4.1369 | 3.4967 |
+| LIMIT query (ms) | 4.6122 | 8.2150 |
+| SELECT 1 (ms) | 0.0743 | 0.0836 |
+| Load (s) | 0.792 | 0.835 |
+
+Hits remain 8001 / 11000 / 7332 / 20. Total construction improves by about 8.6%, but IK-all construction, BENG tokenization and LIMIT regress; this pair does not establish a positive overall score or isolate causality. Raw results are [before](fts_trigger_sampling_before.txt) and [after](fts_trigger_sampling_after.txt). The latest official result, received before this patch, is mean improvement -8.7702%, score zero. A new official evaluation is still needed.
