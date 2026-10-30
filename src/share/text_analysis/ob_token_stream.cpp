@@ -96,9 +96,18 @@ int ObTextWhitespaceTokenizer::get_next(ObDatum &next_token, int64_t &token_freq
     const char *doc = input_doc_->ptr_;
     const uint32_t doc_len = get_input_buf_len();
     int64_t token_len = 0;
+    // ASCII bytes are complete single-byte characters in these UTF-8
+    // collations. Keep multibyte and invalid-sequence handling in the charset
+    // implementation instead of calling it for every English character.
+    const bool ascii_fast_path = cs_->number == CS_TYPE_UTF8MB4_GENERAL_CI
+        || cs_->number == CS_TYPE_UTF8MB4_BIN;
+    const auto char_length = [&]() -> int64_t {
+      return ascii_fast_path && static_cast<unsigned char>(doc[trav_pos_]) < 0x80
+          ? 1 : ob_mbcharlen_ptr(cs_, doc + trav_pos_, doc + doc_len);
+    };
     // to next non-whitespace pos
     while (OB_SUCC(ret) && found_delimiter()) {
-      const int64_t c_len = ob_mbcharlen_ptr(cs_, doc + trav_pos_, doc + doc_len);
+      const int64_t c_len = char_length();
       trav_pos_ += c_len;
       if (trav_pos_ >= doc_len || 0 == c_len) {// if char is invalid, just skip the rest of document
         iter_end_ = true;
@@ -112,7 +121,7 @@ int ObTextWhitespaceTokenizer::get_next(ObDatum &next_token, int64_t &token_freq
 
     // to next whitespace pos
     while (OB_SUCC(ret) && !found_delimiter()) {
-      const int64_t c_len = ob_mbcharlen_ptr(cs_, doc + trav_pos_, doc + doc_len);
+      const int64_t c_len = char_length();
       trav_pos_ += c_len;
       token_len += c_len;
       if (trav_pos_ >= doc_len || 0 == c_len) {
@@ -136,10 +145,9 @@ int ObTextWhitespaceTokenizer::get_next(ObDatum &next_token, int64_t &token_freq
 
 bool ObTextWhitespaceTokenizer::found_delimiter()
 {
-  bool found = false;
-  const char *curr_char = input_doc_->ptr_ + trav_pos_;
-  found = ob_isspace(cs_, *curr_char) || ob_iscntrl(cs_, *curr_char) || ob_ispunct(cs_, *curr_char);
-  return found;
+  const unsigned char curr_char = static_cast<unsigned char>(input_doc_->ptr_[trav_pos_]);
+  return nullptr != cs_->ctype
+      && 0 != (cs_->ctype[curr_char + 1] & (_MY_SPC | _MY_CTR | _MY_PNT));
 }
 
 ObTokenNormalizer::ObTokenNormalizer()
@@ -207,14 +215,13 @@ int ObTokenStopWordNormalizer::filter_special_marks(const ObDatum &check_token, 
   int ret = OB_SUCCESS;
   const int64_t token_len = check_token.len_;
   const char *token = check_token.ptr_;
-  int64_t special_mark_cnt = 0;
-  for (int64_t i = 0; i < token_len; ++i) {
-    const char *character = token + i;
-    if (ob_ispunct(cs_, *character) || ob_iscntrl(cs_, *character)) {
-      special_mark_cnt++;
-    }
+  is_valid = false;
+  for (int64_t i = 0; !is_valid && i < token_len; ++i) {
+    const char character = token[i];
+    // One non-mark byte is sufficient; ordinary words need not be scanned
+    // again in full before the English normalizer consumes them.
+    is_valid = !(ob_ispunct(cs_, character) || ob_iscntrl(cs_, character));
   }
-  is_valid = !(special_mark_cnt == token_len);
   return ret;
 }
 
