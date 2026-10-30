@@ -18,7 +18,7 @@
 #define _OCEANBASE_STORAGE_FTS_IK_OB_IK_ARBITRATOR_H_
 
 #include "lib/allocator/page_arena.h"
-#include "lib/hash/ob_hashmap.h"
+#include "lib/container/ob_se_array.h"
 #include "lib/utility/ob_macro_utils.h"
 #include "storage/fts/ik/ob_ik_token.h"
 
@@ -39,7 +39,8 @@ public:
   int output_result(TokenizeContext &ctx);
 
 private:
-  int prepare(TokenizeContext &ctx);
+  int64_t lower_bound_chain(int64_t offset) const;
+  int find_chain(int64_t offset, ObIKTokenChain *&chain) const;
 
   int add_chain(ObIKTokenChain *chain);
 
@@ -61,7 +62,8 @@ private:
 
 private:
   ObArenaAllocator alloc_;
-  hash::ObHashMap<int64_t, ObIKTokenChain *> chains_;
+  // Chains belong to this arbitrator and are keyed by their start offset.
+  ObSEArray<ObIKTokenChain *, 16, ObIAllocator &> chains_;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(ObIKArbitrator);

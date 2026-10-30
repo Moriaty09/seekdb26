@@ -1,0 +1,45 @@
+drop database if exists ik_arbitration_batches;
+create database ik_arbitration_batches;
+use ik_arbitration_batches;
+create table docs(id int primary key, body text);
+insert into docs values
+(1, '研究生命起源南京市长江大桥一二三四五小时中华人民共和国数据库管理系统'),
+(2, '阿拉伯北京长城地球俄罗斯法国广州海南互联网金融科技龙门蒙古南京欧洲人民群众上海天津乌鲁木齐西藏云南浙江'),
+(3, '𠀀𠮷😀 café CAFÉ İstanbul Straße 한국어漢字１２３ＡＢＣ'),
+(4, repeat('全文索引数据库 tokenizer 123.45 小时 ', 80));
+insert into docs select id+4,body from docs;
+insert into docs select id+8,body from docs;
+insert into docs select id+16,body from docs;
+insert into docs select id+32,body from docs;
+insert into docs select id+64,body from docs;
+insert into docs select id+128,body from docs;
+insert into docs select id+256,body from docs;
+select count(*), sum(crc32(tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	949361694080
+select count(*), sum(crc32(tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	1275648262400
+select count(*), sum(crc32(tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	1135837920640
+select count(*), sum(crc32(tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	1106162447488
+select count(*), sum(crc32(tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	1307149629568
+select count(*), sum(crc32(tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]'))) as checksum from docs;
+count(*)	checksum
+512	796642648832
+alter table docs add fulltext index ft(body) with parser ik;
+select count(*) from docs where match(body) against('数据库');
+count(*)
+256
+start transaction;
+update docs set body='全新正文 database' where id <= 4;
+rollback;
+select count(*) from docs where match(body) against('数据库');
+count(*)
+256
+drop database ik_arbitration_batches;
