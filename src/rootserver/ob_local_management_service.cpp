@@ -1993,12 +1993,24 @@ int ObLocalManagementService::process_ai_column_tasks()
   if (OB_ITER_END == ret) {
     // An empty queue is the normal steady state for the periodic worker.
   } else if (OB_SUCC(ret)) {
-    const int execute_ret = sql_proxy_.write(update_sql.ptr(), affected_rows);
+    // Publish the result and retire its task in the same transaction.  In
+    // particular, a failed queue deletion must not leave a committed result
+    // whose model invocation will be repeated on the next timer tick.
+    ObMySQLTransaction publish_trans;
+    if (OB_FAIL(publish_trans.start(&sql_proxy_))) {
+      return ret;
+    }
+    const int execute_ret = publish_trans.write(update_sql.ptr(), affected_rows);
     if (OB_SUCCESS != execute_ret) {
       LOG_WARN("execute AI column expression failed", KR(execute_ret), K(update_sql),
                K(retry_count), K(max_retries));
     }
     const bool row_updated = OB_SUCCESS == execute_ret && affected_rows > 0;
+    if (!row_updated) {
+      if (OB_FAIL(publish_trans.end(false))) {
+        return ret;
+      }
+    }
     if (row_updated || (OB_SUCCESS != execute_ret && retry_count >= max_retries)) {
       OZ (finish_sql.assign_fmt(
           "DELETE FROM oceanbase.__all_ai_column_task "
@@ -2015,7 +2027,17 @@ int ObLocalManagementService::process_ai_column_tasks()
           task_filter.ptr()));
     }
     if (OB_SUCC(ret)) {
-      OZ (sql_proxy_.write(finish_sql.ptr(), affected_rows));
+      if (row_updated) {
+        OZ (publish_trans.write(finish_sql.ptr(), affected_rows));
+      } else {
+        OZ (sql_proxy_.write(finish_sql.ptr(), affected_rows));
+      }
+    }
+    if (row_updated) {
+      const int end_ret = publish_trans.end(OB_SUCC(ret));
+      if (OB_SUCC(ret)) {
+        ret = end_ret;
+      }
     }
   }
   return ret;
