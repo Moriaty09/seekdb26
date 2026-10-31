@@ -1,0 +1,105 @@
+drop database if exists fts_collector_state;
+create database fts_collector_state;
+use fts_collector_state;
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+insert into docs values (1,'alpha'),(2,'alpha beta'),(3,'alpha beta gamma'),
+(4,'gamma gamma'),(5,'delta alpha alpha'),(6,'beta delta'),(7,'unrelated'),(8,NULL);
+select id, round(match(body) against('alpha'), 9) as score from docs where match(body) against('alpha') order by id;
+id	score
+1	0.395683453
+2	0.371621622
+3	0.350318471
+5	0.428015564
+select id, round(match(body) against('alpha beta'), 9) as score from docs where match(body) against('alpha beta') order by id;
+id	score
+1	0.395683453
+2	1.043491400
+3	0.983673422
+5	0.428015564
+6	0.671869779
+select id, round(match(body) against('alpha beta gamma'), 9) as score from docs where match(body) against('alpha beta gamma') order by id;
+id	score
+1	0.395683453
+2	1.043491400
+3	2.322606657
+4	1.695262241
+5	0.428015564
+6	0.671869779
+select id, round(match(body) against('alpha beta gamma delta'), 9) as score from docs where match(body) against('alpha beta gamma delta') order by id;
+id	score
+1	0.395683453
+2	1.043491400
+3	2.322606657
+4	1.695262241
+5	1.766948799
+6	2.092224629
+select id, round(match(body) against('missing'), 9) as score from docs where match(body) against('missing') order by id;
+id	score
+select id, round(match(body) against('alpha alpha beta'), 9) as score from docs where match(body) against('alpha alpha beta') order by id;
+id	score
+1	0.395683453
+2	1.043491400
+3	0.983673422
+5	0.428015564
+6	0.671869779
+select id, round(match(body) against('+alpha -beta' in boolean mode), 9) as score
+from docs where match(body) against('+alpha -beta' in boolean mode) order by id;
+id	score
+1	0.395683453
+5	0.428015564
+select id from docs where match(body) against('alpha beta gamma') > 0.5 order by id;
+id
+2
+3
+4
+6
+select id from docs where match(body) against('alpha beta gamma') order by id limit 2 offset 2;
+id
+3
+4
+prepare p from 'select id, round(match(body) against(?), 9) as score from docs where match(body) against(?) order by id';
+set @q='alpha beta';
+execute p using @q,@q;
+id	score
+1	0.395683453
+2	1.043491400
+3	0.983673422
+5	0.428015564
+6	0.671869779
+set @q='gamma';
+execute p using @q,@q;
+id	score
+3	1.338933235
+4	1.695262241
+set @q='missing';
+execute p using @q,@q;
+id	score
+set @q='alpha beta';
+execute p using @q,@q;
+id	score
+1	0.395683453
+2	1.043491400
+3	0.983673422
+5	0.428015564
+6	0.671869779
+deallocate prepare p;
+start transaction;
+update docs set body='gamma' where id in (1,2);
+select id, round(match(body) against('alpha beta gamma'),9) from docs where match(body) against('alpha beta gamma') order by id;
+id	round(match(body) against('alpha beta gamma'),9)
+1	0.395683453
+2	0.395683453
+3	1.333991893
+4	0.443548387
+5	0.428015564
+6	0.671869779
+rollback;
+select id, round(match(body) against('alpha beta gamma'),9) from docs where match(body) against('alpha beta gamma') order by id;
+id	round(match(body) against('alpha beta gamma'),9)
+1	0.395683453
+2	1.043491400
+3	2.322606657
+4	1.695262241
+5	0.428015564
+6	0.671869779
+drop database fts_collector_state;

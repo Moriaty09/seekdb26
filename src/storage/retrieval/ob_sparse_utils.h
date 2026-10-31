@@ -50,8 +50,20 @@ struct ObSRDaaTInnerProductRelevanceCollector : ObSRDaaTRelevanceCollector
   int init(int64_t should_match = 0);
   virtual void reset() override;
   virtual void reuse() override;
-  virtual int collect_one_dim(const int64_t dim_idx, const double) override;
-  virtual int get_result(double &relevance, bool &is_valid) override;
+  virtual int collect_one_dim(const int64_t dim_idx, const double relevance) override
+  {
+    total_relevance_ += relevance;
+    ++matched_cnt_;
+    return OB_SUCCESS;
+  }
+  virtual int get_result(double &relevance, bool &is_valid) override
+  {
+    relevance = total_relevance_;
+    is_valid = matched_cnt_ >= should_match_;
+    total_relevance_ = 0.0;
+    matched_cnt_ = 0;
+    return OB_SUCCESS;
+  }
 private:
   double total_relevance_;
   int64_t matched_cnt_;

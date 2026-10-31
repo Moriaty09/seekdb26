@@ -17,6 +17,7 @@
 #define USING_LOG_PREFIX STORAGE
 
 #include "ob_text_daat_iter.h"
+#include <typeinfo>
 
 namespace oceanbase
 {
@@ -33,6 +34,9 @@ int ObTextDaaTIter::init(const ObTextDaaTParam &param)
   } else if (OB_NOT_NULL(param.base_param_->relevance_expr_)
              && OB_FAIL(bm25_param_estimator_.init(param.bm25_param_est_ctx_))) {
   } else {
+    // Only devirtualize the exact built-in collector, never a custom subclass.
+    inner_product_collector_ = typeid(*param.relevance_collector_) == typeid(ObSRDaaTInnerProductRelevanceCollector)
+        ? static_cast<ObSRDaaTInnerProductRelevanceCollector *>(param.relevance_collector_) : nullptr;
     mode_flag_ = param.mode_flag_;
     function_lookup_mode_ = param.function_lookup_mode_;
   }
@@ -41,6 +45,7 @@ int ObTextDaaTIter::init(const ObTextDaaTParam &param)
 
 void ObTextDaaTIter::reset()
 {
+  inner_product_collector_ = nullptr;
   bm25_param_estimator_.reset();
   // this class can know the type of dim_iters_, but ObSRDaaTIterImpl maybe not
   if (OB_NOT_NULL(dim_iters_)) {
@@ -99,6 +104,42 @@ int ObTextDaaTIter::fill_merge_heap()
     } else if (0 != next_round_cnt_ && OB_FAIL(heap->ObSRSimpleMerger::rebuild())) {
     } else {
       next_round_cnt_ = 0;
+    }
+  }
+  return ret;
+}
+
+int ObTextDaaTIter::collect_dims_by_id(
+    const ObDatum *&id_datum, double &relevance, bool &got_valid_id)
+{
+  if (nullptr == simple_merge_heap_ || nullptr == inner_product_collector_) {
+    return ObSRDaaTIterImpl::collect_dims_by_id(id_datum, relevance, got_valid_id);
+  }
+  int ret = OB_SUCCESS;
+  ObSRSimpleMerger *heap = simple_merge_heap_;
+  auto *collector = inner_product_collector_;
+  const ObSRMergeItem *item = nullptr;
+  bool doc_end = false;
+  int64_t iter_idx = 0;
+  relevance = 0.0;
+  got_valid_id = false;
+  while (OB_SUCC(ret) && !doc_end && !heap->ObSRSimpleMerger::empty()) {
+    doc_end = heap->ObSRSimpleMerger::is_unique_champion();
+    if (OB_FAIL(heap->ObSRSimpleMerger::top(item))) {
+    } else if (OB_FAIL(collector->ObSRDaaTInnerProductRelevanceCollector::collect_one_dim(
+                   item->iter_idx_, item->relevance_))) {
+    } else if (FALSE_IT(iter_idx = item->iter_idx_)) {
+    } else if (OB_FAIL(heap->ObSRSimpleMerger::pop())) {
+    } else {
+      next_round_iter_idxes_[next_round_cnt_++] = iter_idx;
+    }
+  }
+  if (OB_SUCC(ret)) {
+    id_datum = iter_domain_ids_[iter_idx];
+    if (OB_ISNULL(id_datum)) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (OB_FAIL(collector->ObSRDaaTInnerProductRelevanceCollector::get_result(relevance, got_valid_id))) {
+    } else if (got_valid_id && OB_FAIL(process_collected_row(*id_datum, relevance))) {
     }
   }
   return ret;

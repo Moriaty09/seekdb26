@@ -54,6 +54,7 @@ class ObTextDaaTIter final : public ObSRDaaTIterImpl
 public:
   ObTextDaaTIter() : ObSRDaaTIterImpl(),
       bm25_param_estimator_(),
+      inner_product_collector_(nullptr),
       mode_flag_(sql::ObMatchAgainstMode::NATURAL_LANGUAGE_MODE),
       function_lookup_mode_(false) {}
   virtual ~ObTextDaaTIter() { reset(); }
@@ -64,8 +65,10 @@ public:
 protected:
   virtual int pre_process() override;
   int fill_merge_heap() override;
+  int collect_dims_by_id(const ObDatum *&id_datum, double &relevance, bool &got_valid_id) override;
 protected:
   ObBM25ParamEstimator bm25_param_estimator_;
+  ObSRDaaTInnerProductRelevanceCollector *inner_product_collector_; // non-owning, exact type checked at init
   sql::ObMatchAgainstMode mode_flag_;
   bool function_lookup_mode_;
 private:
