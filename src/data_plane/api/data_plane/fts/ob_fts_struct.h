@@ -52,15 +52,9 @@ private:
 };
 
 // Per-document/query accumulator owned exclusively by the tokenization call.
-// Both the buckets and the node pool belong to this map. Parallel calls use
-// separate instances; neither needs a lock. Keep the default block sizing.
-using FTWordMapNode = common::hash::HashMapTypes<ObFTWord, int64_t>::AllocType;
-using FTWordMapAllocator = common::hash::SimpleAllocer<FTWordMapNode,
-    common::hash::NodeNumTraits<FTWordMapNode>::NODE_NUM,
-    common::hash::NoPthreadDefendMode>;
+// Parallel calls use separate maps; no bucket latch is needed.
 typedef common::hash::ObHashMap<ObFTWord, int64_t,
-    common::hash::NoPthreadDefendMode, common::hash::hash_func<ObFTWord>,
-    common::hash::equal_to<ObFTWord>, FTWordMapAllocator> ObFTWordMap;
+    common::hash::NoPthreadDefendMode> ObFTWordMap;
 
 class ObAddWordFlag final
 {
