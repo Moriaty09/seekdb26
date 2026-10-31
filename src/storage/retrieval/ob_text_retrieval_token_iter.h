@@ -133,6 +133,26 @@ public:
   virtual int get_curr_score(double &score) const override;
   virtual int get_curr_id(const ObDatum *&id_datum) const override;
 public:
+  // Consume an already buffered posting without three separate virtual calls.
+  // Batch refill and end/error handling remain in get_next_row().
+  inline int next_posting(const ObDatum *&id_datum, double &score)
+  {
+    int ret = OB_SUCCESS;
+    if (OB_LIKELY(cur_idx_ + 1 < count_)) {
+      ++cur_idx_;
+    } else {
+      ret = get_next_row();
+    }
+    if (OB_SUCC(ret)) {
+      if (OB_UNLIKELY(cur_idx_ < 0 || cur_idx_ >= count_)) {
+        ret = OB_ARRAY_OUT_OF_RANGE;
+      } else {
+        id_datum = &doc_id_[cur_idx_].get_datum();
+        score = relevance_expr_ != nullptr ? relevance_[cur_idx_] : 1.0;
+      }
+    }
+    return ret;
+  }
   int get_token_doc_cnt(int64_t &token_doc_cnt) const { return token_iter_->get_token_doc_cnt(token_doc_cnt); }
   virtual int get_dim_max_score(double &score) override {
     int ret = OB_SUCCESS;

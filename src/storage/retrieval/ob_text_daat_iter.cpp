@@ -66,6 +66,44 @@ void ObTextDaaTIter::reuse(const bool switch_tablet)
   ObSRDaaTIterImpl::reuse(switch_tablet);
 }
 
+int ObTextDaaTIter::fill_merge_heap()
+{
+  // Text DaaT owns concrete token iterators (as reset/reuse also require).
+  // Keep large-term merging on the common path and preserve its heap policy.
+  if (nullptr == simple_merge_heap_) {
+    return ObSRDaaTIterImpl::fill_merge_heap();
+  }
+  int ret = OB_SUCCESS;
+  ObSRSimpleMerger *heap = simple_merge_heap_;
+  for (int64_t i = 0; OB_SUCC(ret) && i < next_round_cnt_; ++i) {
+    const int64_t iter_idx = next_round_iter_idxes_[i];
+    auto *iter = static_cast<ObTextRetrievalDaaTTokenIter *>(dim_iters_->at(iter_idx));
+    ObSRMergeItem item;
+    item.iter_idx_ = iter_idx;
+    if (OB_ISNULL(iter)) {
+      ret = OB_ERR_UNEXPECTED;
+    } else if (OB_FAIL(iter->next_posting(iter_domain_ids_[iter_idx], item.relevance_))) {
+      if (OB_ITER_END == ret) {
+        ret = OB_SUCCESS;
+      }
+    } else {
+      if (OB_NOT_NULL(iter_param_->dim_weights_)) {
+        item.relevance_ = item.relevance_ * iter_param_->field_boost_ * iter_param_->dim_weights_->at(iter_idx);
+      }
+      ret = heap->ObSRSimpleMerger::push(item);
+    }
+  }
+  if (OB_SUCC(ret)) {
+    if (heap->ObSRSimpleMerger::empty()) {
+      ret = OB_ITER_END;
+    } else if (0 != next_round_cnt_ && OB_FAIL(heap->ObSRSimpleMerger::rebuild())) {
+    } else {
+      next_round_cnt_ = 0;
+    }
+  }
+  return ret;
+}
+
 int ObTextDaaTIter::pre_process()
 {
   int ret = OB_SUCCESS;

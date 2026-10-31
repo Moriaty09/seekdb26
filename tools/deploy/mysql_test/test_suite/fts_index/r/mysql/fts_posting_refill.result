@@ -1,0 +1,78 @@
+drop database if exists fts_posting_refill;
+create database fts_posting_refill;
+use fts_posting_refill;
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+select count(*), sum(id) from docs where match(body) against('alpha');
+count(*)	sum(id)
+1025	525825
+select count(*), sum(id) from docs where match(body) against('beta gamma');
+count(*)	sum(id)
+513	197121
+select count(*), sum(id) from docs where match(body) against('alpha beta gamma');
+count(*)	sum(id)
+1025	525825
+select count(*), sum(id) from docs where match(body) against('missing');
+count(*)	sum(id)
+0	NULL
+select count(*), sum(id) from docs where match(body) against('alpha beta gamma delta epsilon zeta theta kappa omega');
+count(*)	sum(id)
+1025	525825
+select count(*), sum(id) from docs where match(body) against('+alpha +beta -gamma' in boolean mode);
+count(*)	sum(id)
+172	22188
+select count(*), sum(id) from docs where match(body) against('alpha beta gamma') > 0.01;
+count(*)	sum(id)
+1025	525825
+select round(sum(match(body) against('alpha beta gamma')), 7) as score_sum from docs where match(body) against('alpha beta gamma');
+score_sum
+1134.7225813
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 254;
+id
+320
+321
+322
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 255;
+id
+321
+322
+323
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 256;
+id
+322
+323
+324
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 511;
+id
+576
+577
+578
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 1023;
+id
+1024
+1025
+select id from docs where match(body) against('alpha beta gamma') order by id limit 3 offset 1025;
+id
+prepare p from 'select count(*), sum(id) from docs where match(body) against(?)';
+set @q='beta';
+execute p using @q;
+count(*)	sum(id)
+257	33153
+set @q='delta gamma';
+execute p using @q;
+count(*)	sum(id)
+558	362258
+set @q='missing';
+execute p using @q;
+count(*)	sum(id)
+0	NULL
+deallocate prepare p;
+start transaction;
+update docs set body='omega' where id between 250 and 270;
+select count(*), sum(id) from docs where match(body) against('beta gamma');
+count(*)	sum(id)
+500	193773
+rollback;
+select count(*), sum(id) from docs where match(body) against('beta gamma');
+count(*)	sum(id)
+513	197121
+drop database fts_posting_refill;
