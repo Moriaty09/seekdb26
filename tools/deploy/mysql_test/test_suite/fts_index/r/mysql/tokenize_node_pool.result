@@ -1,0 +1,31 @@
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	da0f1da6e9876ee7bf2d58074f1aa798
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'beng', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	b36e2cb062db5776175561daf340147f
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'space', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	da0f1da6e9876ee7bf2d58074f1aa798
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'space', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	b36e2cb062db5776175561daf340147f
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'ik', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	da0f1da6e9876ee7bf2d58074f1aa798
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'ik', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+distinct_terms	total_terms	token_digest
+257	514	b36e2cb062db5776175561daf340147f
+select benchmark(100, tokenize(@words, 'beng')) as repeated_allocations;
+repeated_allocations
+0
+select tokenize('', 'beng'), tokenize(NULL, 'beng');
+tokenize('', 'beng')	tokenize(NULL, 'beng')
+[]	[]
+set @words=NULL, @tokens=NULL;

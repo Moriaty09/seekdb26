@@ -1,0 +1,19 @@
+# Cross node-pool blocks, duplicate counts, repeated destruction and empty inputs.
+--disable_query_log
+set @words=_utf8mb4'termaa termab termac termad termae termaf termag termah termai termaj termak termal termam terman termao termap termaq termar termas termat termau termav termaw termax termay termaz termba termbb termbc termbd termbe termbf termbg termbh termbi termbj termbk termbl termbm termbn termbo termbp termbq termbr termbs termbt termbu termbv termbw termbx termby termbz termca termcb termcc termcd termce termcf termcg termch termci termcj termck termcl termcm termcn termco termcp termcq termcr termcs termct termcu termcv termcw termcx termcy termcz termda termdb termdc termdd termde termdf termdg termdh termdi termdj termdk termdl termdm termdn termdo termdp termdq termdr termds termdt termdu termdv termdw termdx termdy termdz termea termeb termec termed termee termef termeg termeh termei termej termek termel termem termen termeo termep termeq termer termes termet termeu termev termew termex termey termez termfa termfb termfc termfd termfe termff termfg termfh termfi termfj termfk termfl termfm termfn termfo termfp termfq termfr termfs termft termfu termfv termfw termfx termfy termfz termga termgb termgc termgd termge termgf termgg termgh termgi termgj termgk termgl termgm termgn termgo termgp termgq termgr termgs termgt termgu termgv termgw termgx termgy termgz termha termhb termhc termhd termhe termhf termhg termhh termhi termhj termhk termhl termhm termhn termho termhp termhq termhr termhs termht termhu termhv termhw termhx termhy termhz termia termib termic termid termie termif termig termih termii termij termik termil termim termin termio termip termiq termir termis termit termiu termiv termiw termix termiy termiz termja termjb termjc termjd termje termjf termjg termjh termji termjj termjk termjl termjm termjn termjo termjp termjq termjr termjs termjt termju termjv termjw';
+--enable_query_log
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'beng', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'beng', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'space', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'space', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_general_ci, 'ik', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+set @tokens=tokenize(concat(@words, ' ', @words) collate utf8mb4_bin, 'ik', '[{"output":"all"}]');
+select json_length(json_extract(@tokens, '$.tokens')) as distinct_terms, json_extract(@tokens, '$.doc_len') as total_terms, md5(@tokens) as token_digest;
+select benchmark(100, tokenize(@words, 'beng')) as repeated_allocations;
+select tokenize('', 'beng'), tokenize(NULL, 'beng');
+set @words=NULL, @tokens=NULL;
