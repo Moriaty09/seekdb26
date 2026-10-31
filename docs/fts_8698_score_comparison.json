@@ -1,0 +1,55 @@
+{
+  "d07_report": {
+    "build_beng_en_sec": 5.426,
+    "build_ik_all_sec": 7.054,
+    "build_ik_content_sec": 5.526,
+    "tokenize_beng_avg_ms": 0.0404,
+    "tokenize_ik_avg_ms": 0.0782,
+    "query_beng_avg_ms": 1.9533,
+    "query_cn_avg_ms": 1.2627,
+    "query_limit_avg_ms": 1.9392,
+    "query_mixed_avg_ms": 1.4686
+  },
+  "latest_report": {
+    "build_beng_en_sec": 2.522,
+    "build_ik_all_sec": 6.653,
+    "build_ik_content_sec": 5.125,
+    "tokenize_beng_avg_ms": 0.0367,
+    "tokenize_ik_avg_ms": 0.0675,
+    "query_beng_avg_ms": 1.7169,
+    "query_cn_avg_ms": 1.1242,
+    "query_limit_avg_ms": 1.8383,
+    "query_mixed_avg_ms": 1.2871
+  },
+  "relative_reductions": {
+    "build_beng_en_sec": 0.5352008846295615,
+    "build_ik_all_sec": 0.05684717890558555,
+    "build_ik_content_sec": 0.07256605139341288,
+    "tokenize_beng_avg_ms": 0.09158415841584144,
+    "tokenize_ik_avg_ms": 0.13682864450127874,
+    "query_beng_avg_ms": 0.12102595607433575,
+    "query_cn_avg_ms": 0.10968559436128922,
+    "query_limit_avg_ms": 0.05203176567656764,
+    "query_mixed_avg_ms": 0.12358708974533572
+  },
+  "conditional_mean_lower_bound": 0.1622891667869616,
+  "notes": [
+    "Reports are supplied by the user; platform baseline and individual evaluation commit metadata were not included.",
+    "The fixed-baseline bound is conditional on unchanged repository-style scoring and weights, not a prediction of platform score.",
+    "The checked-in CI baseline produces raw score 100 for both reports, unlike the platform results."
+  ],
+  "reported_scores": {
+    "d07": {
+      "mean_improvement": 0.11630917273202195,
+      "raw_score": 23.26183454640439
+    },
+    "latest": {
+      "mean_improvement": 0.08698203991693793,
+      "raw_score": 17.396407983387586
+    }
+  },
+  "checked_in_baseline_raw_scores": {
+    "d07": 100,
+    "latest": 100
+  }
+}

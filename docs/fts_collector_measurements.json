@@ -1,0 +1,223 @@
+{
+  "source_commit": "11b974d32c692e96c8749d1f623472a2e1e21836",
+  "baseline_source": "09ea627e18a1ed22ac6d916290da6e596d0ff18f",
+  "regression": [
+    {
+      "suite": "fts_index",
+      "name": "fts_collector_state",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    }
+  ],
+  "notes": [
+    "Both original full benchmarks use new instance directories, port 11963, memory 4G, data/log 2G; 45 second startup wait precedes each run.",
+    "Fixed CPU 13 is not exclusive; process CPU includes background workers.",
+    "Full report git_head predates the source commit; candidate executable contains the source_commit changes."
+  ],
+  "cpu_before": {
+    "wall_ms": {
+      "cn": [
+        2.835171639919281,
+        5.391610883176327,
+        5.476200111210346
+      ],
+      "en": [
+        4.332952089607716,
+        8.320372894406319,
+        8.401261858642101
+      ],
+      "mixed": [
+        3.1720104068517685,
+        6.180832915008068,
+        6.144630677998066
+      ],
+      "limit": [
+        5.673397473990917,
+        8.599901676177979,
+        8.583713345229626
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.72,
+        5.32,
+        5.4
+      ],
+      "en": [
+        4.22,
+        8.2,
+        8.3
+      ],
+      "mixed": [
+        3.08,
+        6.08,
+        6.06
+      ],
+      "limit": [
+        5.56,
+        8.5,
+        8.48
+      ]
+    }
+  },
+  "cpu_after": {
+    "wall_ms": {
+      "cn": [
+        2.829695239663124,
+        2.670125015079975,
+        2.6743537858128548
+      ],
+      "en": [
+        4.124239549040794,
+        4.150470830500126,
+        4.209873124957085
+      ],
+      "mixed": [
+        3.0174604952335358,
+        3.034340761601925,
+        3.4108868092298508
+      ],
+      "limit": [
+        4.331572189927101,
+        4.343601040542126,
+        5.233640693128109
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.74,
+        2.56,
+        2.58
+      ],
+      "en": [
+        4.04,
+        4.06,
+        4.14
+      ],
+      "mixed": [
+        2.92,
+        2.92,
+        3.32
+      ],
+      "limit": [
+        4.22,
+        4.24,
+        5.14
+      ]
+    }
+  }
+}
