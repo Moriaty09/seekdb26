@@ -1,0 +1,342 @@
+{
+  "source_commit": "09ea627e18a1ed22ac6d916290da6e596d0ff18f",
+  "baseline_source": "e047eadaccc4ad42ce65ec9f001b25e65e65b4c8",
+  "research": [
+    {
+      "sha": "0ff2745716123f0e86a137e0c88861b1841ff7a9",
+      "title": "[PATCH][FEAT MERGE] optimize query performance of FTS",
+      "committed": "2026-02-04T03:05:53Z",
+      "changed_files": 45
+    },
+    {
+      "sha": "f5674430a83f6bf1e3fe2af0204309eb63dbd907",
+      "title": "[CP] refactor split range and using HYBRID_SAMPLE for vec/fts index",
+      "committed": "2026-02-05T09:06:19Z",
+      "changed_files": 15
+    },
+    {
+      "sha": "3e722c89898860e24c5f34171a436724dbfa778e",
+      "title": "[CP] bugfix: ignore index_back dimension for fulltext search query due to functional lookup",
+      "committed": "2025-12-24T02:49:05Z",
+      "changed_files": 3
+    },
+    {
+      "sha": "42c0d1918d8534c90c9de167f69302fc95217659",
+      "title": "[FTS.BUGFIX] hidden table has been deleted, fail to exit fulltext index build task",
+      "committed": "2026-03-18T02:40:37Z",
+      "changed_files": 4
+    },
+    {
+      "sha": "e4d1f12aa619f37d6f0d080a7d5d50fab0aa5cf3",
+      "title": "[CP] Fix tokenization in AND operator",
+      "committed": "2025-12-04T02:28:28Z",
+      "changed_files": 2
+    },
+    {
+      "sha": "b0ec423f03fb37ecafd0ee0afe4625a3d392601a",
+      "title": "refactor: remove obsolete location routing from single-node access (#1540)",
+      "committed": "2026-10-26T11:46:30Z",
+      "changed_files": 300
+    },
+    {
+      "sha": "76a4a78ee4eeea22d8505a2a6b04d51c078ef9af",
+      "title": "fix(sql): honor the timeout of short queries executed locally (#1455)",
+      "committed": "2026-10-12T06:06:00Z",
+      "changed_files": 2
+    },
+    {
+      "sha": "34aa43d10f2cbeb5afbfa99ecd2e1baf43152de0",
+      "title": "Streamlining the hot path in ObTenant::timeup: remove update_token_usage/update_queue_size, and relax TIME_SLICE_PERIOD from 10ms to 1s.",
+      "committed": "2026-06-10T06:27:47Z",
+      "changed_files": 2
+    }
+  ],
+  "regression": [
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    }
+  ],
+  "cpu_before": {
+    "wall_ms": {
+      "cn": [
+        3.2890612557530403,
+        5.430833362042904,
+        5.520656123757362
+      ],
+      "en": [
+        5.660775393247604,
+        6.257457986474037,
+        8.286951839923859
+      ],
+      "mixed": [
+        3.276482678949833,
+        3.154780723154545,
+        3.90206166356802
+      ],
+      "limit": [
+        5.214286528527737,
+        7.203462705016136,
+        4.3358497098088264
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        3.22,
+        5.36,
+        5.42
+      ],
+      "en": [
+        5.56,
+        6.16,
+        8.18
+      ],
+      "mixed": [
+        3.22,
+        3.08,
+        3.82
+      ],
+      "limit": [
+        5.12,
+        7.1,
+        4.24
+      ]
+    }
+  },
+  "cpu_fresh_before": {
+    "wall_ms": {
+      "cn": [
+        2.815407656133175,
+        2.999359741806984,
+        5.499816104769707
+      ],
+      "en": [
+        4.352454915642738,
+        4.839496910572052,
+        8.277979411184788
+      ],
+      "mixed": [
+        3.3580200746655464,
+        5.64409825950861,
+        5.981590062379837
+      ],
+      "limit": [
+        4.345541559159756,
+        8.372015818953514,
+        8.269632518291473
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.72,
+        2.92,
+        5.4
+      ],
+      "en": [
+        4.26,
+        4.78,
+        8.22
+      ],
+      "mixed": [
+        3.28,
+        5.52,
+        5.86
+      ],
+      "limit": [
+        4.24,
+        8.28,
+        8.16
+      ]
+    }
+  },
+  "cpu_fresh_after": {
+    "wall_ms": {
+      "cn": [
+        2.764129124581814,
+        2.8839062824845314,
+        2.9179764464497566
+      ],
+      "en": [
+        4.47493402659893,
+        4.344468750059605,
+        4.401567421853542
+      ],
+      "mixed": [
+        3.119275987148285,
+        3.293501988053322,
+        3.171915754675865
+      ],
+      "limit": [
+        4.419585183262825,
+        4.3540689796209335,
+        4.398583762347698
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.66,
+        2.8,
+        2.84
+      ],
+      "en": [
+        4.36,
+        4.24,
+        4.3
+      ],
+      "mixed": [
+        3.04,
+        3.22,
+        3.08
+      ],
+      "limit": [
+        4.32,
+        4.26,
+        4.3
+      ]
+    }
+  },
+  "initial_query_wall_ms": {
+    "cn": [
+      3.1186961010098457,
+      3.57596405595541,
+      5.262026481330395,
+      2.793630786240101,
+      3.1848891377449036
+    ],
+    "en": [
+      4.933608539402485,
+      4.343081772327423,
+      4.956662595272064,
+      8.343221783638,
+      4.461371339857578
+    ],
+    "mixed": [
+      3.7701850682497025,
+      3.3655480667948723,
+      4.6617885529994965,
+      6.083313480019569,
+      3.280123844742775
+    ],
+    "limit": [
+      5.523572146892548,
+      4.348639875650406,
+      4.863145053386688,
+      8.296479225158691,
+      4.355517119169235
+    ]
+  },
+  "notes": [
+    "CPU measurements are whole-process CPU times, including background threads, not isolated SQL CPU counters.",
+    "CPU 13 is pinned but not exclusive; other host workloads remain.",
+    "Fresh-directory complete benchmarks use the original script defaults, 20000 rows, 3000 tokenize rounds, 200 query rounds, 3 samples and 30 warmups.",
+    "Full reports show git_head d6d3403 because the candidate was built before committing; candidate source content corresponds to source_commit."
+  ]
+}

@@ -542,3 +542,55 @@ BENG 的 SQL 循环在两轮新版均快于旧版；其他指标并未显示一�
 | limit | 6.1078 | 4.4373 |
 
 固定 CPU 后也未得到一致的查询收益：CN、EN、mixed 回退，LIMIT 变快，且单组耗时变化很大。这轮仅确认去除调用内不必要的同步、保持输出一致，不能声称查询性能已被证实改善。保留独立小补丁以便平台验证或单独回退，下一轮应以相同平台基线的原始指标确认，而非只比较分数。没有修改默认内存、线程、后台任务或防御检查配置来换取分数。
+
+## 5.591 分后的提交对比与全文 posting 消费优化（2026-10-31）
+
+本次回执 raw score 11.18224519425534，折算约 5.591 / 50 分。IK 全字段构建从 7.060 增至 8.566 秒，其他多数分词/查询小幅变慢；不能把构建差异直接归因于某一行代码。撤回上一轮未显示稳定收益的节点池去锁实验，恢复默认节点分配器同步，保留已有的调用内哈希桶去锁及全部回归测试。原生预处理补丁保留，它不作为文本 SQL 评分的直接提速来源。
+
+扩展检索 FTS、fulltext、tokenize、inverted、posting、index performance、DDL performance、batch scan 共八类关键词，得到 37 条去重的搜索命中（搜索可能包含分支提交，不声称 37 条都是 master 新增优化）。重点读取以下八个提交的具体 diff，并与本地实现对照：
+
+| 官方提交 | 优化/修复层次 | 与本地差异及决定 |
+| --- | --- | --- |
+| [0ff2745](https://github.com/oceanbase/seekdb/commit/0ff2745716123f0e86a137e0c88861b1841ff7a9) | FTS 查询：小词数简单合并器、批量扫描等 | 小词数阈值 3 和批次缓存本地已有；继续优化缓存 posting 的消费，不重复移植整个提交 |
+| [f567443](https://github.com/oceanbase/seekdb/commit/f5674430a83f6bf1e3fe2af0204309eb63dbd907) | FTS/向量建索引采样与范围切分 | 本地解析/优化器已有 HYBRID_SAMPLE；此前已修正辅助索引采样，不再次修改采样比例 |
+| [3e722c8](https://github.com/oceanbase/seekdb/commit/3e722c89898860e24c5f34171a436724dbfa778e) | 优化器的全文回表成本维度 | 本地 cal_dimension_info 已有 has_match_expr 判断和 ignore_index_back_dim，不重复应用 |
+| [42c0d19](https://github.com/oceanbase/seekdb/commit/42c0d1918d8534c90c9de167f69302fc95217659) | 隐藏表删除后建索引任务退出及字典锁清理 | 本地已有 charset_type_ 持久化与对应事务内锁处理；它修复失败退出，不是常规建索引加速 |
+| [e4d1f12](https://github.com/oceanbase/seekdb/commit/e4d1f12aa619f37d6f0d080a7d5d50fab0aa5cf3) | Hybrid Search 的 AND 分词语义 | 本地解析顺序及 PHRASE/AND 条件已有；不把 ES 查询修复当成 MATCH SQL 优化 |
+| [b0ec423](https://github.com/oceanbase/seekdb/commit/b0ec423f03fb37ecafd0ee0afe4625a3d392601a) | 10 月 26 日单机访问清理旧位置路由 | 涉及 DML、DAS、会话、错误码和构建体系，范围远超本轮热点，不整体移植 |
+| [76a4a78](https://github.com/oceanbase/seekdb/commit/76a4a78ee4eeea22d8505a2a6b04d51c078ef9af) | 本地短查询不再扣除 RPC 超时预留 | 本地 get_ps_timeout_timestamp 已直接返回 ts_timeout_us_；这是超时正确性，不通过放宽超时获取成绩 |
+| [34aa43d](https://github.com/oceanbase/seekdb/commit/34aa43d10f2cbeb5afbfa99ecd2e1baf43152de0) | 租户周期调度与 token 维护精简 | 历史多租户代码路径与当前单机运行框架不同，不改全局周期/后台调度来制造收益 |
+
+本轮新增代码位于实际使用的 ObTextDaaTIter 路径。EXPLAIN 确认基准 COUNT 查询使用 TEXT RETRIEVAL SCAN、rowset=256、calc_relevance=false；不是仅改旧 SQL 层迭代器。对不超过三个查询词的全文 DaaT 合并，使用具体 token 迭代器的一次 next_posting 调用，直接推进已缓存记录并一起读取文档 ID 和分数，代替三个独立的通用接口调用。缓存耗尽仍进入原来的批次获取/错误/结束处理。维度权重的浮点运算顺序、相关性收集、过滤、OFFSET、LIMIT 和结果投影保留。超过三个词回到通用合并路径；稀疏向量和 BMW 路径不使用这个覆盖方法。这是沿官方设计继续实现的本地扩展，不是官方原补丁。
+
+最终源码提交 `09ea627e18a1ed22ac6d916290da6e596d0ff18f`，其中 `e4e8dfe` 撤回节点池实验，`09ea627` 实现 posting 消费优化并添加测试。构建成功；12 项全文 mysqltest、原始 ai_column_vector_index、完整 sparse_vector_index_vsag_query 均通过，原有预期未修改。新用例 fts_posting_refill 的预期在旧二进制上录制，覆盖 1,025 行、长短不一的倒排列表、分数聚合、布尔组合、多词通用路径、OFFSET 边界、预处理语句重用及更新回滚。
+
+EXPLAIN 的算子、索引选择、输出过滤与关键选项一致，只估算耗时有小差异，记录见 [旧版计划](fts_posting_explain_before.txt)、[新版计划](fts_posting_explain_after.txt)。
+
+完整默认基准分别在两个全新目录上执行，端口均为自用 11963，内存 4G、数据文件 2G、日志盘 2G，使用全部逻辑 CPU。该次比较没有删库锁等待，两轮均完成。报告中的 git_head 为构建时的 d6d3403，旧二进制内容为 e047ead，新二进制内容对应本次源码提交；未将目录中的未提交文件当成另一已提交版本。
+
+| 指标 | 旧版 | 新版 |
+| --- | ---: | ---: |
+| build_ik_all_sec | 19.2020 | 21.0780 |
+| build_ik_content_sec | 14.5950 | 11.3160 |
+| build_beng_en_sec | 5.9680 | 5.6920 |
+| build_total_sec | 39.7970 | 38.1030 |
+| select1_avg_ms | 0.1010 | 0.0775 |
+| tokenize_ik_avg_ms | 0.2875 | 0.2474 |
+| tokenize_beng_avg_ms | 0.1232 | 0.1463 |
+| query_cn_avg_ms | 3.3682 | 5.1292 |
+| query_beng_avg_ms | 4.6447 | 7.9833 |
+| query_mixed_avg_ms | 3.2456 | 5.1326 |
+| query_limit_avg_ms | 4.6117 | 5.2087 |
+
+完整基准的总构建约快 4.3%，但 IK 全字段构建、BENG 分词和四类查询存在回退。SELECT 1 从 0.1010 降到 0.0775 ms，提示环境和调度条件仍有明显变化；不能把全部构建差异解释为代码改进。完整原始报告：[旧版](fts_posting_full_before.txt)、[新版](fts_posting_full_after.txt)。
+
+在各自完整基准建立的索引上再固定逻辑 CPU 13，每类查询预热 500 次，再测三组各 500 次。以下是每条 SQL 的中位数；CPU 列来自数据库整个进程，包含后台工作，不是专属于该 SQL 的 CPU 指令计数：
+
+| 查询 | 旧版墙钟 ms | 新版墙钟 ms | 旧版进程 CPU ms | 新版进程 CPU ms |
+| --- | ---: | ---: | ---: | ---: |
+| cn | 2.9994 | 2.8839 | 2.9200 | 2.8000 |
+| en | 4.8395 | 4.4016 | 4.7800 | 4.3000 |
+| mixed | 5.6441 | 3.1719 | 5.5200 | 3.0800 |
+| limit | 8.2696 | 4.3986 | 8.1600 | 4.3000 |
+
+旧版 mixed 样本为 3.3580 / 5.6441 / 5.9816 ms，LIMIT 为 4.3455 / 8.3720 / 8.2696 ms，波动很大；新版较稳定。不能把混合和 LIMIT 的中位数下降全部当成补丁收益。固定 CPU 结果支持继续验证这个减少通用接口调用的候选方案，但与完整基准结果不一致，目前仍不能宣称整体提速或预测平台得分。全部样本及回归记录见 [fts_posting_measurements.json](fts_posting_measurements.json)。
