@@ -480,3 +480,65 @@ Because the full pair regressed in BENG, the same benchmark script was rerun seq
 | LIMIT query | 4.3851 | 4.3481 |
 
 All hit counts remain unchanged. IK/BENG improve 13.23% / 19.08% in this repeat, but old IK standard deviation is 0.0295 ms versus new 0.0112 ms, and SELECT 1 also improves 8.7%. Thus system variability contributes; the whole improvement cannot be assigned to the patch. In particular, the earlier default full-pair regressions remain visible above. Both reports carry checkout 5d89f4f; their executables are respectively baseline 3c126f7 and delivered 5d89f4f. No score is calculated from this diagnostic.
+
+## 2026-10-31：继续查阅最新提交，优化私有节点池
+
+最新平台回执综合提升率为 0.08171366626119037、raw score 为 16.342733252238073，按此前折算约 8.171 / 50 分。它没有附 commit，因此不将回执强行绑定到某个源码快照。相比前次 5.306 分，构建和查询原始耗时反而增加，只有分词略快。
+
+这次通过 GitHub API 检索 master 最近 300 条记录，最新记录到 2026-10-30；网页缓存并未展示最新历史，因此使用 API 结果核对。重点查看以下此前未深入核查的提交：
+
+| 官方提交 | 内容 | 本轮处理 |
+| --- | --- | --- |
+| [51d5ab1，10 月 21 日](https://github.com/oceanbase/seekdb/commit/51d5ab113dcddffa4855bd5b4e359e312718ce28) | 原生预处理不再格式化无人读取的参数文本 | 精确移植两处源文件补丁；保留实际参数解析、绑定及 SQL EXECUTE/SPI 的公共格式化逻辑 |
+| [655b981，9 月 18 日](https://github.com/oceanbase/seekdb/commit/655b981e7e71956b7ab9493914022aef0ed5490e) | 迭代器缓存统一到会话 | 本地已有，未重复移植；借鉴明确对象归属的做法，继续检查私有分词容器 |
+| [21dc26d，10 月 28 日](https://github.com/oceanbase/seekdb/commit/21dc26d1a97c8d0129f4f7c50741ebc802162e7d) | 移除旧 obmalloc 和重复类型定义 | 涉及 217 个文件及配置、构建、内存体系，不进行大范围移植 |
+| [161ec215，10 月 21 日](https://github.com/oceanbase/seekdb/commit/161ec21513a65c1205f570f0bbc8b32c8fc87236) | 删除六项未使用的缓存统计定义 | 不属于明确的 FTS 热路径，未移植 |
+| [00f3b8a，9 月 21 日](https://github.com/oceanbase/seekdb/commit/00f3b8ac7b5fa840d220d9e6f4fea7a511b5c95e) | 隔离动态采样诊断消息 | 正确性边界改动，不将它作为分词/检索提速补丁 |
+| [684e8c2，8 月 3 日](https://github.com/oceanbase/seekdb/commit/684e8c264c9d80cc1623d597cff55115bf5d177a) | 日志时间格式化缓存 | 本地 ObTime2Str 已调用 ob_fast_localtime，无重复移植 |
+| [5a9f9d0，8 月 5 日](https://github.com/oceanbase/seekdb/commit/5a9f9d0013aa279e176e054d28e16dcd139e82b8) | off-mode 内存上下文使用 raw malloc | 跨分配器、统计和配置的改动，不整体搬入本轮 |
+
+上一轮仅去掉词频哈希表桶锁，其默认 SimpleAllocer 节点池仍在每次 alloc/free 时获取自旋锁。本轮显式指定同一池块大小的无锁节点分配器。五个调用点的词频表均为调用内局部对象，节点池由各自哈希表拥有；不改变共享字典、共享停用词表的同步，也不改变词频、哈希、排序规则、索引或评分算法。此处是本地扩展，不冒称官方直接修复。
+
+51d5ab1 只作用于原生二进制预处理协议；评分脚本使用文本 SQL，不能将该补丁计作评分脚本的直接提速来源。
+
+验证：优化构建成功，11 项全文 mysqltest（含新增 tokenize_node_pool）及原始 ai_column_vector_index 通过。新增用例含 257 个不同词、514 个词项，跨越多个节点池块，覆盖 BENG/space/IK、两种排序规则、重复分配释放、空串及 NULL，预期在旧二进制上生成。8 个并发连接各执行 280 条 TOKENIZE，新旧输出 SHA256 完全一致。独立 mysql-connector-python 驱动在新旧版本上均通过 100 次原生绑定执行，覆盖 int64、中文、引号、零字节、NULL 和重复绑定。
+
+额外的 mysqltest --ps-protocol 在旧、新二进制上同一条语句均返回 errno 0、空错误；随附 C 客户端探针在旧版也出现同类问题。故该客户端路径不能记作通过，也不将它归因于此次补丁；实际二进制协议另由独立驱动验证。没有改动原有测试预期来绕过失败。
+
+性能记录：旧二进制为本轮修改前保存的 5d89f4f 版本，新二进制为 e047ead 的源码内容（同一次构建，提交操作本身不改变二进制）。所有测量均在自用 11963 实例进行，其他用户实例没有停止或改配置。服务器同时有较重的其他计算负载，固定逻辑 CPU 13 并不意味着独占物理核心。
+
+| 固定 CPU 的 BENG 输入 | 旧版预热复测秒 | 新版第一轮秒 | 新版复测秒 |
+| --- | ---: | ---: | ---: |
+| mixed | 0.380049 | 0.371641 | 0.390874 |
+| upper | 0.223326 | 0.212640 | 0.222499 |
+| unicode | 0.213647 | 0.209325 | 0.216918 |
+| vocabulary | 0.445372 | 0.419884 | 0.633476 |
+
+前三组每次执行 30,000 次 TOKENIZE，257 个不同词的 vocabulary 组每次 3,000 次，均先预热再取六组中位数，时间包含客户端启动。第一轮 BENG 有小幅收益，但复测未稳定重现，尤其 vocabulary 复测明显变慢。IK 六组同样有快有慢且存在重启后的异常高值，不把这些差异都解释为代码收益。原始样本全部保留在 [fts_node_pool_measurements.json](fts_node_pool_measurements.json)。
+
+旧版本完成默认完整基准，总构建 50.022 秒；新版本完整基准在 DROP DATABASE 阶段反复表锁冲突（日志含 -6003/-4023），中止等待后改用原脚本的 SKIP_LOAD=1。没有修改脚本、数据、结果文件或评分公式，不能提供本轮有效的构建速度对比。
+
+在同一批 20,000 行索引数据上，三组采样、每组 200 次查询的结果如下；表中顺序用于阅读，实际测量是新版第一轮 → 旧版复测 → 新版复测。均使用全部逻辑 CPU，查询命中数保持 8001/11000/7332/20。
+
+| 指标（ms） | 旧版复测 | 新版第一轮 | 新版复测 |
+| --- | ---: | ---: | ---: |
+| select1_avg_ms | 0.0962 | 0.0779 | 0.0800 |
+| tokenize_beng_avg_ms | 0.1434 | 0.1331 | 0.1350 |
+| tokenize_ik_avg_ms | 0.2451 | 0.2386 | 0.2763 |
+| query_cn_avg_ms | 3.1102 | 5.1173 | 4.8300 |
+| query_beng_avg_ms | 4.3922 | 7.8747 | 7.2861 |
+| query_mixed_avg_ms | 5.3255 | 6.0833 | 4.7077 |
+| query_limit_avg_ms | 4.8674 | 7.1897 | 6.9914 |
+
+BENG 的 SQL 循环在两轮新版均快于旧版；其他指标并未显示一致改善，多数查询有明显回退。不能据此宣称整体提速，更不能据此估算平台分数。原始记录：[旧版完整](fts_node_pool_before.txt)、[旧版复用索引](fts_node_pool_before_reuse.txt)、[新版复用索引](fts_node_pool_after_reuse.txt)、[新版复测](fts_node_pool_after_reuse_repeat.txt)。
+
+最后固定逻辑 CPU 13，使用同一批数据；每类查询先执行 500 次预热，再测五组各 500 次，旧版重启后先等待 60 秒。以下为每条 SQL 的中位数：
+
+| 查询 | 旧版 ms | 新版 ms |
+| --- | ---: | ---: |
+| cn | 2.9728 | 3.1659 |
+| en | 4.6547 | 5.4386 |
+| mixed | 3.4608 | 3.5009 |
+| limit | 6.1078 | 4.4373 |
+
+固定 CPU 后也未得到一致的查询收益：CN、EN、mixed 回退，LIMIT 变快，且单组耗时变化很大。这轮仅确认去除调用内不必要的同步、保持输出一致，不能声称查询性能已被证实改善。保留独立小补丁以便平台验证或单独回退，下一轮应以相同平台基线的原始指标确认，而非只比较分数。没有修改默认内存、线程、后台任务或防御检查配置来换取分数。

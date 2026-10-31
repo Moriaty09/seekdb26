@@ -298,3 +298,9 @@ Source `5d89f4f86f6a23611b8dae5c24ebd71448418c2c` replaces the private IK arbitr
 The optimized build, ten FTS suites and the original AI vector test pass. Eight concurrent connections produce 2,240 outputs matching the old binary. Controlled expression microbenchmarks improve roughly 1.9–10.7% for IK and 19.4–19.7% for BENG, but the full default SQL benchmark has regressions including BENG tokenization and LIMIT. No official improvement is claimed for this source. Latest official feedback is 5.306 / 50 for the preceding submission; AI remains full-marked. Full measurements and submission details are in the [FTS report](competition_fts_optimization.md) and [submission guide](比赛成果验收与提交指南.md).
 
 A follow-up paired SQL-loop run, reusing the same indexes with SKIP_LOAD=1 and five samples, improves IK/BENG by 13.23% / 19.08%. SELECT 1 also improves and old-version variance is high, so this does not invalidate the full default-run regressions or establish an official score. Both raw diagnostic reports are linked in the FTS report.
+
+## 2026-10-31 继续检索官方提交及节点池优化
+
+新增候选源码 `e047eadaccc4ad42ce65ec9f001b25e65e65b4c8`，包含官方 `51d5ab1` 原生预处理格式化消除（本地 `8815166`）及私有分词节点池去锁。检索最近 300 条官方历史，已实现/过于宽泛/不属于热路径的提交未重复引入。11 项全文回归、AI 向量索引及并发输出一致性通过。
+
+性能结论有限：BENG SQL 循环改善，其他本地数据有回退与明显波动；新完整构建基准遭遇测试库删除锁冲突，只有 SKIP_LOAD 复测，不能宣称整体提速或预估官方分数。细节、官方提交链接、客户端协议检查限制及原始正负数据均在 competition_fts_optimization.md 最新节和 fts_node_pool_* 文件中。
