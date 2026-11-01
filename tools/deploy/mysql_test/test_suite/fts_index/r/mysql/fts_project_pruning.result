@@ -1,0 +1,125 @@
+drop database if exists fts_project_pruning;
+create database fts_project_pruning;
+use fts_project_pruning;
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 0 offset 0) v;
+n
+0
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 1 offset 0) v;
+n
+1
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 20 offset 0) v;
+n
+20
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 20 offset 7) v;
+n
+20
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 256 offset 255) v;
+n
+256
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 2000 offset 0) v;
+n
+1090
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 20 offset 1090) v;
+n
+0
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 20 offset 2000) v;
+n
+0
+select count(*) as n from (select id from docs where match(body) against('alpha beta') limit 20 offset 1080) v;
+n
+10
+select count(*) as n from (select id from docs where match(body) against('alpha beta') and id<=21 limit 20 offset 7) v;
+n
+14
+select count(*) from (select 1 from docs where match(body) against('alpha beta') limit 20) v;
+count(*)
+20
+select count(*),count(x) from (select NULL as x from docs where match(body) against('alpha beta') limit 20) v;
+count(*)	count(x)
+20	0
+select count(*) from (select id from docs where match(body) against('missing') limit 20) v;
+count(*)
+0
+select count(*) from (select id from docs where match(body) against('alpha beta') > 0.5 limit 20) v;
+count(*)
+20
+select count(*) from (select id from docs where match(body) against('alpha beta') > 0.5 limit 2000) v;
+count(*)
+727
+select count(*) from (select id from docs where 0.5 < match(body) against('alpha beta') limit 2000) v;
+count(*)
+727
+select count(*) from (select id from docs where match(body) against('alpha beta') < 0.5 limit 2000) v;
+count(*)
+363
+select count(*) from (select 1 from docs order by match(body) against('alpha beta') desc limit 20) v;
+count(*)
+20
+select count(*) from (select id from docs where match(body) against('+alpha -gamma' in boolean mode) limit 20) v;
+count(*)
+20
+select count(*) from (select match(body) against('alpha beta') as score from docs where match(body) against('alpha beta') limit 20) v;
+count(*)
+20
+select count(*) from (select id from docs where match(body) against('alpha beta') order by id desc limit 20 offset 7) v;
+count(*)
+20
+select count(*) from (select 1 from (select id from docs where match(body) against('alpha beta') limit 40) x limit 20 offset 10) v;
+count(*)
+20
+select sum(id) from (select id from docs where match(body) against('alpha beta') order by match(body) against('alpha beta') desc,id limit 20) v;
+sum(id)
+10500
+select round(sum(score),8) from (select match(body) against('alpha beta') as score from docs where match(body) against('alpha beta') order by score desc,id limit 20) v;
+round(sum(score),8)
+15.08571429
+select id,round(match(body) against('alpha beta'),8) as score from docs where match(body) against('alpha beta') order by score desc,id limit 5;
+id	score
+2	0.75428571
+7	0.75428571
+17	0.75428571
+22	0.75428571
+32	0.75428571
+select count(*) from (select distinct id%3 from docs where match(body) against('alpha beta') limit 2) v;
+count(*)
+2
+select count(*) from (select 1 from docs where match(body) against('alpha beta') group by id%3 order by sum(id) limit 2) v;
+count(*)
+2
+select sum(rn) from (select row_number() over(order by id) as rn from docs where match(body) against('alpha beta') order by id limit 20) v;
+sum(rn)
+210
+select count(*) from (select /*+ no_rewrite */ 1 from docs where match(body) against('alpha beta') limit 20) v;
+count(*)
+20
+set @seen=0;
+select count(*) from (select id from docs where match(body) against('alpha beta') order by (@seen:=@seen+1) limit 20) v;
+count(*)
+20
+Warnings:
+Warning	1287	Setting user variables within expressions is deprecated and will be removed in a future release. Please use 'SET variable=expression, ... or SELECT expression(s) INTO variables(s)' instead
+select @seen > 20 as assignment_evaluated;
+assignment_evaluated
+1
+select count(*) from (select 1 from docs where match(body) against('alpha beta') order by (select id from docs where id<3) limit 20) v;
+ERROR 21000: Subquery returns more than 1 row
+prepare p from 'select count(*) from (select id from docs where match(body) against(?) limit ? offset ?) v';
+set @q='alpha beta',@n=20,@o=0;
+execute p using @q,@n,@o;
+count(*)
+20
+set @n=0;
+execute p using @q,@n,@o;
+count(*)
+0
+set @n=2000;
+execute p using @q,@n,@o;
+count(*)
+1090
+set @n=20,@o=2000;
+execute p using @q,@n,@o;
+count(*)
+0
+deallocate prepare p;
+drop database fts_project_pruning;

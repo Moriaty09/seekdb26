@@ -1,0 +1,29 @@
+drop database if exists ai_fts_projection;
+create database ai_fts_projection;
+use ai_fts_projection;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('fts_projection_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('fts_projection_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('fts_projection_model', '{"type":"completion","model_name":"mock-complete"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('fts_projection_ep', '{"ai_model_name":"fts_projection_model","url":"http://127.0.0.1:19129/v1/chat/completions","access_key":"projection-key","provider":"openai","request_model_name":"mock-complete"}');
+create table docs(id int primary key, content varchar(100), result varchar(400) AI COLUMN (AI_COMPLETE('fts_projection_model', content)) WITH(sync_mode='async', max_retries=0));
+create fulltext index ft on docs(content) with parser beng;
+start transaction;
+insert into docs(id,content) values (1,'database alpha');
+set session ai_column_strict_read=on;
+select count(*) from (select result from docs where match(content) against('database') limit 1) v;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select count(*) from (select concat(result,'!') from docs where match(content) against('database') limit 0) v;
+ERROR HY000: AI column has unfinished tasks for table_id=<table_id>, column_id=<column_id>
+select count(*) from (select id from docs where match(content) against('database') limit 1) v;
+count(*)
+1
+set session ai_column_strict_read=off;
+rollback;
+select count(*) as rolled_back_rows from docs;
+rolled_back_rows
+0
+drop table docs;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('fts_projection_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('fts_projection_model');
+drop database ai_fts_projection;
+use test;

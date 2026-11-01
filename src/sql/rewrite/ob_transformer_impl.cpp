@@ -536,8 +536,16 @@ int ObTransformerImpl::choose_rewrite_rules(ObDMLStmt *stmt, uint64_t &need_type
   } else if (OB_FAIL(check_stmt_functions(stmt, func))) {
   } else if (OB_FAIL(check_temp_table_functions(stmt, func))) {
   } else {
-    if (func.contain_geometry_values_ || func.contain_fulltext_search_) {
+    if (func.contain_geometry_values_ ||
+        (func.contain_fulltext_search_ && func.contain_vec_index_approx_)) {
       disable_list = ObTransformRule::ALL_TRANSFORM_RULES;
+    } else if (func.contain_fulltext_search_) {
+      // Keep full-text scan predicates and FROM structure intact, but allow
+      // unused view outputs and unobservable ordering to be eliminated.
+      uint64_t fulltext_enable_list = 0;
+      ObTransformRule::add_trans_type(fulltext_enable_list, PROJECTION_PRUNING);
+      ObTransformRule::add_trans_type(fulltext_enable_list, SIMPLIFY_ORDERBY);
+      disable_list |= (~fulltext_enable_list);
     } else if (func.contain_vec_index_approx_) {
       // ANN scans depend on the statement shape, so keep structural rewrite
       // families disabled.  Expression simplification is shape preserving and

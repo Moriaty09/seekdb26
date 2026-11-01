@@ -73,6 +73,59 @@ int ObTransformSimplifyOrderby::transform_one_stmt(common::ObIArray<ObParentDMLS
   return ret;
 }
 
+namespace
+{
+bool can_drop_fulltext_view_order(const ObSelectStmt &stmt)
+{
+  // Once all view outputs are constant, row identity and ordering are not
+  // observable by its consumer, even with LIMIT/OFFSET. WITH TIES depends on
+  // the sort keys for its cardinality and must keep them.
+  if (stmt.get_match_exprs().empty() || stmt.is_set_stmt() || stmt.has_distinct()
+      || stmt.has_group_by() || stmt.get_aggr_item_size() != 0
+      || stmt.has_window_function() || stmt.is_fetch_with_ties()
+      || nullptr != stmt.get_limit_percent_expr()
+      || nullptr != stmt.get_stmt_hint().get_no_rewrite_hint()
+      || stmt.get_select_item_size() == 0) {
+    return false;
+  }
+  for (int64_t i = 0; i < stmt.get_select_item_size(); ++i) {
+    const ObRawExpr *expr = stmt.get_select_item(i).expr_;
+    if (nullptr == expr || !expr->is_const_expr()) {
+      return false;
+    }
+  }
+  // Restrict this addition to a single ordinary MATCH key that is already
+  // required by WHERE. Other explicit sort expressions may have errors or
+  // side effects that must not disappear when the output is unused.
+  if (stmt.get_order_item_size() != 1) {
+    return false;
+  }
+  const ObRawExpr *match = stmt.get_order_item(0).expr_;
+  if (nullptr == match || !match->has_flag(IS_MATCH_EXPR)
+      || static_cast<const ObMatchFunRawExpr *>(match)->is_es_match()) {
+    return false;
+  }
+  for (int64_t i = 0; i < stmt.get_condition_exprs().count(); ++i) {
+    const ObRawExpr *filter = stmt.get_condition_exprs().at(i);
+    if (filter == match) {
+      return true;
+    } else if (nullptr != filter && filter->get_expr_type() == T_OP_BOOL
+               && filter->get_param_count() == 1 && filter->get_param_expr(0) == match) {
+      return true;
+    } else if (nullptr != filter && IS_RANGE_CMP_OP(filter->get_expr_type())
+               && filter->get_param_count() == 2) {
+      const ObRawExpr *a = filter->get_param_expr(0);
+      const ObRawExpr *b = filter->get_param_expr(1);
+      if ((a == match && nullptr != b && b->is_const_expr())
+          || (b == match && nullptr != a && a->is_const_expr())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+}
+
 // for select/update/delete/insert
 // Remove order by clause from subquery
 int ObTransformSimplifyOrderby::remove_order_by_for_subquery(ObDMLStmt *stmt, bool &trans_happened)
@@ -135,6 +188,11 @@ int ObTransformSimplifyOrderby::remove_order_by_for_view_stmt(ObDMLStmt *stmt, b
       } else if (view_stmt->is_contains_assignment() ||
                  (force_serial_set_order && view_stmt->is_set_stmt())) {
         // do nothing
+      } else if (view_stmt->has_order_by() && can_drop_fulltext_view_order(*view_stmt)) {
+        if (OB_FAIL(do_remove_stmt_order_by(view_stmt, happened))) {
+        } else {
+          trans_happened |= happened;
+        }
       } else if (1 == table_items.count()) {
         if (stmt->is_select_stmt()) {
           select_stmt = static_cast<ObSelectStmt*>(stmt);
