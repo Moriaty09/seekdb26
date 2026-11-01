@@ -320,3 +320,7 @@ A follow-up paired SQL-loop run, reusing the same indexes with SKIP_LOAD=1 and f
 ## 2026-11-01：撤回收集器实验
 
 0 分反馈的四类命中数正确，但九项计分耗时相对 8.698 分均增加，尤其 BENG 构建 2.522→5.728 秒。已通过 `900a6aaa97ddea6cabb929d22920b35ea37f8aec` 撤回 11b974d 的四个 C++ 文件修改，整个 src 目录恢复为 09ea627 内容，保留新增测试。重新构建及 13 项全文/AI 向量/稀疏向量回归最终通过；首个 mysqltest 连接时客户端崩溃，单项重跑通过，原始异常保留。详情见 fts_zero_score_feedback.json、fts_collector_rollback_validation.json 及优化报告最后一节。
+
+## 6.923 分反馈后的构建并发优化
+
+源码 `5c776bf87956dd2970c114f95dc2b69c3b8ae2c2`。在至少 4 GiB 且不少于 2 个配置/系统 CPU 的 mini mode 实例上使用两个局部索引补齐工作线程，较低容量仍单线程。完整基准总构建 38.924→25.614 秒；两个辅助补齐 SQL 从串行改为有实测重叠，工作量与校验不变。14 项全文、AI 向量和稀疏向量回归及两个低容量保护检查通过。完整查询数据仍有回退，不能推测总分。BENG 流水线试验因证据不足已撤回，保留全部测量。最新反馈在 fts_6923_feedback.json，详细验证在 fts_ddl_complement_measurements.json。

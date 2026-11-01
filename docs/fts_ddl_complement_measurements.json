@@ -1,0 +1,455 @@
+{
+  "source_commit": "5c776bf87956dd2970c114f95dc2b69c3b8ae2c2",
+  "baseline_source": "900a6aaa97ddea6cabb929d22920b35ea37f8aec",
+  "capacity_checks": [
+    {
+      "case": "ddl-two-lowmem",
+      "memory_budget": "2G",
+      "cpu_count": "4",
+      "workers": 1,
+      "hits": 2
+    },
+    {
+      "case": "ddl-two-onecpu",
+      "memory_budget": "4G",
+      "cpu_count": "1",
+      "workers": 1,
+      "hits": 2
+    },
+    {
+      "case": "ddl-two-full-after",
+      "memory_budget": "4G",
+      "cpu_count": "auto",
+      "workers": 2,
+      "status": "Name:\tseekdb\nUmask:\t0002\nState:\tS (sleeping)\nTgid:\t2228943\nNgid:\t0\nPid:\t2228943\nPPid:\t2228929\nTracerPid:\t0\nUid:\t1019\t1019\t1019\t1019\nGid:\t1019\t1019\t1019\t1019\nFDSize:\t64\nGroups:\t1019 \nNStgid:\t2228943\nNSpid:\t2228943\nNSpgid:\t2228894\nNSsid:\t2228894\nKthread:\t0\nVmPeak:\t 1749156 kB\nVmSize:\t 1749152 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  440612 kB\nVmRSS:\t  283776 kB\nRssAnon:\t  197440 kB\nRssFile:\t   86336 kB\nRssShmem:\t       0 kB\nVmData:\t 1613832 kB\nVmStk:\t     136 kB\nVmExe:\t  117376 kB\nVmLib:\t    2304 kB\nVmPTE:\t    3152 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t0\nuntag_mask:\t0xffffffffffffffff\nThreads:\t73\nSigQ:\t0/6187030\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\teddfff8000005200\nSigIgn:\t0000000000000000\nSigCgt:\t0000000100000000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSeccomp_filters:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffff,ffffffff\nCpus_allowed_list:\t0-47\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000003\nMems_allowed_list:\t0-1\nvoluntary_ctxt_switches:\t154\nnonvoluntary_ctxt_switches:\t1\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n"
+    }
+  ],
+  "phase_comparison": {
+    "before": {
+      "fti_all_ik": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:31:37.159342",
+            "end": "2026-11-01T10:31:44.617456",
+            "duration_sec": 7.458114,
+            "thread_id": "1914942"
+          },
+          {
+            "start": "2026-11-01T10:31:44.663266",
+            "end": "2026-11-01T10:31:53.424329",
+            "duration_sec": 8.761063,
+            "thread_id": "1914942"
+          }
+        ],
+        "overlap_sec": 0
+      },
+      "fti_content_ik": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:31:53.662534",
+            "end": "2026-11-01T10:32:04.375807",
+            "duration_sec": 10.713273,
+            "thread_id": "1914942"
+          },
+          {
+            "start": "2026-11-01T10:32:04.378534",
+            "end": "2026-11-01T10:32:09.656354",
+            "duration_sec": 5.27782,
+            "thread_id": "1914942"
+          }
+        ],
+        "overlap_sec": 0
+      },
+      "fti_en_beng": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:32:09.892453",
+            "end": "2026-11-01T10:32:12.868780",
+            "duration_sec": 2.976327,
+            "thread_id": "1914942"
+          },
+          {
+            "start": "2026-11-01T10:32:12.913738",
+            "end": "2026-11-01T10:32:15.167256",
+            "duration_sec": 2.253518,
+            "thread_id": "1914942"
+          }
+        ],
+        "overlap_sec": 0
+      }
+    },
+    "after": {
+      "fti_all_ik": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:42:43.281713",
+            "end": "2026-11-01T10:42:50.070166",
+            "duration_sec": 6.788453,
+            "thread_id": "2229062"
+          },
+          {
+            "start": "2026-11-01T10:42:43.035914",
+            "end": "2026-11-01T10:42:52.871903",
+            "duration_sec": 9.835989,
+            "thread_id": "2229063"
+          }
+        ],
+        "overlap_sec": 6.788453
+      },
+      "fti_content_ik": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:42:53.129428",
+            "end": "2026-11-01T10:42:59.409154",
+            "duration_sec": 6.279726,
+            "thread_id": "2229062"
+          },
+          {
+            "start": "2026-11-01T10:42:53.100645",
+            "end": "2026-11-01T10:43:03.557510",
+            "duration_sec": 10.456865,
+            "thread_id": "2229063"
+          }
+        ],
+        "overlap_sec": 6.279726
+      },
+      "fti_en_beng": {
+        "sql_executions": [
+          {
+            "start": "2026-11-01T10:43:03.812241",
+            "end": "2026-11-01T10:43:07.828403",
+            "duration_sec": 4.016162,
+            "thread_id": "2229062"
+          },
+          {
+            "start": "2026-11-01T10:43:03.842184",
+            "end": "2026-11-01T10:43:07.830459",
+            "duration_sec": 3.988275,
+            "thread_id": "2229063"
+          }
+        ],
+        "overlap_sec": 3.986219
+      }
+    }
+  },
+  "regression": [
+    {
+      "suite": "fts_index",
+      "name": "beng_pipeline_lifetime",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_collector_state",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    }
+  ],
+  "rejected_beng_pipeline": {
+    "before_micro": {
+      "mixed": [
+        0.4094455689191818,
+        0.3773898594081402,
+        0.3862917684018612,
+        0.3817855156958103,
+        0.37980867177248,
+        0.3860287144780159
+      ],
+      "upper": [
+        0.2258245348930359,
+        0.22373192012310028,
+        0.2225702852010727,
+        0.22670290619134903,
+        0.22695446386933327,
+        0.2273862063884735
+      ],
+      "unicode": [
+        0.20965751633048058,
+        0.20200835168361664,
+        0.20410002395510674,
+        0.20636453852057457,
+        0.20966335013508797,
+        0.21068010851740837
+      ]
+    },
+    "after_micro": {
+      "mixed": [
+        0.375676017254591,
+        0.37565847858786583,
+        0.388132069259882,
+        0.36901475489139557,
+        0.36843492463231087,
+        0.3864990286529064
+      ],
+      "upper": [
+        0.23214613273739815,
+        0.21477007865905762,
+        0.21898909285664558,
+        0.21825633570551872,
+        0.2185456044971943,
+        0.21477006748318672
+      ],
+      "unicode": [
+        0.20306674391031265,
+        0.19906242191791534,
+        0.20366129279136658,
+        0.20767556503415108,
+        0.20702942460775375,
+        0.20385445654392242
+      ]
+    },
+    "regression": [
+      {
+        "suite": "fts_index",
+        "name": "beng_pipeline_lifetime",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_collector_state",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_posting_refill",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_node_pool",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "ik_arbitration_batches",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_ik_ranges",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_hotpath",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "match_filter_relevance",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_aux_sampling",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_result_batches",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_scan_boundaries",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_function",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_defaults",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_beng_normalization",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "ai_column",
+        "name": "ai_column_vector_index",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "vector_index",
+        "name": "sparse_vector_index_vsag_query",
+        "ps_protocol": false,
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "notes": [
+    "The parser pipeline experiment was reverted before the final build; only the local DDL builder worker policy changes runtime code.",
+    "Initial diagnostic matched only the exact name DdlBuild and reported zero for DdlBuild0/DdlBuild1. Prefix matching fixed this observer error without a kernel change; capacity checks then passed.",
+    "Full benchmarks use fresh directories with 4G memory and 2G data/log on the shared host. Query timing regressions are preserved, not attributed away as proven environmental effects.",
+    "Report git_head predates the source commit; source snapshots are identified above."
+  ]
+}

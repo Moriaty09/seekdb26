@@ -1,0 +1,44 @@
+========================================
+FTS Large Benchmark Report
+========================================
+timestamp:              2026-11-01 10:32:33
+label:                  beng-pipeline-before-900a6aa
+git_head:               857fea4
+git_dirty:              1
+rows:                   20000
+batch:                  500
+rounds:                 3000
+query_rounds:           200
+samples:                3
+warmup:                 30
+skip_load:              0
+----------------------------------------
+select1_avg_ms:         0.1008
+select1_stdev_ms:       0.0095
+raw_load_sec:           0.719
+raw_load_rows_per_sec:  27816.4
+build_ik_all_sec:       17.188
+build_ik_content_sec:   16.233
+build_beng_en_sec:      5.480
+build_total_sec:        38.924
+----------------------------------------
+tokenize_ik_avg_ms:     0.2430
+tokenize_ik_median_ms:  0.2386
+tokenize_ik_stdev_ms:   0.0101
+tokenize_beng_avg_ms:   0.1530
+tokenize_beng_median_ms:0.1511
+tokenize_beng_stdev_ms: 0.0119
+----------------------------------------
+query_cn_hits:          8001
+query_cn_avg_ms:        2.9183
+query_cn_stdev_ms:      0.0605
+query_beng_hits:        11000
+query_beng_avg_ms:      5.4143
+query_beng_stdev_ms:    1.0744
+query_mixed_hits:       7332
+query_mixed_avg_ms:     5.2717
+query_mixed_stdev_ms:   0.4420
+query_limit_hits:       20
+query_limit_avg_ms:     7.6317
+query_limit_stdev_ms:   0.1082
+========================================
