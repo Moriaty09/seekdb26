@@ -1,0 +1,68 @@
+# Private old-binary debugger snapshots; not a statistical CPU profile.
+# Four attaches: SQL worker idle in sample 0, active in samples 1-3.
+# perf was unavailable (perf_event_paranoid=4); no global setting changed.
+
+Sample 0
+ACTIVE THREAD (1451651, 1523810, 0)
+#0  0x0000719931b1e9dd in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00000000059ef1a3 in oceanbase::lib::ObFutex::wait(int, long) ()
+#2  0x0000000001b3f554 in oceanbase::common::SCondTemp<3>::wait(long) ()
+#3  0x0000000001b3f1ce in oceanbase::common::ObPriorityQueue2<1, 2, 3>::do_pop(oceanbase::common::ObLink*&, long, long, int) ()
+#4  0x0000000001b17168 in oceanbase::omt::ObThWorker::worker(long&, long&, int&) ()
+#5  0x0000000001b1814d in non-virtual thunk to oceanbase::omt::ObThWorker::run(long) ()
+#6  0x00000000059d3d25 in oceanbase::lib::Thread::run() ()
+#7  0x00000000059d378f in oceanbase::lib::Thread::__th_start(void*) ()
+#8  0x0000719931a94a83 in start_thread () from /lib/x86_64-linux-gnu/libc.so.6
+#9  0x0000719914eb8240 in ?? ()
+#10 0x00007198efeecf50 in ?? ()
+#11 0xccf129b80db8cbc9 in ?? ()
+#12 0x0000719914eb8240 in ?? ()
+#13 0x000000000000000b in ?? ()
+#14 0x0000719931a94790 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x00007198efeed0b0 in ?? ()
+
+Sample 1
+ACTIVE THREAD (1451651, 1523810, 0)
+#0  0x000000000376f406 in oceanbase::sql::ObExpr::eval_one_datum_of_batch(oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum*&) const ()
+#1  0x0000000003febfcb in oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&) ()
+#2  0x0000000003feb0a2 in oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&) ()
+#3  0x0000000003feafbf in oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&) ()
+#4  0x0000000002bc7ff1 in oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long) ()
+#5  0x00007198ec0ba178 in ?? ()
+#6  0x00007198ec0b9bb0 in ?? ()
+#7  0x00007198ec0b8bb9 in ?? ()
+#8  0x00007198ec0b89d0 in ?? ()
+#9  0x0000000000000100 in ?? ()
+#10 0x00007198ec0b8bb0 in ?? ()
+#11 0x0000719914ea3b40 in ?? ()
+#12 0x0000000002bca56e in oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long) ()
+
+Sample 2
+ACTIVE THREAD (1451651, 1523810, 0)
+#0  0x0000000003ff5bc8 in oceanbase::storage::ObTextDaaTIter::fill_merge_heap() ()
+#1  0x0000000003feb05d in oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&) ()
+#2  0x0000000003feafbf in oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&) ()
+#3  0x0000000002bc7ff1 in oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long) ()
+#4  0x00007198ec0f53b8 in ?? ()
+#5  0x00007198ec0f4df0 in ?? ()
+#6  0x00007198ec0f3df9 in ?? ()
+#7  0x00007198ec0f3c10 in ?? ()
+#8  0x0000000000000100 in ?? ()
+#9  0x00007198ec0f3df0 in ?? ()
+#10 0x0000719914ea3b40 in ?? ()
+#11 0x0000000002bca56e in oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long) ()
+
+Sample 3
+ACTIVE THREAD (1451651, 1523810, 0)
+#0  0x0000000003feb7f8 in oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&) ()
+#1  0x0000000003feb076 in oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&) ()
+#2  0x0000000003feafbf in oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&) ()
+#3  0x0000000002bc7ff1 in oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long) ()
+#4  0x00007198ec0f45f8 in ?? ()
+#5  0x00007198ec0f4030 in ?? ()
+#6  0x00007198ec0f3039 in ?? ()
+#7  0x00007198ec0f2e50 in ?? ()
+#8  0x0000000000000100 in ?? ()
+#9  0x00007198ec0f3030 in ?? ()
+#10 0x0000719914ea3b40 in ?? ()
+#11 0x0000000002bca56e in oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long) ()

@@ -1,0 +1,560 @@
+{
+  "source_commit": "acc14298157fbcc59a99e8fa95ddacb868ddead5",
+  "baseline_source": "e9e364823387171499dea222a96bb23e6b82fccc",
+  "build": {
+    "command": "cmake --build build_release --target observer -j16",
+    "returncode": 0
+  },
+  "method": {
+    "port": 11963,
+    "data_directory": "/tmp/obtest/ddl-two-full-after",
+    "memory_budget": "4G",
+    "configured_cpu_count": 4,
+    "affinity_cpu": 13,
+    "persisted_rows": 20000,
+    "phase_order": [
+      "before",
+      "after",
+      "before_repeat",
+      "after_repeat"
+    ],
+    "warmup_executions_per_query_per_phase": 500,
+    "measured_groups_per_phase": 3,
+    "executions_per_measured_group": 500,
+    "process_cpu_source": "/proc/PID/stat user plus system ticks; includes background threads",
+    "phase_pids": {
+      "before": 1451651,
+      "after": 1749771,
+      "before_repeat": 1779447,
+      "after_repeat": 1848672
+    }
+  },
+  "cpu_measurements": {
+    "before": {
+      "wall_ms": {
+        "cn": [
+          2.7632790729403496,
+          2.834792859852314,
+          2.7936881482601166
+        ],
+        "en": [
+          4.325372911989689,
+          4.340440541505814,
+          4.3044299110770226
+        ],
+        "mixed": [
+          3.15885741263628,
+          3.1621634736657143,
+          3.0619568675756454
+        ],
+        "limit": [
+          0.3363160938024521,
+          0.3298026993870735,
+          0.3196493163704872
+        ]
+      },
+      "process_cpu_ms": {
+        "cn": [
+          2.68,
+          2.72,
+          2.68
+        ],
+        "en": [
+          4.22,
+          4.26,
+          4.2
+        ],
+        "mixed": [
+          3.06,
+          3.06,
+          3.0
+        ],
+        "limit": [
+          0.3,
+          0.28,
+          0.28
+        ]
+      }
+    },
+    "after": {
+      "wall_ms": {
+        "cn": [
+          2.7150396034121513,
+          2.69198340177536,
+          2.5830605551600456
+        ],
+        "en": [
+          3.9498424977064133,
+          3.9941995441913605,
+          4.010125577449799
+        ],
+        "mixed": [
+          2.97110003978014,
+          2.95387651771307,
+          2.954129807651043
+        ],
+        "limit": [
+          0.33850282430648804,
+          0.3412010073661804,
+          0.33830471336841583
+        ]
+      },
+      "process_cpu_ms": {
+        "cn": [
+          2.58,
+          2.58,
+          2.46
+        ],
+        "en": [
+          3.84,
+          3.9,
+          3.92
+        ],
+        "mixed": [
+          2.9,
+          2.86,
+          2.88
+        ],
+        "limit": [
+          0.28,
+          0.28,
+          0.26
+        ]
+      }
+    },
+    "before_repeat": {
+      "wall_ms": {
+        "cn": [
+          2.8599002808332443,
+          2.8801910430192947,
+          2.9569882452487946
+        ],
+        "en": [
+          4.32184012234211,
+          4.33238660544157,
+          4.3091368824243546
+        ],
+        "mixed": [
+          3.187195412814617,
+          3.1518546864390373,
+          3.1782448142766953
+        ],
+        "limit": [
+          0.32673944532871246,
+          0.35173314809799194,
+          0.34607715904712677
+        ]
+      },
+      "process_cpu_ms": {
+        "cn": [
+          2.76,
+          2.78,
+          2.86
+        ],
+        "en": [
+          4.22,
+          4.26,
+          4.18
+        ],
+        "mixed": [
+          3.08,
+          3.04,
+          3.1
+        ],
+        "limit": [
+          0.28,
+          0.3,
+          0.28
+        ]
+      }
+    },
+    "after_repeat": {
+      "wall_ms": {
+        "cn": [
+          2.9035255014896393,
+          2.594246059656143,
+          2.6020695120096207
+        ],
+        "en": [
+          4.037652291357517,
+          4.0687150955200195,
+          4.139546744525433
+        ],
+        "mixed": [
+          2.8973364904522896,
+          2.929093264043331,
+          2.938795119524002
+        ],
+        "limit": [
+          0.33306126296520233,
+          0.34383565187454224,
+          0.32371266186237335
+        ]
+      },
+      "process_cpu_ms": {
+        "cn": [
+          2.82,
+          2.54,
+          2.48
+        ],
+        "en": [
+          3.96,
+          3.98,
+          4.04
+        ],
+        "mixed": [
+          2.84,
+          2.86,
+          2.82
+        ],
+        "limit": [
+          0.26,
+          0.3,
+          0.28
+        ]
+      }
+    }
+  },
+  "aggregate_six_group_medians": {
+    "wall_ms": {
+      "cn": {
+        "before_median": 2.847346570342779,
+        "after_median": 2.6470264568924904,
+        "duration_reduction_percent": 7.03532599567509
+      },
+      "en": {
+        "before_median": 4.323606517165899,
+        "after_median": 4.023888934403658,
+        "duration_reduction_percent": 6.932119784080271
+      },
+      "mixed": {
+        "before_median": 3.160510443150997,
+        "after_median": 2.946335818618536,
+        "duration_reduction_percent": 6.776583352116095
+      },
+      "limit": {
+        "before_median": 0.3330593965947628,
+        "after_median": 0.33840376883745193,
+        "duration_reduction_percent": -1.6046303744408963
+      }
+    },
+    "process_cpu_ms": {
+      "cn": {
+        "before_median": 2.74,
+        "after_median": 2.56,
+        "duration_reduction_percent": 6.569343065693434
+      },
+      "en": {
+        "before_median": 4.22,
+        "after_median": 3.94,
+        "duration_reduction_percent": 6.635071090047385
+      },
+      "mixed": {
+        "before_median": 3.06,
+        "after_median": 2.86,
+        "duration_reduction_percent": 6.535947712418311
+      },
+      "limit": {
+        "before_median": 0.28,
+        "after_median": 0.28,
+        "duration_reduction_percent": 0.0
+      }
+    }
+  },
+  "original_benchmark": {
+    "skip_load": 1,
+    "other_settings": "Default benchmark settings: tokenizer 3000 rounds, query 200 rounds, 3 samples, warmup 30; original script unmodified. CPU 13 affinity retained.",
+    "before": {
+      "git_dirty": 1.0,
+      "rows": 20000.0,
+      "batch": 500.0,
+      "rounds": 3000.0,
+      "query_rounds": 200.0,
+      "samples": 3.0,
+      "warmup": 30.0,
+      "skip_load": 1.0,
+      "select1_avg_ms": 0.0777,
+      "select1_stdev_ms": 0.0019,
+      "tokenize_ik_avg_ms": 0.2178,
+      "tokenize_ik_median_ms": 0.2183,
+      "tokenize_ik_stdev_ms": 0.0009,
+      "tokenize_beng_avg_ms": 0.1252,
+      "tokenize_beng_median_ms": 0.1263,
+      "tokenize_beng_stdev_ms": 0.0023,
+      "query_cn_hits": 8001.0,
+      "query_cn_avg_ms": 2.8568,
+      "query_cn_stdev_ms": 0.0057,
+      "query_beng_hits": 11000.0,
+      "query_beng_avg_ms": 4.464,
+      "query_beng_stdev_ms": 0.0248,
+      "query_mixed_hits": 7332.0,
+      "query_mixed_avg_ms": 3.2854,
+      "query_mixed_stdev_ms": 0.0065,
+      "query_limit_hits": 20.0,
+      "query_limit_avg_ms": 0.4247,
+      "query_limit_stdev_ms": 0.0095
+    },
+    "after": {
+      "git_dirty": 1.0,
+      "rows": 20000.0,
+      "batch": 500.0,
+      "rounds": 3000.0,
+      "query_rounds": 200.0,
+      "samples": 3.0,
+      "warmup": 30.0,
+      "skip_load": 1.0,
+      "select1_avg_ms": 0.0759,
+      "select1_stdev_ms": 0.0024,
+      "tokenize_ik_avg_ms": 0.2186,
+      "tokenize_ik_median_ms": 0.2202,
+      "tokenize_ik_stdev_ms": 0.0027,
+      "tokenize_beng_avg_ms": 0.1277,
+      "tokenize_beng_median_ms": 0.1277,
+      "tokenize_beng_stdev_ms": 0.0061,
+      "query_cn_hits": 8001.0,
+      "query_cn_avg_ms": 2.7199,
+      "query_cn_stdev_ms": 0.0181,
+      "query_beng_hits": 11000.0,
+      "query_beng_avg_ms": 4.0752,
+      "query_beng_stdev_ms": 0.0299,
+      "query_mixed_hits": 7332.0,
+      "query_mixed_avg_ms": 3.0556,
+      "query_mixed_stdev_ms": 0.0176,
+      "query_limit_hits": 20.0,
+      "query_limit_avg_ms": 0.4148,
+      "query_limit_stdev_ms": 0.0268
+    }
+  },
+  "plans": {
+    "output_and_filter_annotations_equal": {
+      "en": true,
+      "cn": true,
+      "limit": true
+    },
+    "before": {
+      "en": "==================================================================\n|ID|OPERATOR             |NAME             |EST.ROWS|EST.TIME(us)|\n------------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                 |1       |834767      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_en_beng)|18000   |834441      |\n==================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit')), \n      pushdown_match_filter(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit'))\n",
+      "cn": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587536      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12669   |587307      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器'))\n",
+      "limit": "=======================================================================\n|ID|OPERATOR               |NAME                |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------------\n|0 |SCALAR GROUP BY        |                    |1       |949         |\n|1 |└─SUBPLAN SCAN         |t                   |20      |948         |\n|2 |  └─TEXT RETRIEVAL SCAN|docs(fti_content_ik)|20      |948         |\n=======================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil)\n  2 - output([1]), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      limit(20), offset(nil), is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.content) AGAINST('倒排索引 tokenizer')), \n      pushdown_match_filter(MATCH(docs.content) AGAINST('倒排索引 tokenizer'))\n"
+    },
+    "after": {
+      "en": "==================================================================\n|ID|OPERATOR             |NAME             |EST.ROWS|EST.TIME(us)|\n------------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                 |1       |834767      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_en_beng)|18000   |834441      |\n==================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit')), \n      pushdown_match_filter(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit'))\n",
+      "cn": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587536      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12669   |587307      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器'))\n",
+      "limit": "=======================================================================\n|ID|OPERATOR               |NAME                |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------------\n|0 |SCALAR GROUP BY        |                    |1       |949         |\n|1 |└─SUBPLAN SCAN         |t                   |20      |948         |\n|2 |  └─TEXT RETRIEVAL SCAN|docs(fti_content_ik)|20      |948         |\n=======================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil)\n  2 - output([1]), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      limit(20), offset(nil), is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.content) AGAINST('倒排索引 tokenizer')), \n      pushdown_match_filter(MATCH(docs.content) AGAINST('倒排索引 tokenizer'))\n"
+    }
+  },
+  "regression_executions": [
+    {
+      "suite": "fts_index",
+      "name": "fts_truth_filter",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_project_pruning",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "beng_pipeline_lifetime",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_collector_state",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_retry_strict",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_strict_scope",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_fts_projection",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_truth_filter",
+      "ps_protocol": true,
+      "returncode": 1,
+      "stdout": "not ok\n",
+      "stderr": "[2026-11-01 20:54:31] mysqltest: At line 3: query 'drop database if exists fts_truth_filter' failed: 0: \n"
+    }
+  ],
+  "successful_normal_regression_count": 21,
+  "ps_protocol_baseline_reproduction": [
+    {
+      "name": "select1",
+      "returncode": 1,
+      "stdout": "select 1;\nnot ok\n",
+      "stderr": "[2026-11-01 20:56:24] mysqltest: At line 1: query 'select 1' failed: 0: \n"
+    },
+    {
+      "name": "new_fixture",
+      "returncode": 1,
+      "stdout": "not ok\n",
+      "stderr": "[2026-11-01 20:56:24] mysqltest: At line 3: query 'drop database if exists fts_truth_filter' failed: 0: \n"
+    }
+  ],
+  "new_test_golden": {
+    "source": "unmodified e9e3648 binary",
+    "row_count": 1057,
+    "body_classes": 7,
+    "result_sha256": "082e14036590923735678a38e43c8d906dc9d623b3c9bf39d7af9d4569ce8af8",
+    "note": "Expected output was recorded on the old binary before compilation. A draft used unsupported ~ boolean syntax and was corrected before the final golden was recorded. Existing expected files were not changed."
+  },
+  "notes": [
+    "The 30.071-point user report predates this source change; no platform score is available for this candidate.",
+    "Counts remained cn=8001, en=11000, mixed=7332 and limit=20 in every timing group.",
+    "Both old/new plain EXPLAIN output/filter annotations are equal for the inspected count queries; only runtime predicate dispatch changes.",
+    "Original-script tokenization slightly regressed while query time improved; no tokenizer or construction source was modified, and construction was not remeasured.",
+    "Extra mysqltest --ps-protocol failed at DROP DATABASE before reaching retrieval. The old binary reproduces that failure and also fails at SELECT 1. These checks are not counted as passes; SQL PREPARE/EXECUTE inside normal regressions passed.",
+    "Original benchmark reports contain a documentation git_head predating the source commit because measurements preceded commit; candidate compiled source corresponds to source_commit.",
+    "Debugger snapshots identify execution paths only; no CPU percentages are inferred from four attaches."
+  ],
+  "private_instance_cleanup": {
+    "pid": 1967319,
+    "port": 11963,
+    "graceful_shutdown_complete": true,
+    "other_instances_untouched": true
+  }
+}
