@@ -20,6 +20,9 @@
 #include "lib/stat/ob_diagnostic_info_guard.h"
 #include "share/rc/ob_server_runtime.h"
 #include "share/ob_force_print_log.h"
+#include "share/config/ob_server_config.h"
+#include "config_bridge.h"
+#include "lib/utility/utility.h"
 
 #define USING_LOG_PREFIX STORAGE
 
@@ -350,7 +353,15 @@ int ObDDLLocalBuilder::push_task(ObAsyncTask &task)
 
 int64_t ObDDLLocalBuilder::get_thread_cnt_() const
 {
-  return lib::is_mini_mode() ? 1 : 16;
+  // Mini mode covers budgets up to 9.6 GiB. At 4 GiB and above, allow two
+  // independent complements to progress (e.g. the two FTS auxiliary indexes).
+  // Keep the single-worker footprint for smaller budgets and single CPUs.
+  const int64_t configured_cpus = config::cpu_count();
+  const int64_t cpu_count = configured_cpus > 0 ? configured_cpus : common::get_cpu_num();
+  if (lib::is_mini_mode()) {
+    return GMEMCONF.get_server_memory_budget() >= (4LL << 30) && cpu_count >= 2 ? 2 : 1;
+  }
+  return 16;
 }
 
 }  // end namespace share
