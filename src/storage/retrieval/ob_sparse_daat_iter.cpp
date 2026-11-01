@@ -376,7 +376,22 @@ int ObSRDaaTIterImpl::filter_on_demand(const int64_t count, const double relevan
       relevance_proj_expr->set_evaluated_projected(*eval_ctx);
       ObDatum *filter_res = nullptr;
       filter_expr->clear_evaluated_flag(*eval_ctx);
-      if (OB_FAIL(filter_expr->eval(*eval_ctx, filter_res))) {
+      // The first row still uses eval() to initialize the batch descriptors and
+      // flags. Later BOOL(projected_double) rows can consume the value we just
+      // wrote, while retaining the filter result for any upper expression.
+      if (count > 0 && T_OP_BOOL == filter_expr->type_
+          && 1 == filter_expr->arg_cnt_
+          && filter_expr->args_[0] == relevance_proj_expr
+          && ObDoubleType == relevance_proj_expr->datum_meta_.type_
+          && ObInt32Type == filter_expr->datum_meta_.type_
+          && filter_expr->is_batch_result()
+          && filter_expr->get_eval_info(*eval_ctx).evaluated_
+          && !filter_expr->get_eval_info(*eval_ctx).projected_) {
+        need_project = 0.0 != relevance;
+        filter_res = &filter_expr->locate_datum_for_write(*eval_ctx);
+        filter_res->set_int32(need_project);
+        filter_expr->get_evaluated_flags(*eval_ctx).set(count);
+      } else if (OB_FAIL(filter_expr->eval(*eval_ctx, filter_res))) {
       } else {
         need_project = !(filter_res->is_null() || 0 == filter_res->get_int());
       }

@@ -1,0 +1,87 @@
+drop database if exists fts_truth_filter;
+create database fts_truth_filter;
+use fts_truth_filter;
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+select count(*), sum(id) from docs where match(body) against('alpha beta');
+count(*)	sum(id)
+604	319516
+select count(*), sum(id) from docs where match(body) against('alpha beta') > 0;
+count(*)	sum(id)
+604	319516
+select count(*), sum(id) from docs where match(body) against('alpha beta') > 0.5;
+count(*)	sum(id)
+453	239184
+select count(*), sum(id) from docs where match(body) against('alpha beta') is true;
+count(*)	sum(id)
+604	319516
+select count(*), sum(id) from docs where not match(body) against('alpha beta');
+count(*)	sum(id)
+453	239637
+select count(*), sum(id) from docs where match(body) against('absent');
+count(*)	sum(id)
+0	NULL
+select count(*), sum(id) from docs where match(body) against('alpha beta') and id between 250 and 780;
+count(*)	sum(id)
+304	147553
+select count(*), sum(id) from docs force index(primary) where match(body) against('alpha beta');
+count(*)	sum(id)
+604	319516
+select count(*), round(sum(score), 8), sum(score <> 0) from (select match(body) against('alpha beta') as score from docs where match(body) against('alpha beta')) t;
+count(*)	round(sum(score), 8)	sum(score <> 0)
+604	648.56982042	604
+select count(*), sum(truth_value), sum(id) from (select id, (match(body) against('alpha beta') is true) as truth_value from docs where match(body) against('alpha beta')) t;
+count(*)	sum(truth_value)	sum(id)
+604	604	319516
+select id from docs where match(body) against('alpha beta') order by id limit 5 offset 255;
+id
+469
+470
+471
+475
+476
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 13 offset 257) t;
+count(*)
+13
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 600) t;
+count(*)
+4
+select count(*), sum(id) from docs where match(body) against('+alpha -beta' in boolean mode);
+count(*)	sum(id)
+302	160513
+select count(*), sum(id) from docs where match(body) against('+beta -alpha' in boolean mode);
+count(*)	sum(id)
+151	79577
+select count(*), sum(id) from docs where match(body) against('+alpha beta' in boolean mode);
+count(*)	sum(id)
+453	239939
+select count(*), round(sum(score), 8), sum(score <> 0) from (select match(body) against('+alpha beta' in boolean mode) as score from docs where match(body) against('+alpha beta' in boolean mode)) t;
+count(*)	round(sum(score), 8)	sum(score <> 0)
+453	443.12241291	453
+prepare p from 'select count(*), sum(id) from docs where match(body) against(?)';
+set @q='alpha beta';
+execute p using @q;
+count(*)	sum(id)
+604	319516
+set @q='absent';
+execute p using @q;
+count(*)	sum(id)
+0	NULL
+set @q='gamma';
+execute p using @q;
+count(*)	sum(id)
+302	159305
+set @q='alpha beta';
+execute p using @q;
+count(*)	sum(id)
+604	319516
+deallocate prepare p;
+begin;
+update docs set body='absent' where id <= 300;
+select count(*), sum(id) from docs where match(body) against('alpha beta');
+count(*)	sum(id)
+433	293845
+rollback;
+select count(*), sum(id) from docs where match(body) against('alpha beta');
+count(*)	sum(id)
+604	319516
+drop database fts_truth_filter;
