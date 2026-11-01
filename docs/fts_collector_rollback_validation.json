@@ -1,0 +1,134 @@
+{
+  "source_commit": "900a6aaa97ddea6cabb929d22920b35ea37f8aec",
+  "src_identical_to": "09ea627e18a1ed22ac6d916290da6e596d0ff18f",
+  "initial_run": [
+    {
+      "suite": "fts_index",
+      "name": "fts_collector_state",
+      "ps_protocol": false,
+      "returncode": -11,
+      "stdout": "",
+      "stderr": "mysqltest got signal 11\nread_command_buf (0x63bc561ef678): \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\n\nAttempting backtrace...\nstack_bottom = 0x0 thread_stack 0x3c000\nmysys/stacktrace.c:175(my_print_stacktrace)[0x63bc2ed277f9]\nbits/stdio2.h:100(signal_handler)[0x63bc2ecc8d30]\nlibc_sigaction.c:0(__restore_rt)[0x7678a5842520]\nlibmariadb/mariadb_lib.c:533(ma_simple_command)[0x63bc2ece201d]\nlibmariadb/mariadb_lib.c:3519(mysql_real_query)[0x63bc2ece27ae]\nlibmariadb/mariadb_lib.c:2348(get_ob_server_version)[0x63bc2ece4061]\nlibmariadb/mariadb_lib.c:2287(mysql_real_connect)[0x63bc2ecdf3f8]\ntests/nonblock-wrappers.h:165(wrap_mysql_real_connect(st_mysql*, char const*, char const*, char const*, char const*, unsigned int, char const*, unsigned long))[0x63bc2ecc8e16]\nclient/mysqltest.cc:6667(safe_connect(st_mysql*, char const*, char const*, char const*, char const*, char const*, int, char const*))[0x63bc2ecccfa6]\nclient/mysqltest.cc:11269(main)[0x63bc2ecc6f21]\nnptl/libc_start_call_main.h:58(__libc_start_call_main)[0x7678a5829d90]\ncsu/libc-start.c:128(call_init)[0x7678a5829e40]\n/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest(_start+0x2e)[0x63bc2ecc863e]\nWriting a core file...\n"
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    }
+  ],
+  "collector_state_retry": {
+    "returncode": 0,
+    "output": "ok\n"
+  },
+  "notes": [
+    "Initial collector-state mysqltest process crashed in mysql_real_connect/get_ob_server_version before executing test SQL; isolated retry passed. Other 12 FTS tests and AI/sparse vector tests passed on the first run.",
+    "This rollback is source restoration, not a new performance optimization; no new performance score is claimed."
+  ]
+}

@@ -316,3 +316,7 @@ A follow-up paired SQL-loop run, reusing the same indexes with SKIP_LOAD=1 and f
 源码 `11b974d32c692e96c8749d1f623472a2e1e21836`：为精确内置收集器的小词数全文合并内联累计分数和取结果，保留最少匹配数、清零与回退语义。13 项全文回归、AI 向量和稀疏向量用例通过，两个新目录完整默认基准均完成，原始记录在 fts_collector_*。
 
 相较 d07c0c9 的 11.631 分用户回执，最新九项计分耗时全部更低。仓库评分脚本/基线文件未变化；固定基线公式不能解释此种分数反向变化，而仓库旧 CI 基线对两份回执均会打满 raw 100，不能代替平台真实基线。具体未知的是平台基线、口径或运行关联，不能断言代码退化或平台存在 bug。详细条件推导及四个最新重点提交研究见 competition_fts_optimization.md 最新节。
+
+## 2026-11-01：撤回收集器实验
+
+0 分反馈的四类命中数正确，但九项计分耗时相对 8.698 分均增加，尤其 BENG 构建 2.522→5.728 秒。已通过 `900a6aaa97ddea6cabb929d22920b35ea37f8aec` 撤回 11b974d 的四个 C++ 文件修改，整个 src 目录恢复为 09ea627 内容，保留新增测试。重新构建及 13 项全文/AI 向量/稀疏向量回归最终通过；首个 mysqltest 连接时客户端崩溃，单项重跑通过，原始异常保留。详情见 fts_zero_score_feedback.json、fts_collector_rollback_validation.json 及优化报告最后一节。
