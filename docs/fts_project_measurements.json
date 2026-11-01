@@ -1,0 +1,270 @@
+{
+  "source_commit": "e9e364823387171499dea222a96bb23e6b82fccc",
+  "baseline_source": "5c776bf87956dd2970c114f95dc2b69c3b8ae2c2",
+  "cpu_before": {
+    "wall_ms": {
+      "cn": [
+        2.849411115050316,
+        2.831272356212139,
+        3.270625665783882
+      ],
+      "en": [
+        4.356919445097446,
+        4.389815829694271,
+        7.014084450900555
+      ],
+      "mixed": [
+        3.2056068554520607,
+        3.3467002511024475,
+        6.168776072561741
+      ],
+      "limit": [
+        4.378682911396027,
+        5.507824055850506,
+        8.618418842554092
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.76,
+        2.74,
+        3.2
+      ],
+      "en": [
+        4.24,
+        4.28,
+        6.92
+      ],
+      "mixed": [
+        3.12,
+        3.26,
+        6.08
+      ],
+      "limit": [
+        4.26,
+        5.42,
+        8.52
+      ]
+    }
+  },
+  "cpu_after": {
+    "wall_ms": {
+      "cn": [
+        2.7930390685796738,
+        2.816720597445965,
+        3.1239011883735657
+      ],
+      "en": [
+        4.3120653703808784,
+        4.321655802428722,
+        4.88128637522459
+      ],
+      "mixed": [
+        3.2122637778520584,
+        4.855513460934162,
+        3.4770295843482018
+      ],
+      "limit": [
+        0.33924683928489685,
+        0.3452224060893059,
+        0.36079801619052887
+      ]
+    },
+    "process_cpu_ms": {
+      "cn": [
+        2.72,
+        2.72,
+        3.06
+      ],
+      "en": [
+        4.2,
+        4.22,
+        4.78
+      ],
+      "mixed": [
+        3.12,
+        4.82,
+        3.38
+      ],
+      "limit": [
+        0.28,
+        0.28,
+        0.3
+      ]
+    }
+  },
+  "regression": [
+    {
+      "suite": "fts_index",
+      "name": "fts_project_pruning",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "beng_pipeline_lifetime",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_collector_state",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_posting_refill",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_node_pool",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "ik_arbitration_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_ik_ranges",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_hotpath",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "match_filter_relevance",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_aux_sampling",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "fts_result_batches",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_scan_boundaries",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_function",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_defaults",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "fts_index",
+      "name": "tokenize_beng_normalization",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_vector_index",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "vector_index",
+      "name": "sparse_vector_index_vsag_query",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_retry_strict",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_strict_scope",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    },
+    {
+      "suite": "ai_column",
+      "name": "ai_column_fts_projection",
+      "ps_protocol": false,
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": ""
+    }
+  ],
+  "additional_offset_boundary_check": {
+    "returncode": 0,
+    "output": "ok\n",
+    "note": "Extended the new test with offsets 1080/20 and a 21-row filter with offset 7; expected 10 and 14 from fixture cardinalities. Rechecked after the final source build."
+  },
+  "notes": [
+    "Original benchmark script, same persisted 20000-row index data, SKIP_LOAD=1, other defaults unchanged; no index build comparison or platform score is claimed.",
+    "CPU 13 pinned timing uses one 500-execution warmup and three measured groups of 500 per query. Process CPU includes background threads, not isolated SQL CPU.",
+    "Only final guarded source measurements are shown as after; an earlier prototype was tightened before this build.",
+    "Most new expected results were recorded on the stable old binary. The two additional offset boundary expectations are derived from the same fixture cardinalities.",
+    "Final report git_head predates source commit; compiled source contents correspond to source_commit."
+  ]
+}
