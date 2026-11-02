@@ -79,15 +79,15 @@ int ObTextDaaTIter::fill_merge_heap()
   for (int64_t i = 0; OB_SUCC(ret) && i < next_round_cnt_; ++i) {
     const int64_t iter_idx = next_round_iter_idxes_[i];
     auto *iter = static_cast<ObTextRetrievalDaaTTokenIter *>(dim_iters_->at(iter_idx));
-    ObSRMergeItem &item = small_heads_[iter_idx];
-    item.iter_idx_ = iter_idx;
+    PostingHead &item = small_heads_[iter_idx];
     if (OB_ISNULL(iter)) {
       ret = OB_ERR_UNEXPECTED;
-    } else if (OB_FAIL(iter->next_posting(iter_domain_ids_[iter_idx], item.relevance_))) {
+    } else if (OB_FAIL(iter->next_posting(item.id_, item.relevance_))) {
       if (OB_ITER_END == ret) {
         ret = OB_SUCCESS;
       }
     } else {
+      OB_ASSERT(nullptr != item.id_);
       if (OB_NOT_NULL(iter_param_->dim_weights_)) {
         item.relevance_ = item.relevance_ * iter_param_->field_boost_ * iter_param_->dim_weights_->at(iter_idx);
       }
@@ -128,7 +128,7 @@ int ObTextDaaTIter::collect_dims_by_id(
       matched_heads = bit;
     } else {
       int64_t cmp = 0;
-      if (OB_FAIL(merge_cmp_.cmp(small_heads_[i], small_heads_[winner], cmp))) {
+      if (OB_FAIL(merge_cmp_.cmp_ids(*small_heads_[i].id_, *small_heads_[winner].id_, cmp))) {
       } else if (cmp < 0) {
         winner = i;
         matched_heads = bit;
@@ -147,7 +147,7 @@ int ObTextDaaTIter::collect_dims_by_id(
     if (0 != (matched_heads & bit)) {
       if (OB_FAIL(relevance_collector_->collect_one_dim(i, small_heads_[i].relevance_))) {
       } else {
-        id_datum = iter_domain_ids_[i];
+        id_datum = small_heads_[i].id_;
         next_round_iter_idxes_[next_round_cnt_++] = i;
         active_heads_ &= ~bit;
       }

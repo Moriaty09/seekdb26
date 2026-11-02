@@ -69,7 +69,13 @@ protected:
   ObBM25ParamEstimator bm25_param_estimator_;
   sql::ObMatchAgainstMode mode_flag_;
   bool function_lookup_mode_;
-  ObSRMergeItem small_heads_[ObSRSimpleMerger::USE_SIMPLE_MERGER_MAX_TABLE_CNT];
+  struct PostingHead
+  {
+    PostingHead() : relevance_(0.0), id_(nullptr) {}
+    double relevance_;
+    const ObDatum *id_;
+  };
+  PostingHead small_heads_[ObSRSimpleMerger::USE_SIMPLE_MERGER_MAX_TABLE_CNT];
   uint64_t active_heads_;
 private:
   DISALLOW_COPY_AND_ASSIGN(ObTextDaaTIter);
