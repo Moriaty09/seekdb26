@@ -189,6 +189,99 @@ fail:
   return NULL;
 }
 
+int seekdb_cuvs_graph_degree(void* handle, long* degree)
+{
+  sk_cuvs_index* h = (sk_cuvs_index*)handle;
+  int64_t actual = 0;
+  if (!h || !degree || cuvsCagraIndexGetGraphDegree(h->idx, &actual) != CUVS_SUCCESS ||
+      actual <= 0 || actual > h->n || (uint64_t)actual > INT32_MAX) return 1;
+  *degree = (long)actual;
+  return 0;
+}
+
+int seekdb_cuvs_export_graph(void* handle, unsigned int* output, long degree)
+{
+  sk_cuvs_index* h = (sk_cuvs_index*)handle;
+  if (!h || !output || degree <= 0 || degree > h->n ||
+      (uint64_t)h->n > SIZE_MAX / sizeof(unsigned int) / (uint64_t)degree) return 1;
+  if (pthread_mutex_lock(&h->search_mutex) != 0) return 1;
+  int rc = 1;
+  DLManagedTensor view = {};
+  cudaStream_t stream = 0;
+  size_t pitch = 0;
+  const size_t width = (size_t)degree * sizeof(unsigned int);
+  if (cuvsStreamSync(h->res) != CUVS_SUCCESS ||
+      cuvsCagraIndexGetGraph(h->idx, &view) != CUVS_SUCCESS) goto done;
+  if (!view.dl_tensor.data || !view.dl_tensor.shape || view.dl_tensor.ndim != 2 ||
+      view.dl_tensor.shape[0] != h->n || view.dl_tensor.shape[1] != degree ||
+      view.dl_tensor.dtype.code != kDLUInt || view.dl_tensor.dtype.bits != 32 ||
+      view.dl_tensor.dtype.lanes != 1 || view.dl_tensor.device.device_type != kDLCUDA ||
+      (view.dl_tensor.strides &&
+       (view.dl_tensor.strides[1] != 1 || view.dl_tensor.strides[0] < degree))) goto done;
+  pitch = (size_t)(view.dl_tensor.strides ? view.dl_tensor.strides[0] : degree);
+  if (pitch > SIZE_MAX / sizeof(unsigned int) / (size_t)h->n ||
+      view.dl_tensor.byte_offset > SIZE_MAX - pitch * sizeof(unsigned int) * (size_t)h->n) goto done;
+  if (cuvsStreamGet(h->res, &stream) != CUVS_SUCCESS ||
+      cudaMemcpy2DAsync(output, width, (char*)view.dl_tensor.data + view.dl_tensor.byte_offset,
+                       pitch * sizeof(unsigned int), width, (size_t)h->n,
+                       cudaMemcpyDefault, stream) != cudaSuccess ||
+      cuvsStreamSync(h->res) != CUVS_SUCCESS) goto done;
+  rc = 0;
+done:
+  if (rc) cuvsStreamSync(h->res);
+  if (view.deleter) view.deleter(&view);
+  pthread_mutex_unlock(&h->search_mutex);
+  return rc;
+}
+
+void* seekdb_cuvs_restore_graph(const float* base, long n, long dim,
+                                const unsigned int* graph, long degree)
+{
+  if (!base || !graph || n <= 0 || (uint64_t)n > UINT32_MAX || dim <= 0 ||
+      degree <= 0 || degree > n || degree > INT32_MAX ||
+      (uint64_t)n > SIZE_MAX / sizeof(float) / (uint64_t)dim ||
+      (uint64_t)n > SIZE_MAX / sizeof(unsigned int) / (uint64_t)degree) return NULL;
+  const size_t edges = (size_t)n * (size_t)degree;
+  // Invalid row offsets must never reach the library's graph-search kernels.
+  for (size_t i = 0; i < edges; ++i) if (graph[i] >= (uint64_t)n) return NULL;
+  sk_cuvs_index* h = (sk_cuvs_index*)calloc(1, sizeof(*h));
+  if (!h) return NULL;
+  DLManagedTensor dataset = {}, adjacency = {};
+  int64_t ds[2] = {n, dim}, gs[2] = {n, degree};
+  dataset.dl_tensor.data = (void*)base;
+  dataset.dl_tensor.device.device_type = kDLCPU;
+  dataset.dl_tensor.ndim = 2;
+  dataset.dl_tensor.dtype.code = kDLFloat;
+  dataset.dl_tensor.dtype.bits = 32;
+  dataset.dl_tensor.dtype.lanes = 1;
+  dataset.dl_tensor.shape = ds;
+  adjacency = dataset;
+  adjacency.dl_tensor.data = (void*)graph;
+  adjacency.dl_tensor.dtype.code = kDLUInt;
+  adjacency.dl_tensor.shape = gs;
+  if (cuvsResourcesCreate(&h->res) != CUVS_SUCCESS) { free(h); return NULL; }
+  if (cuvsCagraIndexParamsCreate(&h->ip) != CUVS_SUCCESS) goto fail_res;
+  if (cuvsCagraIndexCreate(&h->idx) != CUVS_SUCCESS) goto fail_ip;
+  if (cuvsCagraIndexFromArgs(h->res, h->ip->metric, &adjacency, &dataset, h->idx) != CUVS_SUCCESS)
+    goto fail_idx;
+  // FromArgs may enqueue host-to-device copies. Keep caller-owned storage alive
+  // through completion, including when a copy reports an asynchronous error.
+  if (cuvsStreamSync(h->res) != CUVS_SUCCESS) goto fail_idx;
+  if (pthread_mutex_init(&h->search_mutex, NULL) != 0) goto fail_idx;
+  h->n = n;
+  h->dim = dim;
+  return h;
+fail_idx:
+  cuvsStreamSync(h->res);
+  cuvsCagraIndexDestroy(h->idx);
+fail_ip:
+  cuvsCagraIndexParamsDestroy(h->ip);
+fail_res:
+  cuvsResourcesDestroy(h->res);
+  free(h);
+  return NULL;
+}
+
 int seekdb_cuvs_cagra_knn(const float* base, long n, long dim,
                           const float* query, long nq, long topk,
                           unsigned int* out_ids)

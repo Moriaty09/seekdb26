@@ -1,5 +1,9 @@
 # V5 CAGRA 外围优化与复现方法
 
+2026-11-02 新增无损紧凑快照候选，详见 [COMPACT_SNAPSHOT.md](COMPACT_SNAPSHOT.md)。
+新版本写 OBCUVS03、继续读 OBCUVS02；主机测试通过，真实 GPU 编译与性能尚未验证。
+下文的 10K GPU 测量对应上一版提交，不代表新快照候选。
+
 ## 当前交付状态
 
 基线：`634888d9b037153fa143d2c913ba4b25503e1d62`。
@@ -22,9 +26,9 @@
 - 每次搜索重新设置与 V5 相同的 `itopk_size=max(库默认值,512,4*k)` 和 `search_width=4`，避免先查大 k 导致后续小 k 参数变化。
 - 建图仍使用 NN_DESCENT、graph_degree=128、intermediate_graph_degree=256、nn_descent_niter=100。
   数据保持 FP32，查询仍调用固定 hipVS CAGRA 搜索。
-- 快照图中转块从 64 KiB 增至 4 MiB。文件格式、图/ID/原始向量内容及持久化顺序保持 V5 格式。
-  增大中转块减少 `fread/fwrite` 和 `istream/ostream` 调用，不改变下层固定容量回调的总次数。
-  相比 V5 每次快照操作额外使用约 3.94 MiB 主机内存，性能影响需实测。
+- 新快照直接保存 GPU 图和一份原始 FP32 向量，消除重复向量与临时文件中转。
+  OBCUVS03 通过固定 hipVS 的 IndexFromArgs 恢复同一张图；不额外建图。
+  旧 OBCUVS02 读取仍使用 4 MiB 中转块；详细格式、兼容性和资源开销见 COMPACT_SNAPSHOT.md。
 - 距离回拷贝失败返回非零值；增加参数/溢出检查，DLPack shape 使用明确的 int64_t。
 - `build.sh` 添加内部线程链接选项。对外构建入口不变，不新增第三方依赖。
 

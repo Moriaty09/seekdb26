@@ -7,4 +7,6 @@ typedef struct {
   void* data; DLDevice device; int ndim; DLDataType dtype;
   int64_t* shape; int64_t* strides; uint64_t byte_offset;
 } DLTensor;
-typedef struct { DLTensor dl_tensor; void* manager_ctx; void* deleter; } DLManagedTensor;
+typedef struct DLManagedTensor {
+  DLTensor dl_tensor; void* manager_ctx; void (*deleter)(struct DLManagedTensor*);
+} DLManagedTensor;

@@ -25,6 +25,13 @@ int   seekdb_cuvs_search(void* handle, const float* query, long nq, long topk,
 void  seekdb_cuvs_free(void* handle);
 int seekdb_cuvs_serialize(void* handle, const char* filename);
 void* seekdb_cuvs_deserialize(const char* filename, long n, long dim);
+/* Lossless snapshot helpers. Export the actual GPU-built adjacency matrix;
+ * restore it with the original FP32 vectors via hipVS CAGRA IndexFromArgs.
+ * The restored index owns device copies before returning. No graph is rebuilt. */
+int seekdb_cuvs_graph_degree(void* handle, long* degree);
+int seekdb_cuvs_export_graph(void* handle, unsigned int* graph, long degree);
+void* seekdb_cuvs_restore_graph(const float* base, long n, long dim,
+                                const unsigned int* graph, long degree);
 #ifdef __cplusplus
 }
 #endif

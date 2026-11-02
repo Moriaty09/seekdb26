@@ -26,6 +26,8 @@ def main():
     parser.add_argument('--queries', type=pathlib.Path, required=True)
     parser.add_argument('--dimension', type=int, default=128)
     parser.add_argument('--output', type=pathlib.Path, required=True)
+    parser.add_argument('--require-compact', action='store_true',
+                        help='Require and verify lossless graph export/restore API')
     args = parser.parse_args()
     base = np.fromfile(args.base, dtype='<f4').reshape(-1, args.dimension)
     queries = np.fromfile(args.queries, dtype='<f4').reshape(-1, args.dimension)
@@ -51,6 +53,18 @@ def main():
     lib.seekdb_cuvs_serialize.restype = ctypes.c_int
     lib.seekdb_cuvs_deserialize.argtypes = [ctypes.c_char_p, ctypes.c_long, ctypes.c_long]
     lib.seekdb_cuvs_deserialize.restype = pointer
+    compact_api = all(hasattr(lib, name) for name in ['seekdb_cuvs_graph_degree',
+                      'seekdb_cuvs_export_graph', 'seekdb_cuvs_restore_graph'])
+    if args.require_compact and not compact_api:
+        parser.error('This library does not export the compact snapshot API')
+    if compact_api:
+        lib.seekdb_cuvs_graph_degree.argtypes = [pointer, ctypes.POINTER(ctypes.c_long)]
+        lib.seekdb_cuvs_graph_degree.restype = ctypes.c_int
+        lib.seekdb_cuvs_export_graph.argtypes = [pointer, pointer, ctypes.c_long]
+        lib.seekdb_cuvs_export_graph.restype = ctypes.c_int
+        lib.seekdb_cuvs_restore_graph.argtypes = [pointer, ctypes.c_long, ctypes.c_long,
+                                               pointer, ctypes.c_long]
+        lib.seekdb_cuvs_restore_graph.restype = pointer
     hip = ctypes.CDLL('/opt/rocm/lib/libamdhip64.so')
     hip.hipDeviceSynchronize.argtypes = []
     hip.hipDeviceSynchronize.restype = ctypes.c_int
@@ -119,6 +133,35 @@ def main():
                 answers = list(pool.map(lambda i: search(handle, queries[i:i+1], 10)[0][0],
                                         range(min(16, len(queries)))))
             np.testing.assert_array_equal(np.asarray(answers), reference[10][:len(answers)])
+        if compact_api:
+            degree = ctypes.c_long()
+            if lib.seekdb_cuvs_graph_degree(handle, ctypes.byref(degree)) or not 0 < degree.value <= len(base):
+                raise RuntimeError('Invalid graph degree')
+            graph = np.empty((len(base), degree.value), dtype=np.uint32)
+            if lib.seekdb_cuvs_export_graph(handle, graph.ctypes.data, degree.value):
+                raise RuntimeError('Graph export failed')
+            if np.any(graph >= len(base)):
+                raise RuntimeError('Exported graph contains invalid row offsets')
+            result['graph_sha256'] = hashlib.sha256(graph.tobytes()).hexdigest()
+            lib.seekdb_cuvs_free(handle)
+            handle = None
+            dataset_copy, graph_copy = base.copy(), graph.copy()
+            handle = lib.seekdb_cuvs_restore_graph(dataset_copy.ctypes.data, len(base), args.dimension,
+                                                  graph_copy.ctypes.data, degree.value)
+            if not handle:
+                raise RuntimeError('Graph restore failed')
+            dataset_copy.fill(np.nan)
+            graph_copy.fill(np.iinfo(np.uint32).max)
+            # Both inputs may be released/changed after restore; device copies are owned.
+            again = np.empty_like(graph)
+            if lib.seekdb_cuvs_export_graph(handle, again.ctypes.data, degree.value):
+                raise RuntimeError('Restored graph export failed')
+            np.testing.assert_array_equal(again, graph)
+            for k in [10, 100]:
+                answers = [search(handle, query.reshape(1, -1), k)[0][0] for query in queries]
+                np.testing.assert_array_equal(np.asarray(answers), reference[k])
+            result.update(compact_graph_restore=True, graph_degree=degree.value,
+                          compact_adaptor_snapshot_bytes=32 + len(base) * 8 + base.nbytes + graph.nbytes)
         result.update(result_integrity=True, snapshot_reload=True, concurrent_search=True)
     finally:
         if handle:
