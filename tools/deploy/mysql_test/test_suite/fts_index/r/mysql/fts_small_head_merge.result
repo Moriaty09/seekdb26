@@ -1,0 +1,112 @@
+drop database if exists fts_small_head_merge;
+create database fts_small_head_merge;
+use fts_small_head_merge;
+create table digits(n int primary key);
+insert into digits values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table docs(id int primary key, body text, fulltext index ft(body) with parser beng);
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha');
+count(*)	sum(id)	bit_xor(id)
+459	236212	1872
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha beta');
+count(*)	sum(id)	bit_xor(id)
+613	316216	458
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha beta gamma');
+count(*)	sum(id)	bit_xor(id)
+675	348646	1622
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha beta gamma delta');
+count(*)	sum(id)	bit_xor(id)
+710	366587	1181
+select count(*),sum(id) from docs where match(body) against('missing gamma absent');
+count(*)	sum(id)
+184	94750
+select count(*),sum(id) from docs where match(body) against('missing absent nowhere');
+count(*)	sum(id)
+0	NULL
+select count(*),sum(id) from docs where match(body) against('alpha beta gamma')>0.8;
+count(*)	sum(id)
+429	221320
+select count(*),round(sum(match(body) against('alpha beta gamma')),7) as score_sum
+from docs where match(body) against('alpha beta gamma');
+count(*)	score_sum
+675	1035.3289872
+select id,round(match(body) against('alpha beta gamma'),7) as score
+from docs where match(body) against('alpha beta gamma') order by id limit 7 offset 254;
+id	score
+388	0.4280156
+390	3.9180771
+392	0.4135338
+393	1.2808211
+394	0.4280156
+395	2.7493533
+396	1.5554708
+select id,round(match(body) against('alpha beta gamma'),7) as score
+from docs where match(body) against('alpha beta gamma') order by score desc,id limit 7;
+id	score
+30	3.9180771
+60	3.9180771
+90	3.9180771
+120	3.9180771
+150	3.9180771
+180	3.9180771
+240	3.9180771
+select count(*),sum(id) from docs where match(body) against('+alpha +beta -gamma' in boolean mode);
+count(*)	sum(id)
+121	61746
+select count(*),sum(id) from docs where match(body) against('+(alpha beta) -gamma' in boolean mode);
+count(*)	sum(id)
+491	253896
+select count(*) from (select id from docs where match(body) against('alpha beta gamma') limit 23 offset 510) t;
+count(*)
+23
+prepare q from 'select count(*),sum(id) from docs where match(body) against(?)';
+set @q='alpha beta gamma';
+execute q using @q;
+count(*)	sum(id)
+675	348646
+set @q='alpha';
+execute q using @q;
+count(*)	sum(id)
+459	236212
+set @q='alpha beta gamma delta';
+execute q using @q;
+count(*)	sum(id)
+710	366587
+set @q='missing';
+execute q using @q;
+count(*)	sum(id)
+0	NULL
+set @q='beta gamma';
+execute q using @q;
+count(*)	sum(id)
+429	221320
+deallocate prepare q;
+begin;
+update docs set body='alpha beta gamma' where id between 250 and 530;
+delete from docs where id between 900 and 980;
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha beta gamma');
+count(*)	sum(id)	bit_xor(id)
+721	337446	1418
+rollback;
+select count(*),sum(id),bit_xor(id) from docs where match(body) against('alpha beta gamma');
+count(*)	sum(id)	bit_xor(id)
+675	348646	1622
+create table part_docs(bucket int,id int,body text,primary key(bucket,id),
+fulltext index ft(body) with parser beng) partition by hash(bucket) partitions 4;
+insert into part_docs select mod(id,4),id,body from docs;
+select count(*),sum(id),bit_xor(id) from part_docs where match(body) against('alpha beta gamma');
+count(*)	sum(id)	bit_xor(id)
+675	348646	1622
+select count(*),sum(id) from part_docs where match(body) against('+alpha +beta -gamma' in boolean mode);
+count(*)	sum(id)
+121	61746
+select id,round(match(body) against('alpha beta gamma'),7) as score from part_docs
+where match(body) against('alpha beta gamma') order by id limit 7 offset 254;
+id	score
+388	0.4280156
+390	3.9041502
+392	0.4135338
+393	1.2567542
+394	0.4280156
+395	2.7792666
+396	1.5585476
+drop database fts_small_head_merge;

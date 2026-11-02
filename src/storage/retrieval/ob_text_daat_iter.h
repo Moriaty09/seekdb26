@@ -55,7 +55,7 @@ public:
   ObTextDaaTIter() : ObSRDaaTIterImpl(),
       bm25_param_estimator_(),
       mode_flag_(sql::ObMatchAgainstMode::NATURAL_LANGUAGE_MODE),
-      function_lookup_mode_(false) {}
+      function_lookup_mode_(false), small_heads_(), active_heads_(0) {}
   virtual ~ObTextDaaTIter() { reset(); }
 
   int init(const ObTextDaaTParam &param);
@@ -64,10 +64,13 @@ public:
 protected:
   virtual int pre_process() override;
   int fill_merge_heap() override;
+  int collect_dims_by_id(const ObDatum *&id_datum, double &relevance, bool &got_valid_id) override;
 protected:
   ObBM25ParamEstimator bm25_param_estimator_;
   sql::ObMatchAgainstMode mode_flag_;
   bool function_lookup_mode_;
+  ObSRMergeItem small_heads_[ObSRSimpleMerger::USE_SIMPLE_MERGER_MAX_TABLE_CNT];
+  uint64_t active_heads_;
 private:
   DISALLOW_COPY_AND_ASSIGN(ObTextDaaTIter);
 };

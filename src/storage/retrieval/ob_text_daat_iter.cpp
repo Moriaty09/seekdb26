@@ -41,6 +41,7 @@ int ObTextDaaTIter::init(const ObTextDaaTParam &param)
 
 void ObTextDaaTIter::reset()
 {
+  active_heads_ = 0;
   bm25_param_estimator_.reset();
   // this class can know the type of dim_iters_, but ObSRDaaTIterImpl maybe not
   if (OB_NOT_NULL(dim_iters_)) {
@@ -53,6 +54,7 @@ void ObTextDaaTIter::reset()
 
 void ObTextDaaTIter::reuse(const bool switch_tablet)
 {
+  active_heads_ = 0;
   if ((OB_NOT_NULL(dim_iters_) && 0 == dim_iters_->count())) {
     // do nothing
   } else {
@@ -74,11 +76,10 @@ int ObTextDaaTIter::fill_merge_heap()
     return ObSRDaaTIterImpl::fill_merge_heap();
   }
   int ret = OB_SUCCESS;
-  ObSRSimpleMerger *heap = simple_merge_heap_;
   for (int64_t i = 0; OB_SUCC(ret) && i < next_round_cnt_; ++i) {
     const int64_t iter_idx = next_round_iter_idxes_[i];
     auto *iter = static_cast<ObTextRetrievalDaaTTokenIter *>(dim_iters_->at(iter_idx));
-    ObSRMergeItem item;
+    ObSRMergeItem &item = small_heads_[iter_idx];
     item.iter_idx_ = iter_idx;
     if (OB_ISNULL(iter)) {
       ret = OB_ERR_UNEXPECTED;
@@ -90,16 +91,73 @@ int ObTextDaaTIter::fill_merge_heap()
       if (OB_NOT_NULL(iter_param_->dim_weights_)) {
         item.relevance_ = item.relevance_ * iter_param_->field_boost_ * iter_param_->dim_weights_->at(iter_idx);
       }
-      ret = heap->ObSRSimpleMerger::push(item);
+      active_heads_ |= (uint64_t(1) << iter_idx);
     }
   }
   if (OB_SUCC(ret)) {
-    if (heap->ObSRSimpleMerger::empty()) {
+    if (0 == active_heads_) {
       ret = OB_ITER_END;
-    } else if (0 != next_round_cnt_ && OB_FAIL(heap->ObSRSimpleMerger::rebuild())) {
     } else {
       next_round_cnt_ = 0;
     }
+  }
+  return ret;
+}
+
+int ObTextDaaTIter::collect_dims_by_id(
+    const ObDatum *&id_datum, double &relevance, bool &got_valid_id)
+{
+  if (nullptr == simple_merge_heap_) {
+    return ObSRDaaTIterImpl::collect_dims_by_id(id_datum, relevance, got_valid_id);
+  }
+  static_assert(ObSRSimpleMerger::USE_SIMPLE_MERGER_MAX_TABLE_CNT <= 64,
+                "active posting heads must fit in the mask");
+  int ret = OB_SUCCESS;
+  int64_t winner = -1;
+  uint64_t matched_heads = 0;
+  relevance = 0.0;
+  got_valid_id = false;
+  // At most three live heads: select their minimum without sorting and
+  // moving heap entries after every posting. Unconsumed heads remain valid
+  // until their own token iterator is advanced in the next fill operation.
+  for (int64_t i = 0; OB_SUCC(ret) && i < dim_iters_->count(); ++i) {
+    const uint64_t bit = uint64_t(1) << i;
+    if (0 == (active_heads_ & bit)) {
+    } else if (winner < 0) {
+      winner = i;
+      matched_heads = bit;
+    } else {
+      int64_t cmp = 0;
+      if (OB_FAIL(merge_cmp_.cmp(small_heads_[i], small_heads_[winner], cmp))) {
+      } else if (cmp < 0) {
+        winner = i;
+        matched_heads = bit;
+      } else if (0 == cmp) {
+        matched_heads |= bit;
+      }
+    }
+  }
+  if (OB_SUCC(ret) && winner < 0) {
+    ret = OB_ERR_UNEXPECTED;
+  }
+  // Preserve the heap's ascending iterator-index order for equal IDs,
+  // including floating-point score accumulation and the chosen ID datum.
+  for (int64_t i = 0; OB_SUCC(ret) && i < dim_iters_->count(); ++i) {
+    const uint64_t bit = uint64_t(1) << i;
+    if (0 != (matched_heads & bit)) {
+      if (OB_FAIL(relevance_collector_->collect_one_dim(i, small_heads_[i].relevance_))) {
+      } else {
+        id_datum = iter_domain_ids_[i];
+        next_round_iter_idxes_[next_round_cnt_++] = i;
+        active_heads_ &= ~bit;
+      }
+    }
+  }
+  if (OB_FAIL(ret)) {
+  } else if (OB_ISNULL(id_datum)) {
+    ret = OB_ERR_UNEXPECTED;
+  } else if (OB_FAIL(relevance_collector_->get_result(relevance, got_valid_id))) {
+  } else if (got_valid_id && OB_FAIL(process_collected_row(*id_datum, relevance))) {
   }
   return ret;
 }
