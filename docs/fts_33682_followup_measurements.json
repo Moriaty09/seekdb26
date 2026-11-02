@@ -1,0 +1,2378 @@
+{
+  "baseline_source_commit": "45831f2d7001655010dabb11d0a3084e3370b925",
+  "initial_documentation_head": "34011ff48e6f80f5bf591426213513cbb38d4879",
+  "final_runtime_source_commit": "45831f2d7001655010dabb11d0a3084e3370b925",
+  "adopted_runtime_changes": [],
+  "platform_feedback": "docs/fts_33682_feedback.json",
+  "method": {
+    "memory_budget": "4G",
+    "configured_cpu_count": 4,
+    "affinity_cpu": 13,
+    "port": 11963,
+    "data_directory": "/tmp/obtest/ddl-two-full-after",
+    "persisted_rows": 20000,
+    "warmup_per_query_per_micro_phase": 500,
+    "micro_groups_per_phase": 3,
+    "executions_per_micro_group": 500,
+    "process_cpu_source": "/proc/PID/stat user+system ticks; includes database background threads",
+    "logical_host_cpus": 48,
+    "host": "Linux-6.8.0-90-generic-x86_64-with-glibc2.35"
+  },
+  "profile": {
+    "method": "100 GDB MI interrupt samples of the most CPU-active thread, separate from timing",
+    "workload": "SELECT COUNT(*) FROM fts_large_bench.docs WHERE MATCH(title_en,content_en) AGAINST('database performance audit');",
+    "samples": 100,
+    "top_frames": [
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)",
+        11
+      ],
+      [
+        "__memmove_evex_unaligned_erms",
+        10
+      ],
+      [
+        "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const",
+        6
+      ],
+      [
+        "__memcmp_evex_movbe",
+        6
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)",
+        5
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)",
+        5
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)",
+        5
+      ],
+      [
+        "oceanbase::storage::ObTextDaaTIter::fill_merge_heap()",
+        5
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)",
+        5
+      ],
+      [
+        "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const",
+        4
+      ],
+      [
+        "oceanbase::storage::(anonymous namespace)::compare_binary_ids(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)",
+        3
+      ],
+      [
+        "syscall",
+        3
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)",
+        2
+      ],
+      [
+        "oceanbase::storage::ObSRMergeCmp::get_id_datum(long)",
+        2
+      ],
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::compaction::ObPartitionMergeLoserTreeItem, oceanbase::compaction::ObPartitionMergeLoserTreeCmp>::empty() const",
+        2
+      ],
+      [
+        "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()",
+        2
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const",
+        2
+      ],
+      [
+        "oceanbase::sql::ObDocIdExt::from_datum(oceanbase::common::ObDatum const&)",
+        1
+      ],
+      [
+        "arena_large_dalloc_stats_update",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObStorageDatumCmpFunc::compare(oceanbase::blocksstable::ObStorageDatum const&, oceanbase::blocksstable::ObStorageDatum const&, int&) const",
+        1
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::project_results(long)",
+        1
+      ],
+      [
+        "oceanbase::storage::ObBlockBatchedRowStore::get_row_ids(oceanbase::blocksstable::ObIMicroBlockReader*, long&, long, long&, bool, oceanbase::storage::ObFilterResult const&)",
+        1
+      ],
+      [
+        "try_check_mem_status",
+        1
+      ],
+      [
+        "clock_gettime",
+        1
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)",
+        1
+      ],
+      [
+        "oceanbase::storage::ObTableScanIterator::get_next_rows(long&, long)",
+        1
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTInnerProductRelevanceCollector::get_result(double&, bool&)",
+        1
+      ],
+      [
+        "oceanbase::sql::DASRelatedTabletMap::get_related_tablet_id(oceanbase::common::ObTabletID, unsigned long)",
+        1
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObExpr::eval_one_datum_of_batch(oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum*&) const",
+        1
+      ]
+    ],
+    "inclusive_frames": [
+      [
+        "??",
+        99
+      ],
+      [
+        "oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long)",
+        66
+      ],
+      [
+        "oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long)",
+        66
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)",
+        63
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&)",
+        63
+      ],
+      [
+        "oceanbase::storage::ObTextDaaTIter::fill_merge_heap()",
+        41
+      ],
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)",
+        25
+      ],
+      [
+        "oceanbase::sql::ObDASScanIter::inner_get_next_rows(long&, long)",
+        19
+      ],
+      [
+        "oceanbase::storage::ObTableScanIterator::get_next_rows(long&, long)",
+        19
+      ],
+      [
+        "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_next_rows()",
+        18
+      ],
+      [
+        "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::get_next_rows()",
+        18
+      ],
+      [
+        "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::fetch_rows(oceanbase::storage::ObSSTableReadHandle&)",
+        18
+      ],
+      [
+        "oceanbase::storage::ObMultipleMerge::get_next_rows(long&, long)",
+        18
+      ],
+      [
+        "oceanbase::storage::ObMultipleScanMerge::inner_get_next_rows()",
+        18
+      ],
+      [
+        "oceanbase::storage::ObVectorStore::fill_output_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)",
+        18
+      ],
+      [
+        "oceanbase::storage::ObVectorStore::fill_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)",
+        18
+      ],
+      [
+        "oceanbase::storage::ObMultipleMerge::get_next_normal_rows(long&, long)",
+        18
+      ],
+      [
+        "oceanbase::blocksstable::ObMicroBlockDecoder::get_rows(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, bool, int const*, char const**, long, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, long)",
+        17
+      ],
+      [
+        "oceanbase::blocksstable::ObMicroBlockDecoder::get_col_datums(int, int const*, char const**, long, oceanbase::common::ObDatum*)",
+        17
+      ],
+      [
+        "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_rows_for_old_format(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, int const*, long, long, char const**, oceanbase::common::ObIArray<oceanbase::sql::ObExpr*>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObStorageDatum> const*, bool)",
+        17
+      ],
+      [
+        "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::open_cur_data_block(oceanbase::storage::ObSSTableReadHandle&)",
+        14
+      ],
+      [
+        "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const",
+        13
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)",
+        12
+      ],
+      [
+        "__memmove_evex_unaligned_erms",
+        10
+      ],
+      [
+        "oceanbase::storage::(anonymous namespace)::compare_binary_ids(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)",
+        9
+      ],
+      [
+        "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()",
+        8
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)",
+        8
+      ],
+      [
+        "__memcmp_evex_movbe",
+        6
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)",
+        5
+      ],
+      [
+        "oceanbase::storage::ObSRMergeCmp::get_id_datum(long)",
+        5
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)",
+        5
+      ],
+      [
+        "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::inner_get_next_row(oceanbase::blocksstable::ObDatumRow const*&)",
+        4
+      ],
+      [
+        "oceanbase::sql::ObDocIdExt::from_datum(oceanbase::common::ObDatum const&)",
+        4
+      ],
+      [
+        "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const",
+        4
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)",
+        3
+      ],
+      [
+        "oceanbase::lib::Thread::run()",
+        3
+      ],
+      [
+        "oceanbase::lib::Thread::__th_start(void*)",
+        3
+      ],
+      [
+        "oceanbase::omt::ObThWorker::worker(long&, long&, int&)",
+        3
+      ],
+      [
+        "syscall",
+        3
+      ],
+      [
+        "start_thread",
+        3
+      ],
+      [
+        "oceanbase::common::ObPriorityQueue2<1, 2, 3>::do_pop(oceanbase::common::ObLink*&, long, long, int)",
+        3
+      ],
+      [
+        "non-virtual thunk to oceanbase::omt::ObThWorker::run(long)",
+        3
+      ],
+      [
+        "oceanbase::lib::ObFutex::wait(int, long)",
+        3
+      ],
+      [
+        "oceanbase::common::SCondTemp<3>::wait(long)",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTIterImpl::project_results(long)",
+        3
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()",
+        3
+      ],
+      [
+        "oceanbase::storage::ObSimpleRowsMerger<oceanbase::compaction::ObPartitionMergeLoserTreeItem, oceanbase::compaction::ObPartitionMergeLoserTreeCmp>::empty() const",
+        2
+      ],
+      [
+        "oceanbase::storage::ObTextRetrievalTokenIter::get_next_batch(long, long&)",
+        2
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const",
+        2
+      ],
+      [
+        "je_large_dalloc",
+        1
+      ],
+      [
+        "arena_large_dalloc_stats_update",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObTFMIndexBlockRowIterator::locate_range(oceanbase::blocksstable::ObDatumRange const&, bool, bool)",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObStorageDatumCmpFunc::compare(oceanbase::blocksstable::ObStorageDatum const&, oceanbase::blocksstable::ObStorageDatum const&, int&) const",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObIndexBlockRowScanner::open(oceanbase::blocksstable::MacroBlockId const&, oceanbase::blocksstable::ObMicroBlockData const&, oceanbase::blocksstable::ObDatumRange const&, long, bool, bool, oceanbase::blocksstable::ObMicroIndexInfo const*)",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObRowkeyVector::locate_key(long, long, oceanbase::blocksstable::ObDatumRowkey const&, oceanbase::blocksstable::ObStorageDatumUtils const&, long&, bool) const",
+        1
+      ],
+      [
+        "oceanbase::blocksstable::ObRowkeyVector::locate_range(oceanbase::blocksstable::ObDatumRange const&, bool, bool, oceanbase::blocksstable::ObStorageDatumUtils const&, long&, long&) const",
+        1
+      ],
+      [
+        "oceanbase::storage::ObBlockBatchedRowStore::get_row_ids(oceanbase::blocksstable::ObIMicroBlockReader*, long&, long, long&, bool, oceanbase::storage::ObFilterResult const&)",
+        1
+      ],
+      [
+        "try_check_mem_status",
+        1
+      ],
+      [
+        "nstime_update_impl",
+        1
+      ],
+      [
+        "je_eset_insert",
+        1
+      ],
+      [
+        "clock_gettime",
+        1
+      ],
+      [
+        "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)",
+        1
+      ],
+      [
+        "oceanbase::storage::ObSRDaaTInnerProductRelevanceCollector::get_result(double&, bool&)",
+        1
+      ],
+      [
+        "oceanbase::omt::ObWorkerProcessor::process(oceanbase::rpc::ObRequest&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObPlanCache::get_cache_obj(oceanbase::sql::ObILibCacheCtx&, oceanbase::sql::ObILibCacheKey*, oceanbase::sql::ObCacheObjGuard&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObSql::stmt_query(oceanbase::common::ObString const&, oceanbase::sql::ObSqlCtx&, oceanbase::sql::ObResultSet&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObPlanCache::get_plan(oceanbase::common::ObIAllocator&, oceanbase::sql::ObPlanCacheCtx&, oceanbase::sql::ObCacheObjGuard&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObPhyLocationGetter::build_table_locs(oceanbase::sql::ObDASCtx&, oceanbase::common::ObIArray<oceanbase::sql::ObTableLocation> const&, oceanbase::common::ObIArray<oceanbase::sql::ObCandiTableLoc> const&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObDASCtx::extended_tablet_loc(oceanbase::sql::ObDASTableLoc&, oceanbase::sql::ObCandiTabletLoc const&, oceanbase::sql::ObDASTabletLoc*&)",
+        1
+      ],
+      [
+        "oceanbase::rpc::frame::ObSqlProcessor::run()",
+        1
+      ],
+      [
+        "oceanbase::sql::ObSql::pc_get_plan(oceanbase::sql::ObPlanCacheCtx&, oceanbase::sql::ObCacheObjGuard&, int&, bool&)",
+        1
+      ],
+      [
+        "oceanbase::sql::DASRelatedTabletMap::get_related_tablet_id(oceanbase::common::ObTabletID, unsigned long)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObSqlPlanSet::try_get_local_plan(oceanbase::sql::ObPlanCacheCtx&, oceanbase::sql::ObPhysicalPlan*&, bool&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObPlanCacheValue::choose_plan(oceanbase::sql::ObPlanCacheCtx&, oceanbase::common::ObIArray<oceanbase::sql::PCVSchemaObj> const&, oceanbase::sql::ObPlanCacheObject*&)",
+        1
+      ],
+      [
+        "oceanbase::observer::ObMPQuery::process()",
+        1
+      ],
+      [
+        "oceanbase::observer::ObMPQuery::process_single_stmt(oceanbase::sql::ObMultiStmtItem const&, oceanbase::observer::ObSMConnection*, oceanbase::sql::ObSQLSessionInfo&, bool, bool, bool&, bool&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObSqlPlanSet::get_plan_special(oceanbase::sql::ObPlanCacheCtx&, oceanbase::sql::ObPhysicalPlan*&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObDASCtx::add_candi_table_loc(oceanbase::sql::ObDASTableLocMeta const&, oceanbase::sql::ObCandiTableLoc const&)",
+        1
+      ],
+      [
+        "oceanbase::omt::ObThWorker::process_request(oceanbase::rpc::ObRequest&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObPCVSet::inner_get_cache_obj(oceanbase::sql::ObILibCacheCtx&, oceanbase::sql::ObILibCacheKey*, oceanbase::sql::ObILibCacheObject*&)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObSqlPlanSet::select_plan(oceanbase::sql::ObPlanCacheCtx&, oceanbase::sql::ObPlanCacheObject*&)",
+        1
+      ],
+      [
+        "oceanbase::omt::ObWorkerProcessor::process_one(oceanbase::rpc::ObRequest&)",
+        1
+      ],
+      [
+        "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)",
+        1
+      ],
+      [
+        "oceanbase::sql::ObExpr::eval_one_datum_of_batch(oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum*&) const",
+        1
+      ]
+    ],
+    "limitations": "Path-localization snapshots, not unbiased CPU percentage estimates. Raw frames, scripts and disassembly are archived."
+  },
+  "initial_auxiliary_baseline": {
+    "measurement": {
+      "instance": {
+        "pid": 1255067,
+        "phase": "baseline_45831f2",
+        "command": [
+          "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "warmup": 500,
+      "executions_per_group": 500,
+      "measured_groups": 3,
+      "results": {
+        "cn": [
+          {
+            "wall_ms": 2.4336406365036964,
+            "process_cpu_ms": 2.32,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.4487139508128166,
+            "process_cpu_ms": 2.36,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.455806963145733,
+            "process_cpu_ms": 2.36,
+            "hits": "8001"
+          }
+        ],
+        "en": [
+          {
+            "wall_ms": 3.555397041141987,
+            "process_cpu_ms": 3.48,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.5680319145321846,
+            "process_cpu_ms": 3.46,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.54799897223711,
+            "process_cpu_ms": 3.42,
+            "hits": "11000"
+          }
+        ],
+        "mixed": [
+          {
+            "wall_ms": 2.6791663840413094,
+            "process_cpu_ms": 2.56,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.7441971972584724,
+            "process_cpu_ms": 2.64,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.684514082968235,
+            "process_cpu_ms": 2.58,
+            "hits": "7332"
+          }
+        ],
+        "limit": [
+          {
+            "wall_ms": 0.34636030346155167,
+            "process_cpu_ms": 0.3,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.34601377695798874,
+            "process_cpu_ms": 0.3,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.3361084908246994,
+            "process_cpu_ms": 0.26,
+            "hits": "20"
+          }
+        ]
+      }
+    },
+    "limitation": {
+      "file": "baseline.json",
+      "status": "auxiliary only",
+      "reason": "A read-only objdump process launched earlier had not yet been reaped when this timing run began. Retain the data, but start the controlled series afresh after confirming disassembly ended."
+    }
+  },
+  "id16_trial": {
+    "change": "When binary-ID common prefix length equals OB_DOC_ID_COLUMN_BYTE_LENGTH, use constant-sized memcmp, retaining all null, prefix-length and other-length behavior.",
+    "source": "baseline + archive:id16_trial.patch",
+    "binary": "seekdb-id16",
+    "control": "published 45831f2",
+    "measurements": {
+      "phase_order": [
+        "baseline_quiet",
+        "id16",
+        "baseline_repeat",
+        "id16_repeat"
+      ],
+      "phases": {
+        "baseline_quiet": {
+          "instance": {
+            "pid": 1255067,
+            "phase": "baseline_45831f2",
+            "command": [
+              "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.456303119659424,
+                "process_cpu_ms": 2.36,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.461188942193985,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.453932411968708,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.571479134261608,
+                "process_cpu_ms": 3.46,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.593208372592926,
+                "process_cpu_ms": 3.5,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5996582210063934,
+                "process_cpu_ms": 3.5,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7021729722619057,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.7039047554135323,
+                "process_cpu_ms": 2.6,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.7135576382279396,
+                "process_cpu_ms": 2.6,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.36363986879587173,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3580779433250427,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.340997651219368,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "id16": {
+          "instance": {
+            "pid": 1487203,
+            "phase": "id16",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.558226779103279,
+                "process_cpu_ms": 2.48,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.430735230445862,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4072255566716194,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.6281798481941223,
+                "process_cpu_ms": 3.52,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.540228523313999,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5426505729556084,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7816688790917397,
+                "process_cpu_ms": 2.68,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.664502516388893,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6433390751481056,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.32913820445537567,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.34638235718011856,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.43730536848306656,
+                "process_cpu_ms": 0.36,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "baseline_repeat": {
+          "instance": {
+            "pid": 1590693,
+            "phase": "baseline_repeat",
+            "command": [
+              "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.5751686319708824,
+                "process_cpu_ms": 2.48,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4469648897647858,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4310523346066475,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5774014368653297,
+                "process_cpu_ms": 3.46,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.6274324506521225,
+                "process_cpu_ms": 3.56,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.6400101110339165,
+                "process_cpu_ms": 3.54,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.6963494196534157,
+                "process_cpu_ms": 2.62,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6673213094472885,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6505164802074432,
+                "process_cpu_ms": 2.54,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3494274914264679,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.345815509557724,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3429017588496208,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "id16_repeat": {
+          "instance": {
+            "pid": 1690215,
+            "phase": "id16_repeat",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.405100643634796,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.437043085694313,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.389015033841133,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5275052785873413,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.544946126639843,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5264171585440636,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7133789882063866,
+                "process_cpu_ms": 2.62,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.712967701256275,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6402910351753235,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3413695991039276,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.33474862575531006,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3486669361591339,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        }
+      },
+      "aggregate_six_group_medians": {
+        "cn": {
+          "wall_ms": {
+            "control_median": 2.455117765814066,
+            "candidate_median": 2.4189803935587406,
+            "reduction_percent": 1.471920115544556
+          },
+          "process_cpu_ms": {
+            "control_median": 2.37,
+            "candidate_median": 2.32,
+            "reduction_percent": 2.1097046413502185
+          }
+        },
+        "en": {
+          "wall_ms": {
+            "control_median": 3.5964332967996597,
+            "candidate_median": 3.5414395481348038,
+            "reduction_percent": 1.5291191056926556
+          },
+          "process_cpu_ms": {
+            "control_median": 3.5,
+            "candidate_median": 3.44,
+            "reduction_percent": 1.7142857142857126
+          }
+        },
+        "mixed": {
+          "wall_ms": {
+            "control_median": 2.6992611959576607,
+            "candidate_median": 2.688735108822584,
+            "reduction_percent": 0.38996178475947385
+          },
+          "process_cpu_ms": {
+            "control_median": 2.59,
+            "candidate_median": 2.58,
+            "reduction_percent": 0.3861003861003742
+          }
+        },
+        "limit": {
+          "wall_ms": {
+            "control_median": 0.34762150049209595,
+            "candidate_median": 0.3438759781420231,
+            "reduction_percent": 1.0774714293479204
+          },
+          "process_cpu_ms": {
+            "control_median": 0.3,
+            "candidate_median": 0.28,
+            "reduction_percent": 6.666666666666654
+          }
+        }
+      }
+    },
+    "decision": "withdraw: small isolated CN/EN gains were not stable in the original SQL benchmark"
+  },
+  "direct_id_array_trial": {
+    "change": "Retain bounds/null assertions but read query-owned ID array directly; remove the nested accessor.",
+    "source": "baseline + archive:direct_ids_trial.patch",
+    "binary": "seekdb-direct-ids",
+    "control": "ID16-only trial",
+    "measurements": {
+      "phase_order": [
+        "id16_repeat",
+        "direct_ids",
+        "id16_control_repeat",
+        "direct_ids_repeat"
+      ],
+      "phases": {
+        "id16_repeat": {
+          "instance": {
+            "pid": 1690215,
+            "phase": "id16_repeat",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.405100643634796,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.437043085694313,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.389015033841133,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5275052785873413,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.544946126639843,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5264171585440636,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7133789882063866,
+                "process_cpu_ms": 2.62,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.712967701256275,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6402910351753235,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3413695991039276,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.33474862575531006,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3486669361591339,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "direct_ids": {
+          "instance": {
+            "pid": 1965384,
+            "phase": "direct_ids",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-direct-ids",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.474894441664219,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4655303210020065,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.492963135242462,
+                "process_cpu_ms": 2.4,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5300368294119835,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5475211292505264,
+                "process_cpu_ms": 3.46,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5320369005203247,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.694695919752121,
+                "process_cpu_ms": 2.6,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6949108615517616,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6644505113363266,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.348425455391407,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.333023376762867,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3321686461567879,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "id16_control_repeat": {
+          "instance": {
+            "pid": 2032751,
+            "phase": "id16_control_repeat",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.445543646812439,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4245361983776093,
+                "process_cpu_ms": 2.32,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.430821791291237,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.541182190179825,
+                "process_cpu_ms": 3.46,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.4969812259078026,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.519402451813221,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.670014649629593,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6661463007330894,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6703370213508606,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3498125821352005,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.36377140134572983,
+                "process_cpu_ms": 0.32,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3580963611602783,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "direct_ids_repeat": {
+          "instance": {
+            "pid": 2208465,
+            "phase": "direct_ids_repeat",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-direct-ids",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.4634212031960487,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.468170240521431,
+                "process_cpu_ms": 2.38,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4281238093972206,
+                "process_cpu_ms": 2.36,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.536800093948841,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.617562621831894,
+                "process_cpu_ms": 3.52,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5339435562491417,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.6720185056328773,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6311342641711235,
+                "process_cpu_ms": 2.52,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6399010717868805,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.34694886207580566,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3434840440750122,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.33808664232492447,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        }
+      },
+      "aggregate_six_group_medians": {
+        "cn": {
+          "wall_ms": {
+            "control_median": 2.427678994834423,
+            "candidate_median": 2.4668502807617188,
+            "reduction_percent": -1.6135282304886145
+          },
+          "process_cpu_ms": {
+            "control_median": 2.3099999999999996,
+            "candidate_median": 2.38,
+            "reduction_percent": -3.03030303030305
+          }
+        },
+        "en": {
+          "wall_ms": {
+            "control_median": 3.5269612185657024,
+            "candidate_median": 3.5353718250989914,
+            "reduction_percent": -0.2384660905545566
+          },
+          "process_cpu_ms": {
+            "control_median": 3.42,
+            "candidate_median": 3.4299999999999997,
+            "reduction_percent": -0.29239766081869956
+          }
+        },
+        "mixed": {
+          "wall_ms": {
+            "control_median": 2.6701758354902267,
+            "candidate_median": 2.668234508484602,
+            "reduction_percent": 0.07270408861551614
+          },
+          "process_cpu_ms": {
+            "control_median": 2.5700000000000003,
+            "candidate_median": 2.5700000000000003,
+            "reduction_percent": 0.0
+          }
+        },
+        "limit": {
+          "wall_ms": {
+            "control_median": 0.3492397591471672,
+            "candidate_median": 0.34078534319996834,
+            "reduction_percent": 2.4208056859975735
+          },
+          "process_cpu_ms": {
+            "control_median": 0.3,
+            "candidate_median": 0.28,
+            "reduction_percent": 6.666666666666654
+          }
+        }
+      }
+    },
+    "decision": "withdraw: CN and EN regressions; mixed effectively flat"
+  },
+  "batch_metadata_trial": {
+    "change": "Set batch-wide evaluated/projected fields once after filling nonempty vectorized output batches; retain per-row datums/flags, zero-row and scalar handling.",
+    "source": "baseline + archive:batch_flags_trial.patch",
+    "binary": "seekdb-batch-flags",
+    "control": "ID16-only trial",
+    "measurements": {
+      "phase_order": [
+        "flags_control_1",
+        "batch_flags_1",
+        "flags_control_2",
+        "batch_flags_2"
+      ],
+      "phases": {
+        "flags_control_1": {
+          "instance": {
+            "pid": 2444960,
+            "phase": "flags_control_1",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.4330032989382744,
+                "process_cpu_ms": 2.36,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.536928229033947,
+                "process_cpu_ms": 2.44,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4499055817723274,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.510338507592678,
+                "process_cpu_ms": 3.4,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5209344625473022,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5193721279501915,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.6680942326784134,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.667462483048439,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6895161867141724,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.357610858976841,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.35228490084409714,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.34474678337574005,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "batch_flags_1": {
+          "instance": {
+            "pid": 2611830,
+            "phase": "batch_flags_1",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-batch-flags",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.442755699157715,
+                "process_cpu_ms": 2.36,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.3787140250205994,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.442570559680462,
+                "process_cpu_ms": 2.36,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5803004652261734,
+                "process_cpu_ms": 3.46,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5431801304221153,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5297772213816643,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.6678971722722054,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.7207817807793617,
+                "process_cpu_ms": 2.58,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.652274042367935,
+                "process_cpu_ms": 2.54,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3400712236762047,
+                "process_cpu_ms": 0.26,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3486672341823578,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.37239012867212296,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "flags_control_2": {
+          "instance": {
+            "pid": 2718094,
+            "phase": "flags_control_2",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-id16",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.429067887365818,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.405302532017231,
+                "process_cpu_ms": 2.32,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.434826873242855,
+                "process_cpu_ms": 2.34,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.5578874722123146,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.520231857895851,
+                "process_cpu_ms": 3.4,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5377772971987724,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7627178207039833,
+                "process_cpu_ms": 2.68,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.624450445175171,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.664144366979599,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.34301958978176117,
+                "process_cpu_ms": 0.26,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.4076920747756958,
+                "process_cpu_ms": 0.34,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3479938581585884,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              }
+            ]
+          }
+        },
+        "batch_flags_2": {
+          "instance": {
+            "pid": 3117053,
+            "phase": "batch_flags_2",
+            "command": [
+              "/tmp/fts-20261102-id16/seekdb-batch-flags",
+              "--nodaemon",
+              "--base-dir",
+              "/tmp/obtest/ddl-two-full-after",
+              "--port",
+              "11963",
+              "--parameter",
+              "memory_budget=4G",
+              "--parameter",
+              "datafile_size=2G",
+              "--parameter",
+              "log_disk_size=2G",
+              "--parameter",
+              "cpu_count=4"
+            ]
+          },
+          "warmup": 500,
+          "executions_per_group": 500,
+          "measured_groups": 3,
+          "results": {
+            "cn": [
+              {
+                "wall_ms": 2.4026646688580513,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.4059886634349823,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              },
+              {
+                "wall_ms": 2.40540961176157,
+                "process_cpu_ms": 2.3,
+                "hits": "8001"
+              }
+            ],
+            "en": [
+              {
+                "wall_ms": 3.509061224758625,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.5257323011755943,
+                "process_cpu_ms": 3.42,
+                "hits": "11000"
+              },
+              {
+                "wall_ms": 3.53792854398489,
+                "process_cpu_ms": 3.44,
+                "hits": "11000"
+              }
+            ],
+            "mixed": [
+              {
+                "wall_ms": 2.7175585106015205,
+                "process_cpu_ms": 2.62,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.7486187368631363,
+                "process_cpu_ms": 2.64,
+                "hits": "7332"
+              },
+              {
+                "wall_ms": 2.6532181575894356,
+                "process_cpu_ms": 2.56,
+                "hits": "7332"
+              }
+            ],
+            "limit": [
+              {
+                "wall_ms": 0.3423479348421097,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.3331630006432533,
+                "process_cpu_ms": 0.28,
+                "hits": "20"
+              },
+              {
+                "wall_ms": 0.35566404461860657,
+                "process_cpu_ms": 0.3,
+                "hits": "20"
+              }
+            ]
+          }
+        }
+      },
+      "aggregate_six_group_medians": {
+        "cn": {
+          "wall_ms": {
+            "control_median": 2.4339150860905647,
+            "candidate_median": 2.405699137598276,
+            "reduction_percent": 1.1592823699371535
+          },
+          "process_cpu_ms": {
+            "control_median": 2.34,
+            "candidate_median": 2.3,
+            "reduction_percent": 1.7094017094017144
+          }
+        },
+        "en": {
+          "wall_ms": {
+            "control_median": 3.5205831602215767,
+            "candidate_median": 3.533852882683277,
+            "reduction_percent": -0.37691830750179456
+          },
+          "process_cpu_ms": {
+            "control_median": 3.42,
+            "candidate_median": 3.44,
+            "reduction_percent": -0.5847953216374213
+          }
+        },
+        "mixed": {
+          "wall_ms": {
+            "control_median": 2.667778357863426,
+            "candidate_median": 2.692727841436863,
+            "reduction_percent": -0.9352157573321973
+          },
+          "process_cpu_ms": {
+            "control_median": 2.56,
+            "candidate_median": 2.58,
+            "reduction_percent": -0.78125
+          }
+        },
+        "limit": {
+          "wall_ms": {
+            "control_median": 0.3501393795013428,
+            "candidate_median": 0.34550758451223373,
+            "reduction_percent": 1.3228432048133176
+          },
+          "process_cpu_ms": {
+            "control_median": 0.29000000000000004,
+            "candidate_median": 0.29000000000000004,
+            "reduction_percent": 0.0
+          }
+        }
+      }
+    },
+    "decision": "withdraw: small CN gain accompanied by EN and mixed regressions"
+  },
+  "original_sql_benchmark": {
+    "command": "bash tools/benchmark/fts_large_bench.sh",
+    "parameters": {
+      "ROWS": 20000,
+      "BATCH": 500,
+      "ROUNDS": 3000,
+      "QUERY_ROUNDS": 200,
+      "SAMPLES": 3,
+      "WARMUP": 30,
+      "SKIP_LOAD": 1
+    },
+    "phase_records": [
+      {
+        "phase": "sql_baseline_1",
+        "instance": {
+          "pid": 3352023,
+          "phase": "sql_baseline_1",
+          "command": [
+            "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity": "13",
+        "returncode": 0,
+        "wall_sec": 11.28353238105774
+      },
+      {
+        "phase": "sql_candidate_1",
+        "instance": {
+          "pid": 3362531,
+          "phase": "sql_candidate_1",
+          "command": [
+            "/tmp/fts-20261102-id16/seekdb-id16",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity": "13",
+        "returncode": 0,
+        "wall_sec": 12.23998761177063
+      },
+      {
+        "phase": "sql_baseline_2",
+        "instance": {
+          "pid": 3373622,
+          "phase": "sql_baseline_2",
+          "command": [
+            "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity": "13",
+        "returncode": 0,
+        "wall_sec": 11.01972508430481
+      },
+      {
+        "phase": "sql_candidate_2",
+        "instance": {
+          "pid": 3384129,
+          "phase": "sql_candidate_2",
+          "command": [
+            "/tmp/fts-20261102-id16/seekdb-id16",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity": "13",
+        "returncode": 0,
+        "wall_sec": 11.051342487335205
+      }
+    ],
+    "metrics": {
+      "sql_baseline_1": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 1.0,
+        "select1_avg_ms": 0.0798,
+        "select1_stdev_ms": 0.0033,
+        "tokenize_ik_avg_ms": 0.214,
+        "tokenize_ik_median_ms": 0.2135,
+        "tokenize_ik_stdev_ms": 0.0026,
+        "tokenize_beng_avg_ms": 0.1201,
+        "tokenize_beng_median_ms": 0.1183,
+        "tokenize_beng_stdev_ms": 0.0026,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.4699,
+        "query_cn_stdev_ms": 0.0326,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.5983,
+        "query_beng_stdev_ms": 0.0213,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.7921,
+        "query_mixed_stdev_ms": 0.0516,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.433,
+        "query_limit_stdev_ms": 0.0041
+      },
+      "sql_candidate_1": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 1.0,
+        "select1_avg_ms": 0.0774,
+        "select1_stdev_ms": 0.0007,
+        "tokenize_ik_avg_ms": 0.2173,
+        "tokenize_ik_median_ms": 0.2147,
+        "tokenize_ik_stdev_ms": 0.0048,
+        "tokenize_beng_avg_ms": 0.1152,
+        "tokenize_beng_median_ms": 0.1126,
+        "tokenize_beng_stdev_ms": 0.0037,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.5166,
+        "query_cn_stdev_ms": 0.0387,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.6422,
+        "query_beng_stdev_ms": 0.0288,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.7316,
+        "query_mixed_stdev_ms": 0.0188,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4166,
+        "query_limit_stdev_ms": 0.0327
+      },
+      "sql_baseline_2": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 1.0,
+        "select1_avg_ms": 0.0787,
+        "select1_stdev_ms": 0.0042,
+        "tokenize_ik_avg_ms": 0.2112,
+        "tokenize_ik_median_ms": 0.2126,
+        "tokenize_ik_stdev_ms": 0.002,
+        "tokenize_beng_avg_ms": 0.119,
+        "tokenize_beng_median_ms": 0.1197,
+        "tokenize_beng_stdev_ms": 0.0031,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.5337,
+        "query_cn_stdev_ms": 0.0123,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.6687,
+        "query_beng_stdev_ms": 0.0403,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.7463,
+        "query_mixed_stdev_ms": 0.0437,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4252,
+        "query_limit_stdev_ms": 0.0079
+      },
+      "sql_candidate_2": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 1.0,
+        "select1_avg_ms": 0.077,
+        "select1_stdev_ms": 0.0017,
+        "tokenize_ik_avg_ms": 0.213,
+        "tokenize_ik_median_ms": 0.2128,
+        "tokenize_ik_stdev_ms": 0.0029,
+        "tokenize_beng_avg_ms": 0.1169,
+        "tokenize_beng_median_ms": 0.118,
+        "tokenize_beng_stdev_ms": 0.0047,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.4935,
+        "query_cn_stdev_ms": 0.0137,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.6111,
+        "query_beng_stdev_ms": 0.0143,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.7762,
+        "query_mixed_stdev_ms": 0.0296,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4257,
+        "query_limit_stdev_ms": 0.0122
+      }
+    },
+    "aggregate_means": {
+      "select1_avg_ms": {
+        "baseline_mean": 0.07925,
+        "candidate_mean": 0.07719999999999999,
+        "reduction_percent": 2.5867507886435437
+      },
+      "tokenize_beng_avg_ms": {
+        "baseline_mean": 0.11954999999999999,
+        "candidate_mean": 0.11605,
+        "reduction_percent": 2.9276453366792077
+      },
+      "tokenize_ik_avg_ms": {
+        "baseline_mean": 0.2126,
+        "candidate_mean": 0.21515,
+        "reduction_percent": -1.1994355597365836
+      },
+      "query_cn_avg_ms": {
+        "baseline_mean": 2.5018000000000002,
+        "candidate_mean": 2.5050499999999998,
+        "reduction_percent": -0.1299064673434991
+      },
+      "query_beng_avg_ms": {
+        "baseline_mean": 3.6334999999999997,
+        "candidate_mean": 3.6266499999999997,
+        "reduction_percent": 0.18852346222650862
+      },
+      "query_mixed_avg_ms": {
+        "baseline_mean": 2.7692,
+        "candidate_mean": 2.7539,
+        "reduction_percent": 0.5525061389571095
+      },
+      "query_limit_avg_ms": {
+        "baseline_mean": 0.42910000000000004,
+        "candidate_mean": 0.42115,
+        "reduction_percent": 1.852714984852022
+      }
+    },
+    "raw_sample_count": 84,
+    "control": "published 45831f2",
+    "candidate": "ID16-only trial",
+    "limitations": "Build was skipped and no new construction speed is claimed. Runtime binaries are identified by phase command and SHA-256; git_head in the original script reports the checkout HEAD, not the running binary. Direction reverses between pairs for the main CN/EN queries."
+  },
+  "experimental_binary_provenance": {
+    "baseline_source": "45831f2d7001655010dabb11d0a3084e3370b925",
+    "baseline_binary_sha256": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+    "binary_sha256": {
+      "seekdb-id16": "c7e4b15904a867ab3753229707ac7a3c464fd6799631c957cd62dbee70d43006",
+      "seekdb-direct-ids": "24b3687281f95e5a6298b3da40f03d3199835e6034f124f2222284b40a513d24",
+      "seekdb-batch-flags": "68817081971d9471dc2acfac43ae3bd63b831fe29009ff26f214897f020207c4",
+      "build_release/src/observer/seekdb": "c7e4b15904a867ab3753229707ac7a3c464fd6799631c957cd62dbee70d43006"
+    },
+    "rebuilt_id16_matches_initial": true,
+    "final_source_patch_sha256": "7e6a7c55f9ad64c748f1d57c3e539d06c04713a4c97303edaabaebdc1dca9fd4"
+  },
+  "restoration": {
+    "source_commit": "45831f2d7001655010dabb11d0a3084e3370b925",
+    "source_diff_empty": true,
+    "rebuilt_binary_sha256": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+    "installed_binary_sha256": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+    "previously_validated_binary_sha256": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+    "build_returncode": 0,
+    "test_execution_this_followup": "No new full regression run: all prototypes withdrawn, final source and both binaries match the source previously validated by 24 normal-protocol regressions.",
+    "private_instance_stopped": true
+  },
+  "correctness_scope": {
+    "prototypes": "Each measured micro group checked all 500 outputs against 8001/11000/7332/20. Original SQL runs retained all four hit counts. No prototype received a new full regression pass claim.",
+    "final_source": "All prototypes were withdrawn. Restored source, rebuilt executable and installed executable exactly match the version previously validated by 24 normal-protocol regressions.",
+    "prior_full_validation": "docs/fts_binary_ascii_measurements.json",
+    "extra_ps_protocol": "Not retried. The prior shared baseline/candidate failure remains a failure, not a pass."
+  },
+  "notes": {
+    "baseline_initial": {
+      "file": "baseline.json",
+      "status": "auxiliary only",
+      "reason": "A read-only objdump process launched earlier had not yet been reaped when this timing run began. Retain the data, but start the controlled series afresh after confirming disassembly ended."
+    },
+    "controlled_phases_planned": [
+      "baseline_quiet",
+      "id16",
+      "baseline_repeat",
+      "id16_repeat"
+    ],
+    "profiling_note": "100 GDB MI samples on exact 45831f2 binary. Diagnostic sampling is separate from timing. Qualitative path evidence only; no CPU percentage inference.",
+    "direct_array_access_trial": {
+      "decision": "withdraw",
+      "raw_summary": "direct_ids_summary.json",
+      "patch": "direct_ids_trial.patch",
+      "reason": "Both candidate phases regressed CN; EN did not improve and mixed was flat. Removing calls did not produce a runtime benefit. The original accessor and header were restored."
+    },
+    "batch_metadata_trial": {
+      "planned_order": [
+        "flags_control_1",
+        "batch_flags_1",
+        "flags_control_2",
+        "batch_flags_2"
+      ],
+      "control": "16-byte comparison only",
+      "change": "Set evaluated_/projected_ batch-wide flags once after filling each nonempty vectorized output batch; retain datum writes, per-row evaluated bits, scalar and zero-row behavior.",
+      "decision": "withdraw; small CN gain accompanied by EN and mixed regressions; preserve all samples",
+      "summary": "batch_flags_summary.json"
+    },
+    "final_decision": {
+      "adopted_runtime_changes": [],
+      "stable_source": "45831f2d7001655010dabb11d0a3084e3370b925",
+      "id16": "withdraw; original SQL benefit not stable",
+      "direct_array_access": "withdraw; CN and EN regressions",
+      "batch_metadata_flags": "withdraw; EN and mixed regressions",
+      "source_restoration_verified": true
+    }
+  },
+  "limitations": [
+    "These local prototypes have no platform score and are not associated with the 33.682-point receipt.",
+    "Thread/process CPU counters and CPU affinity do not eliminate shared-host contention or frequency drift.",
+    "C and D were isolated against ID16-only, not against the published baseline. Differences are not added together to claim a combined source benefit.",
+    "The initial auxiliary baseline may have overlapped a still-unreaped objdump diagnostic; it was retained but excluded from the controlled series before a fresh baseline was taken.",
+    "GNU objdump emitted debug-format warnings on mixed debug information. Function disassembly was captured cleanly using GDB --readnever.",
+    "All four original SQL reports and all 84 per-group log records are preserved. Output existence guards prevent accidental report overwrite."
+  ],
+  "raw_archive": {
+    "path": "docs/fts_33682_followup_raw.json.gz",
+    "sha256": "6230f93de1142369a9e1e263c3c445c92607d7d5c3756feb9097b179c7fb6403",
+    "file_count": 66,
+    "files": [
+      "baseline.json",
+      "baseline_quiet.json",
+      "baseline_repeat.json",
+      "batch_flags_1.json",
+      "batch_flags_2.json",
+      "batch_flags_summary.json",
+      "batch_flags_trial.patch",
+      "build_batch_flags.log",
+      "build_direct_ids.log",
+      "build_id16.log",
+      "build_id16_final.log",
+      "build_restore_45831f2.log",
+      "direct_ids.json",
+      "direct_ids_repeat.json",
+      "direct_ids_summary.json",
+      "direct_ids_trial.patch",
+      "disassembly_baseline.txt",
+      "disassembly_batch_flags.txt",
+      "disassembly_direct_ids_cmp.txt",
+      "disassembly_id16.txt",
+      "flags_control_1.json",
+      "flags_control_2.json",
+      "id16.json",
+      "id16_control_repeat.json",
+      "id16_repeat.json",
+      "id16_summary.json",
+      "id16_trial.patch",
+      "instance.json",
+      "instance.py",
+      "measure.py",
+      "profile.py",
+      "profile_en.json",
+      "profile_en.sql",
+      "profile_en_client.log",
+      "profile_en_gdb.log",
+      "provenance.json",
+      "restoration.json",
+      "server_baseline_45831f2.log",
+      "server_baseline_repeat.log",
+      "server_batch_flags_1.log",
+      "server_batch_flags_2.log",
+      "server_direct_ids.log",
+      "server_direct_ids_repeat.log",
+      "server_flags_control_1.log",
+      "server_flags_control_2.log",
+      "server_id16.log",
+      "server_id16_control_repeat.log",
+      "server_id16_repeat.log",
+      "server_sql_baseline_1.log",
+      "server_sql_baseline_2.log",
+      "server_sql_candidate_1.log",
+      "server_sql_candidate_2.log",
+      "sql_baseline_1.log",
+      "sql_baseline_1.txt",
+      "sql_baseline_2.log",
+      "sql_baseline_2.txt",
+      "sql_candidate_1.log",
+      "sql_candidate_1.txt",
+      "sql_candidate_2.log",
+      "sql_candidate_2.txt",
+      "sql_cycle.json",
+      "sql_cycle.py",
+      "sql_cycle_summary.json",
+      "trial_notes.json",
+      "measure_driver_before_output_guard.py",
+      "compiler_flags.make"
+    ],
+    "uncompressed_bytes": 2984136,
+    "compressed_bytes": 60287
+  }
+}
