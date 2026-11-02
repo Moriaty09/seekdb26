@@ -1,0 +1,153 @@
+drop database if exists tokenize_ik_range_lookup;
+create database tokenize_ik_range_lookup;
+use tokenize_ik_range_lookup;
+create table docs(id int primary key, body text);
+insert into docs values (1,convert(X'e4b880e4b880e58897e4b8be' using utf8mb4));
+insert into docs values (2,convert(X'e58d95e9bdbfe9a29de5ae9ae58d87e9998de883bde58a9b' using utf8mb4));
+insert into docs values (3,convert(X'e58d96e4b88de587bae58ebb' using utf8mb4));
+insert into docs values (4,convert(X'e5ba94e9aa8c' using utf8mb4));
+insert into docs values (5,convert(X'e5ba95e4b88b' using utf8mb4));
+insert into docs values (6,convert(X'e6a6abe79cbc' using utf8mb4));
+insert into docs values (7,convert(X'e6a6b1e5b4a9e6a08be68a98' using utf8mb4));
+insert into docs values (8,convert(X'e7b298e9aaa8e8869ce58886e7a6bbe599a8' using utf8mb4));
+insert into docs values (9,convert(X'e7b29ce9a38ee58d96e99ba8' using utf8mb4));
+insert into docs values (10,convert(X'e98689e9acbc' using utf8mb4));
+insert into docs values (11,convert(X'e9868be58ab2' using utf8mb4));
+insert into docs values (12,convert(X'e9be9fe9be99e9ba9fe587a4' using utf8mb4));
+insert into docs values (13,convert(X'e58d96e5ba97e5ba92e5ba9be6a6ace6a6b0e7b299e7b29be9858ae9858ce9bea0e9bea1' using utf8mb4));
+insert into docs values (14,convert(X'e39080e39081e4b6bfe4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6f0a08080f0a0aeb7f09f9880' using utf8mb4));
+insert into docs values (15,convert(X'00090a20213fe4b8ade6968700' using utf8mb4));
+insert into docs values (16,convert(X'' using utf8mb4));
+insert into docs values (17,convert(X'efbca1efbca2efbca3efbc91efbc92efbc9320636166c3a920ed959ceab5adec96b4e6bca2e5ad97' using utf8mb4));
+select id, tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"一一列举": 1}], "doc_len": 1}
+2	{"tokens": [{"单齿额定升降能力": 1}], "doc_len": 1}
+3	{"tokens": [{"卖不出去": 1}], "doc_len": 1}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"粘骨膜分离器": 1}], "doc_len": 1}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"龠": 1}, {"榬": 1}, {"卖": 1}, {"酊": 1}, {"庒": 1}, {"酌": 1}, {"榰": 1}, {"店": 1}, {"粙": 1}, {"庛": 1}, {"粛": 1}, {"龡": 1}], "doc_len": 12}
+14	{"tokens": [{"䶿": 1}, {"一二三四五": 1}, {"㐀": 1}, {"小时": 1}, {"㐁": 1}], "doc_len": 5}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"어": 1}, {"字": 1}, {"漢": 1}, {"한": 1}, {"국": 1}, {"ａｂｃ１２３": 1}, {"caf": 1}], "doc_len": 7}
+select id, tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"举": 1}, {"一一列举": 1}, {"一一": 1}, {"一列": 1}, {"列举": 1}, {"列": 1}], "doc_len": 6}
+2	{"tokens": [{"能力": 1}, {"单齿额定升降能力": 1}, {"升降": 1}, {"额定": 1}], "doc_len": 4}
+3	{"tokens": [{"出去": 1}, {"卖不出去": 1}, {"不出去": 1}, {"不出": 1}], "doc_len": 4}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"分离器": 1}, {"分离": 1}, {"器": 1}, {"粘骨膜分离器": 1}, {"骨膜": 1}, {"膜分离": 1}], "doc_len": 6}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"龠": 1}, {"榬": 1}, {"卖": 1}, {"酊": 1}, {"庒": 1}, {"酌": 1}, {"榰": 1}, {"店": 1}, {"粙": 1}, {"庛": 1}, {"粛": 1}, {"龡": 1}], "doc_len": 12}
+14	{"tokens": [{"䶿": 1}, {"一二三四五": 1}, {"㐀": 1}, {"五小": 1}, {"二三": 1}, {"四五": 1}, {"五小时": 1}, {"小时": 1}, {"㐁": 1}], "doc_len": 9}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"１２３": 1}, {"어": 1}, {"ａｂｃ": 1}, {"字": 1}, {"漢": 1}, {"한": 1}, {"국": 1}, {"ａｂｃ１２３": 1}, {"caf": 1}], "doc_len": 9}
+select id, tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"一一列举": 1}], "doc_len": 1}
+2	{"tokens": [{"单齿额定升降能力": 1}], "doc_len": 1}
+3	{"tokens": [{"卖不出去": 1}], "doc_len": 1}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"粘骨膜分离器": 1}], "doc_len": 1}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"庛": 1}, {"庒": 1}, {"榰": 1}, {"酌": 1}, {"酊": 1}, {"店": 1}, {"粙": 1}, {"龠": 1}, {"粛": 1}, {"龡": 1}, {"卖": 1}, {"榬": 1}], "doc_len": 12}
+14	{"tokens": [{"㐀": 1}, {"㐁": 1}, {"䶿": 1}, {"小时": 1}, {"一二三四五": 1}], "doc_len": 5}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"ａｂｃ１２３": 1}, {"caf": 1}, {"字": 1}, {"국": 1}, {"한": 1}, {"어": 1}, {"漢": 1}], "doc_len": 7}
+select id, tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"列": 1}, {"一一列举": 1}, {"举": 1}, {"一一": 1}, {"一列": 1}, {"列举": 1}], "doc_len": 6}
+2	{"tokens": [{"额定": 1}, {"单齿额定升降能力": 1}, {"能力": 1}, {"升降": 1}], "doc_len": 4}
+3	{"tokens": [{"卖不出去": 1}, {"不出": 1}, {"不出去": 1}, {"出去": 1}], "doc_len": 4}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"分离器": 1}, {"器": 1}, {"膜分离": 1}, {"粘骨膜分离器": 1}, {"骨膜": 1}, {"分离": 1}], "doc_len": 6}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"庛": 1}, {"庒": 1}, {"榰": 1}, {"酌": 1}, {"酊": 1}, {"店": 1}, {"粙": 1}, {"龠": 1}, {"粛": 1}, {"龡": 1}, {"卖": 1}, {"榬": 1}], "doc_len": 12}
+14	{"tokens": [{"五小时": 1}, {"五小": 1}, {"㐀": 1}, {"㐁": 1}, {"䶿": 1}, {"小时": 1}, {"二三": 1}, {"四五": 1}, {"一二三四五": 1}], "doc_len": 9}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"ａｂｃ１２３": 1}, {"caf": 1}, {"字": 1}, {"국": 1}, {"한": 1}, {"어": 1}, {"１２３": 1}, {"ａｂｃ": 1}, {"漢": 1}], "doc_len": 9}
+select id, tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"一一列举": 1}], "doc_len": 1}
+2	{"tokens": [{"单齿额定升降能力": 1}], "doc_len": 1}
+3	{"tokens": [{"卖不出去": 1}], "doc_len": 1}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"粘骨膜分离器": 1}], "doc_len": 1}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"酊": 1}, {"店": 1}, {"酌": 1}, {"粛": 1}, {"龡": 1}, {"龠": 1}, {"卖": 1}, {"榬": 1}, {"榰": 1}, {"庛": 1}, {"庒": 1}, {"粙": 1}], "doc_len": 12}
+14	{"tokens": [{"䶿": 1}, {"㐀": 1}, {"一二三四五": 1}, {"㐁": 1}, {"小时": 1}], "doc_len": 5}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"ａｂｃ１２３": 1}, {"어": 1}, {"caf": 1}, {"漢": 1}, {"字": 1}, {"한": 1}, {"국": 1}], "doc_len": 7}
+select id, tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+id	tokens
+1	{"tokens": [{"列": 1}, {"举": 1}, {"一列": 1}, {"一一列举": 1}, {"列举": 1}, {"一一": 1}], "doc_len": 6}
+2	{"tokens": [{"单齿额定升降能力": 1}, {"额定": 1}, {"升降": 1}, {"能力": 1}], "doc_len": 4}
+3	{"tokens": [{"卖不出去": 1}, {"不出去": 1}, {"不出": 1}, {"出去": 1}], "doc_len": 4}
+4	{"tokens": [{"应验": 1}], "doc_len": 1}
+5	{"tokens": [{"底下": 1}], "doc_len": 1}
+6	{"tokens": [{"榫眼": 1}], "doc_len": 1}
+7	{"tokens": [{"榱崩栋折": 1}], "doc_len": 1}
+8	{"tokens": [{"骨膜": 1}, {"分离器": 1}, {"粘骨膜分离器": 1}, {"膜分离": 1}, {"分离": 1}, {"器": 1}], "doc_len": 6}
+9	{"tokens": [{"粜风卖雨": 1}], "doc_len": 1}
+10	{"tokens": [{"醉鬼": 1}], "doc_len": 1}
+11	{"tokens": [{"醋劲": 1}], "doc_len": 1}
+12	{"tokens": [{"龟龙麟凤": 1}], "doc_len": 1}
+13	{"tokens": [{"酊": 1}, {"店": 1}, {"酌": 1}, {"粛": 1}, {"龡": 1}, {"龠": 1}, {"卖": 1}, {"榬": 1}, {"榰": 1}, {"庛": 1}, {"庒": 1}, {"粙": 1}], "doc_len": 12}
+14	{"tokens": [{"四五": 1}, {"五小": 1}, {"五小时": 1}, {"䶿": 1}, {"㐀": 1}, {"一二三四五": 1}, {"二三": 1}, {"㐁": 1}, {"小时": 1}], "doc_len": 9}
+15	{"tokens": [{"中文": 1}], "doc_len": 1}
+16	{"tokens": [], "doc_len": 0}
+17	{"tokens": [{"ａｂｃ": 1}, {"ａｂｃ１２３": 1}, {"어": 1}, {"１２３": 1}, {"caf": 1}, {"漢": 1}, {"字": 1}, {"한": 1}, {"국": 1}], "doc_len": 9}
+alter table docs add fulltext index ft(body) with parser ik;
+select id from docs where match(body) against('一一列举 醋劲 醉鬼') order by id;
+id
+1
+10
+11
+begin;
+update docs set body='数据库性能全文索引' where id between 1 and 6;
+select count(*) from docs where match(body) against('数据库');
+count(*)
+6
+rollback;
+select id from docs where match(body) against('一一列举 醋劲 醉鬼') order by id;
+id
+1
+10
+11
+drop database tokenize_ik_range_lookup;

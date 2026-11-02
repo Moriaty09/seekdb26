@@ -382,17 +382,38 @@ int ObFTRangeDict::find_first_char_range(const ObString &single_word, ObIFTDict 
 {
   int ret = OB_SUCCESS;
   bool found = false;
-  for (int i = 0; OB_SUCC(ret) && !found && i < range_dicts_.size(); ++i) {
-    if (ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                          range_dicts_[i].start_.get_word(),
-                          single_word)
-            <= 0
-        && ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                             range_dicts_[i].end_.get_word(),
-                             single_word)
-               >= 0) {
-      dict = range_dicts_[i].dict_;
+  if (ranges_in_order_ && !single_word.empty()) {
+    // Range boundaries use UTF8MB4_BIN's byte order (strnncoll, without
+    // space padding). Locate the first range whose end is not below the
+    // character, then check its start to preserve gaps between ranges.
+    int64_t low = 0;
+    int64_t high = range_dicts_.size();
+    while (low < high) {
+      const int64_t mid = low + (high - low) / 2;
+      if (range_dicts_[mid].end_.get_word().compare(single_word) < 0) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    if (low < range_dicts_.size()
+        && range_dicts_[low].start_.get_word().compare(single_word) <= 0) {
+      dict = range_dicts_[low].dict_;
       found = true;
+    }
+  } else {
+    for (int i = 0; OB_SUCC(ret) && !found && i < range_dicts_.size(); ++i) {
+      if (ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
+                            range_dicts_[i].start_.get_word(),
+                            single_word)
+              <= 0
+          && ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
+                               range_dicts_[i].end_.get_word(),
+                               single_word)
+                 >= 0) {
+        dict = range_dicts_[i].dict_;
+        found = true;
+      }
     }
   }
   if (!found) {
@@ -405,6 +426,7 @@ int ObFTRangeDict::find_first_char_range(const ObString &single_word, ObIFTDict 
 int ObFTRangeDict::build_dict_from_cache(const ObFTCacheRangeContainer &range_container)
 {
   int ret = OB_SUCCESS;
+  ranges_in_order_ = true;
   for (ObList<ObFTCacheRangeHandle *, ObIAllocator>::const_iterator iter = range_container.get_handles().begin();
        OB_SUCC(ret) && iter != range_container.get_handles().end();
        iter++) {
@@ -418,6 +440,14 @@ int ObFTRangeDict::build_dict_from_cache(const ObFTCacheRangeContainer &range_co
       range.start_ = dat->start_word_;
       range.end_ = dat->end_word_;
       range.dict_ = dict;
+      // A future cache with overlapping or unsorted ranges must retain the
+      // original first-match scan rather than use ordered lookup.
+      if (range.start_.get_word().empty() || range.end_.get_word().empty()
+          || range.start_.get_word().compare(range.end_.get_word()) > 0
+          || (range_dicts_.size() > 0
+              && range_dicts_[range_dicts_.size() - 1].end_.get_word().compare(range.start_.get_word()) >= 0)) {
+        ranges_in_order_ = false;
+      }
       if (OB_FAIL(range_dicts_.push_back(range))) {
       }
     }

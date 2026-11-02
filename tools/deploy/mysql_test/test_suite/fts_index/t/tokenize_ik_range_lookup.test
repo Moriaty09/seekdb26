@@ -1,0 +1,38 @@
+# Range starts, ends and gaps; golden captured on 45831f2 before this change.
+--disable_warnings
+drop database if exists tokenize_ik_range_lookup;
+--enable_warnings
+create database tokenize_ik_range_lookup;
+use tokenize_ik_range_lookup;
+create table docs(id int primary key, body text);
+insert into docs values (1,convert(X'e4b880e4b880e58897e4b8be' using utf8mb4));
+insert into docs values (2,convert(X'e58d95e9bdbfe9a29de5ae9ae58d87e9998de883bde58a9b' using utf8mb4));
+insert into docs values (3,convert(X'e58d96e4b88de587bae58ebb' using utf8mb4));
+insert into docs values (4,convert(X'e5ba94e9aa8c' using utf8mb4));
+insert into docs values (5,convert(X'e5ba95e4b88b' using utf8mb4));
+insert into docs values (6,convert(X'e6a6abe79cbc' using utf8mb4));
+insert into docs values (7,convert(X'e6a6b1e5b4a9e6a08be68a98' using utf8mb4));
+insert into docs values (8,convert(X'e7b298e9aaa8e8869ce58886e7a6bbe599a8' using utf8mb4));
+insert into docs values (9,convert(X'e7b29ce9a38ee58d96e99ba8' using utf8mb4));
+insert into docs values (10,convert(X'e98689e9acbc' using utf8mb4));
+insert into docs values (11,convert(X'e9868be58ab2' using utf8mb4));
+insert into docs values (12,convert(X'e9be9fe9be99e9ba9fe587a4' using utf8mb4));
+insert into docs values (13,convert(X'e58d96e5ba97e5ba92e5ba9be6a6ace6a6b0e7b299e7b29be9858ae9858ce9bea0e9bea1' using utf8mb4));
+insert into docs values (14,convert(X'e39080e39081e4b6bfe4b880e4ba8ce4b889e59b9be4ba94e5b08fe697b6f0a08080f0a0aeb7f09f9880' using utf8mb4));
+insert into docs values (15,convert(X'00090a20213fe4b8ade6968700' using utf8mb4));
+insert into docs values (16,convert(X'' using utf8mb4));
+insert into docs values (17,convert(X'efbca1efbca2efbca3efbc91efbc92efbc9320636166c3a920ed959ceab5adec96b4e6bca2e5ad97' using utf8mb4));
+select id, tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+select id, tokenize(body collate utf8mb4_bin, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+select id, tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+select id, tokenize(body collate utf8mb4_general_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+select id, tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]') as tokens from docs order by id;
+select id, tokenize(body collate utf8mb4_unicode_ci, 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"max_word"}]}]') as tokens from docs order by id;
+alter table docs add fulltext index ft(body) with parser ik;
+select id from docs where match(body) against('一一列举 醋劲 醉鬼') order by id;
+begin;
+update docs set body='数据库性能全文索引' where id between 1 and 6;
+select count(*) from docs where match(body) against('数据库');
+rollback;
+select id from docs where match(body) against('一一列举 醋劲 醉鬼') order by id;
+drop database tokenize_ik_range_lookup;
