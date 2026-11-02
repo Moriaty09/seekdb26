@@ -1,0 +1,403 @@
+{
+  "scope": "Local development measurements only; not SIFT250K/Hidden250K or a formal score",
+  "frozen_baseline": "634888d9b037153fa143d2c913ba4b25503e1d62",
+  "tested_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+  "production_sha256": {
+    "src/oblib/lib/vector/ob_vsag_adaptor.cpp": "d9ca7c29ba8c7df81655c4518adedb462d0a8d36352e27b6a854c177e576ace3",
+    "src/oblib/lib/vector/cuvs_worker.h": "4a37d334bdb745057118c244f3a64b6b41221af816f6f266f24cfc95e604563f",
+    "tools/hipvs_bridge/seekdb_cuvs_bridge.c": "74586325bcb3fa22649b0669cc88b74900ee297cf27c0afed59955c37d67cc3f",
+    "tools/hipvs_bridge/seekdb_cuvs_bridge.h": "0a33828f21fcc076cb0a9f98b95f9e2f9d37ddb853e9695ab1bbe5e9f62c5273",
+    "tools/hipvs_bridge/build.sh": "90889664bc2608ccd19ecc6e40e0ea2985271c8e9da12aa9f1cdfa86b3060c2d",
+    "tools/hipvs_bridge/host_thread_budget.h": "7b99a20cf5e4bdabc4d8f4dee03a627ec300f2e56a108db9e61561c92f199535"
+  },
+  "environment": {
+    "gfx": "gfx1100",
+    "rocm": "7.2.4",
+    "cpu_cgroup_cores": 16,
+    "memory_cgroup_bytes": 59055800320,
+    "service_memory_budget": "16G",
+    "omp_team_cap": 16,
+    "kmp_blocktime": 0
+  },
+  "pairs": [
+    {
+      "label": "thread16-pair-1",
+      "order": "baseline,candidate",
+      "unique_probes": 100,
+      "probe_policy": "Cyclic repetition to 4096 single-row SQL queries",
+      "baseline": {
+        "dataset": "PublicSample10K",
+        "rows": 10000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 8.696667814976536,
+        "ddl_seconds": 8.663365999935195,
+        "first_query_seconds": 0.03330181504134089,
+        "top10": {
+          "qps": 152.79836245705758,
+          "elapsed_seconds": 26.80657000595238,
+          "p95_ms": 6.961744045838714,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 146.58267840058505,
+          "elapsed_seconds": 27.943274367018603,
+          "p95_ms": 7.231221068650484,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "0aca80f3f251e1db3b4f592faf5aeed5513f3375ad5197c445994727742450b2",
+        "queries_sha256": "05ae857acc3e7decb826da9d93a280e737363b6de52964da865325b05c4a8cc5",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "82eb2ffb192a87c64e1e7862143dfbb2ccf651a36af68cc1f0fe62737b64ae3a",
+        "ids_sha256": "ead55eed9f5632007ad23a53dc8c50104349787bb1f2febf9acaffa018a0712f",
+        "server_binary_sha256": "373dd18ad867aa9b626b173cd65a0b0b5f6eff03e679762d893291bb24bf9815",
+        "server_source_patch_sha256": null,
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "22c493b66eeb6e7c5e5182d17e46285158eed74234d66c54ec01cccf6ef3aaa2"
+      },
+      "candidate": {
+        "dataset": "PublicSample10K",
+        "rows": 10000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 1.3675124540459365,
+        "ddl_seconds": 1.3408953360049054,
+        "first_query_seconds": 0.026617118041031063,
+        "top10": {
+          "qps": 357.9158617195589,
+          "elapsed_seconds": 11.444030393962748,
+          "p95_ms": 2.890773001126945,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 321.1339347354782,
+          "elapsed_seconds": 12.754802769050002,
+          "p95_ms": 3.291408997029066,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "0aca80f3f251e1db3b4f592faf5aeed5513f3375ad5197c445994727742450b2",
+        "queries_sha256": "05ae857acc3e7decb826da9d93a280e737363b6de52964da865325b05c4a8cc5",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "82eb2ffb192a87c64e1e7862143dfbb2ccf651a36af68cc1f0fe62737b64ae3a",
+        "ids_sha256": "ead55eed9f5632007ad23a53dc8c50104349787bb1f2febf9acaffa018a0712f",
+        "server_binary_sha256": "7acd1cf74204b170977092de80c68874e5854d3eb51d6e7105d1acc2ed87b8f0",
+        "server_source_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "330dfc0b0aaf3cc987c27ccaf5db986e617ec2cf48235b8c8dd52750376aec1e"
+      },
+      "build_ratio": 6.3594797906567395,
+      "query_ratio": 2.2653374074478827,
+      "sampled_resources": {
+        "baseline": {
+          "sampled_vram_bytes": 484163584,
+          "rss_kib": 1075184,
+          "threads": 449,
+          "samples": 1254
+        },
+        "candidate": {
+          "sampled_vram_bytes": 484155392,
+          "rss_kib": 1015012,
+          "threads": 218,
+          "samples": 556
+        }
+      }
+    },
+    {
+      "label": "thread16-pair-2",
+      "order": "candidate,baseline",
+      "unique_probes": 100,
+      "probe_policy": "Cyclic repetition to 4096 single-row SQL queries",
+      "baseline": {
+        "dataset": "PublicSample10K",
+        "rows": 10000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 6.7621513470076025,
+        "ddl_seconds": 6.725502533023246,
+        "first_query_seconds": 0.03664881398435682,
+        "top10": {
+          "qps": 154.21089542684814,
+          "elapsed_seconds": 26.56102857494261,
+          "p95_ms": 6.85451494064182,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 147.6906651058292,
+          "elapsed_seconds": 27.733641778002493,
+          "p95_ms": 7.163222995586693,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "0aca80f3f251e1db3b4f592faf5aeed5513f3375ad5197c445994727742450b2",
+        "queries_sha256": "05ae857acc3e7decb826da9d93a280e737363b6de52964da865325b05c4a8cc5",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "82eb2ffb192a87c64e1e7862143dfbb2ccf651a36af68cc1f0fe62737b64ae3a",
+        "ids_sha256": "ead55eed9f5632007ad23a53dc8c50104349787bb1f2febf9acaffa018a0712f",
+        "server_binary_sha256": "373dd18ad867aa9b626b173cd65a0b0b5f6eff03e679762d893291bb24bf9815",
+        "server_source_patch_sha256": null,
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "50a25da3dc775ff9df48875c0c7de602114f5452a9fb826aa659d8b47ad6e35c"
+      },
+      "candidate": {
+        "dataset": "PublicSample10K",
+        "rows": 10000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 1.4743955410085618,
+        "ddl_seconds": 1.447111208923161,
+        "first_query_seconds": 0.02728433208540082,
+        "top10": {
+          "qps": 357.2605518297523,
+          "elapsed_seconds": 11.465021757991053,
+          "p95_ms": 2.9053129255771637,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 320.0534829871321,
+          "elapsed_seconds": 12.797861038008705,
+          "p95_ms": 3.2939990051090717,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "0aca80f3f251e1db3b4f592faf5aeed5513f3375ad5197c445994727742450b2",
+        "queries_sha256": "05ae857acc3e7decb826da9d93a280e737363b6de52964da865325b05c4a8cc5",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "82eb2ffb192a87c64e1e7862143dfbb2ccf651a36af68cc1f0fe62737b64ae3a",
+        "ids_sha256": "ead55eed9f5632007ad23a53dc8c50104349787bb1f2febf9acaffa018a0712f",
+        "server_binary_sha256": "7acd1cf74204b170977092de80c68874e5854d3eb51d6e7105d1acc2ed87b8f0",
+        "server_source_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "9f124edcbdd910e16e4c8667c7e2d0098573e9b0bceeb4cec2ad7af726028fe4"
+      },
+      "build_ratio": 4.586388902385004,
+      "query_ratio": 2.2406279990491993,
+      "sampled_resources": {
+        "baseline": {
+          "sampled_vram_bytes": 484167680,
+          "rss_kib": 1071280,
+          "threads": 442,
+          "samples": 1226
+        },
+        "candidate": {
+          "sampled_vram_bytes": 484167680,
+          "rss_kib": 1006956,
+          "threads": 215,
+          "samples": 579
+        }
+      }
+    },
+    {
+      "label": "large-sql-128",
+      "order": "baseline,candidate",
+      "unique_probes": 64,
+      "probe_policy": "Cyclic repetition to 4096 single-row SQL queries",
+      "baseline": {
+        "dataset": "LocalSyntheticClusters250K128D",
+        "rows": 250000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 45.694090827018954,
+        "ddl_seconds": 45.65885049698409,
+        "first_query_seconds": 0.03524033003486693,
+        "top10": {
+          "qps": 143.72470887587957,
+          "elapsed_seconds": 28.498927094973624,
+          "p95_ms": 7.312939967960119,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 138.44355908837827,
+          "elapsed_seconds": 29.58606400305871,
+          "p95_ms": 7.653346983715892,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "50d0748ef748db4f5806c1127f2ece8e2ef1b36e76032b8a730be9abe28f9c36",
+        "queries_sha256": "b8928c9dd921a7565dede0abd6f30de73e3d88543c613e13fd302bebb0679590",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "44850c419b38b4b494840440dc46046c155842976e545e04c16824f3f6c824d8",
+        "ids_sha256": "b4a3e4ab4259c61d41c97c46b6d658e5dabe12c1f8dda425aa5bb260ef989777",
+        "server_binary_sha256": "373dd18ad867aa9b626b173cd65a0b0b5f6eff03e679762d893291bb24bf9815",
+        "server_source_patch_sha256": null,
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "11d96fe4a1d620045522540c2ac6fca87b0457abb09be0bd720c2cc09dca6859"
+      },
+      "candidate": {
+        "dataset": "LocalSyntheticClusters250K128D",
+        "rows": 250000,
+        "dimension": 128,
+        "nq": 4096,
+        "build_seconds": 14.853923624032177,
+        "ddl_seconds": 14.826573027065024,
+        "first_query_seconds": 0.02735059696715325,
+        "top10": {
+          "qps": 299.81847569393295,
+          "elapsed_seconds": 13.66159970802255,
+          "p95_ms": 3.358918009325862,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 271.7399420520059,
+          "elapsed_seconds": 15.073234979994595,
+          "p95_ms": 3.7658929359167814,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "50d0748ef748db4f5806c1127f2ece8e2ef1b36e76032b8a730be9abe28f9c36",
+        "queries_sha256": "b8928c9dd921a7565dede0abd6f30de73e3d88543c613e13fd302bebb0679590",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "44850c419b38b4b494840440dc46046c155842976e545e04c16824f3f6c824d8",
+        "ids_sha256": "b4a3e4ab4259c61d41c97c46b6d658e5dabe12c1f8dda425aa5bb260ef989777",
+        "server_binary_sha256": "7acd1cf74204b170977092de80c68874e5854d3eb51d6e7105d1acc2ed87b8f0",
+        "server_source_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "07c32dc369da88628c9de94d29c7056a88bb81cc87ab6ebf19513629f7d230ce"
+      },
+      "build_ratio": 3.076230360649656,
+      "query_ratio": 2.0235029345572104,
+      "sampled_resources": {
+        "baseline": {
+          "sampled_vram_bytes": 732958720,
+          "rss_kib": 2836488,
+          "threads": 442,
+          "samples": 1920
+        },
+        "candidate": {
+          "sampled_vram_bytes": 732942336,
+          "rss_kib": 2776312,
+          "threads": 227,
+          "samples": 1041
+        }
+      }
+    },
+    {
+      "label": "large-sql-256-retry",
+      "order": "candidate,baseline",
+      "unique_probes": 64,
+      "probe_policy": "Cyclic repetition to 4096 single-row SQL queries",
+      "baseline": {
+        "dataset": "LocalSyntheticClusters250K256D",
+        "rows": 250000,
+        "dimension": 256,
+        "nq": 4096,
+        "build_seconds": 46.80064553604461,
+        "ddl_seconds": 46.76193499600049,
+        "first_query_seconds": 0.038710540044121444,
+        "top10": {
+          "qps": 130.53360487791463,
+          "elapsed_seconds": 31.378892843960784,
+          "p95_ms": 8.040003012865782,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 126.13635877234367,
+          "elapsed_seconds": 32.47279404499568,
+          "p95_ms": 8.38202005252242,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "2a3e59461e0b4ac7a6c29b1622d86190946743c5a90d0858112b8910e3436ff3",
+        "queries_sha256": "8071598fbb6a2dace8b6debf001451274dc4d6eac8b276ae979cd88d6b250ccb",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "e92c6583be90cb72cade212e37e47d4a73daba42925a157f6d95c06f224f5646",
+        "ids_sha256": "b4a3e4ab4259c61d41c97c46b6d658e5dabe12c1f8dda425aa5bb260ef989777",
+        "server_binary_sha256": "373dd18ad867aa9b626b173cd65a0b0b5f6eff03e679762d893291bb24bf9815",
+        "server_source_patch_sha256": null,
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "b0dbb6cf9898953398b30abaf7572c6351c48cda1e1643df1ef6acf0dc18aa67"
+      },
+      "candidate": {
+        "dataset": "LocalSyntheticClusters250K256D",
+        "rows": 250000,
+        "dimension": 256,
+        "nq": 4096,
+        "build_seconds": 19.44352827197872,
+        "ddl_seconds": 19.412463339045644,
+        "first_query_seconds": 0.031064932933077216,
+        "top10": {
+          "qps": 263.1428016919211,
+          "elapsed_seconds": 15.565692748059519,
+          "p95_ms": 3.9880420081317425,
+          "recall": 1.0
+        },
+        "top100": {
+          "qps": 236.40890162281346,
+          "elapsed_seconds": 17.325912737986073,
+          "p95_ms": 4.402396967634559,
+          "recall": 1.0
+        },
+        "result_integrity": true,
+        "data_sha256": "2a3e59461e0b4ac7a6c29b1622d86190946743c5a90d0858112b8910e3436ff3",
+        "queries_sha256": "8071598fbb6a2dace8b6debf001451274dc4d6eac8b276ae979cd88d6b250ccb",
+        "ddl_sha256": "6cafa7cfa625988fcece895cf713ceeeca27e547409eec13db90746244d86628",
+        "first_query_sha256": "e92c6583be90cb72cade212e37e47d4a73daba42925a157f6d95c06f224f5646",
+        "ids_sha256": "b4a3e4ab4259c61d41c97c46b6d658e5dabe12c1f8dda425aa5bb260ef989777",
+        "server_binary_sha256": "7acd1cf74204b170977092de80c68874e5854d3eb51d6e7105d1acc2ed87b8f0",
+        "server_source_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+        "sql_client": "mysqlclient",
+        "raw_record_sha256": "3ea373566c180e3b274d926710eaa01dd58d1ed4587883ae2532dd586eb9d8a4"
+      },
+      "build_ratio": 2.4070037537113023,
+      "query_ratio": 1.943776596871473,
+      "sampled_resources": {
+        "baseline": {
+          "sampled_vram_bytes": 861126656,
+          "rss_kib": 3186484,
+          "threads": 446,
+          "samples": 2109
+        },
+        "candidate": {
+          "sampled_vram_bytes": 861122560,
+          "rss_kib": 3136280,
+          "threads": 225,
+          "samples": 1310
+        }
+      }
+    }
+  ],
+  "cpu_vsag_250k128": {
+    "dataset": "LocalSyntheticClusters250K128D",
+    "rows": 250000,
+    "dimension": 128,
+    "nq": 4096,
+    "build_seconds": 77.96795152395498,
+    "ddl_seconds": 77.82240345003083,
+    "first_query_seconds": 0.1455480739241466,
+    "top10": {
+      "qps": 3914.6265965583966,
+      "elapsed_seconds": 1.046332236030139,
+      "p95_ms": 0.28671789914369583,
+      "recall": 0.9953125
+    },
+    "top100": {
+      "qps": 2149.9833181526415,
+      "elapsed_seconds": 1.905131060979329,
+      "p95_ms": 0.5054060602560639,
+      "recall": 0.9859375
+    },
+    "result_integrity": true,
+    "data_sha256": "50d0748ef748db4f5806c1127f2ece8e2ef1b36e76032b8a730be9abe28f9c36",
+    "queries_sha256": "b8928c9dd921a7565dede0abd6f30de73e3d88543c613e13fd302bebb0679590",
+    "ddl_sha256": "7c96089053c07bcad913963d358b411aa78f9cda6a3322a8c231a4611cf1888e",
+    "first_query_sha256": "44850c419b38b4b494840440dc46046c155842976e545e04c16824f3f6c824d8",
+    "ids_sha256": "b4a3e4ab4259c61d41c97c46b6d658e5dabe12c1f8dda425aa5bb260ef989777",
+    "server_binary_sha256": "7acd1cf74204b170977092de80c68874e5854d3eb51d6e7105d1acc2ed87b8f0",
+    "server_source_patch_sha256": "e0310bbb396e2842ab66bfa95840ed61c53075f9d47953d7b39748bf2ac31456",
+    "sql_client": "mysqlclient",
+    "ef_search": 512,
+    "comparison_limit": "GPU SQL ef_search=64; recalls differ; no equal-quality CPU/GPU speedup claim"
+  },
+  "bridge_profile_kernel_calls": {
+    "nn_descent": 76,
+    "prune": 1,
+    "cagra_search": 421,
+    "total": 2136
+  },
+  "full_sql_profiler": "V5 and candidate both SIGABRT before ready; cause unknown; normal SQL reload passed afterward",
+  "resource_sampling": "50 ms device sysfs/process RSS samples, not allocator peak certification",
+  "formal_gates": null,
+  "formal_score": null,
+  "full_archive_sha256": "54d73ea63254db3c97d7c7606d3a510968e0e14ce1a7efbd86af8f471657d32e"
+}

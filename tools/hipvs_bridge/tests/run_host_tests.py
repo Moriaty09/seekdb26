@@ -1,7 +1,9 @@
 """Run host control-flow tests using a C++17 compiler; no ROCm installation needed."""
 import argparse
+import os
 import pathlib
 import subprocess
+import sys
 import tempfile
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -32,3 +34,14 @@ with tempfile.TemporaryDirectory(prefix='seekdb-bridge-test-', dir=args.temp_dir
     subprocess.run([args.cxx, '-std=c++17', '-Wall', '-Wextra', '-Werror', '-pthread',
                     str(here / 'test_cuvs_worker.cpp'), '-o', str(worker_binary)], check=True)
     subprocess.run([str(worker_binary)], check=True, timeout=30)
+    if sys.platform.startswith('linux'):
+        budget_binary = pathlib.Path(tmp) / 'test_host_thread_budget'
+        subprocess.run([args.cxx, '-std=c++17', '-Wall', '-Wextra', '-Werror',
+                        '-pthread', '-rdynamic', str(here / 'test_host_thread_budget.cpp'),
+                        '-ldl', '-o', str(budget_binary)], check=True)
+        clean = dict(os.environ)
+        for name in ['OMP_NUM_THREADS', 'KMP_BLOCKTIME']:
+            clean.pop(name, None)
+        for settings in [{}, {'OMP_NUM_THREADS': '2'}, {'KMP_BLOCKTIME': '15'},
+                         {'OMP_NUM_THREADS': '2', 'KMP_BLOCKTIME': '15'}]:
+            subprocess.run([str(budget_binary)], env=dict(clean, **settings), check=True)

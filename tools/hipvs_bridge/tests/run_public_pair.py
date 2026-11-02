@@ -25,8 +25,10 @@ def main():
     parser.add_argument('--port', type=int, default=2881)
     args = parser.parse_args()
     fixture = json.loads((args.fixtures / 'fixture.json').read_text())
-    if fixture['dataset'] != 'PublicSample10K':
+    if fixture['dataset'] != 'PublicSample10K' and not fixture['dataset'].startswith('Local'):
         parser.error('Only public diagnostic fixtures are supported')
+    if fixture['dimension'] not in (128, 256) or fixture['rows'] < 256:
+        parser.error('Require at least 256 rows and a supported 128/256 dimension')
     if shutil.disk_usage(args.output.parent).free < 30 * 1024 ** 3:
         parser.error('Require at least 30 GiB free for two fresh runtime directories')
     with socket.socket() as sock:
@@ -62,9 +64,10 @@ def main():
             tsv = (args.fixtures / 'items.tsv').resolve()
             if "'" in str(tsv):
                 raise ValueError('Fixture path cannot contain a SQL quote')
-            setup = ("CREATE DATABASE bench_public; USE bench_public; "
+            setup = ("SET ob_query_timeout=300000000; SET ob_trx_timeout=300000000; "
+                     "CREATE DATABASE bench_public; USE bench_public; "
                      "ALTER SYSTEM SET ob_vector_memory_limit_percentage=30; "
-                     "CREATE TABLE items(id BIGINT PRIMARY KEY,v VECTOR(128)); "
+                     f"CREATE TABLE items(id BIGINT PRIMARY KEY,v VECTOR({fixture['dimension']})); "
                      f"LOAD DATA LOCAL INFILE '{tsv}' INTO TABLE items "
                      "FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' (id,v); "
                      "SELECT COUNT(*) FROM items;")

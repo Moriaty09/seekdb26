@@ -1,4 +1,4 @@
-"""Prepare the template's 10K public sample for local SQL diagnostics.
+"""Prepare FP32 public or explicitly local inputs for SQL diagnostics.
 
 The 100 supplied probes repeat to fill the benchmark's 4096 SQL requests.
 This fixture is not SIFT250K, Hidden250K, or an official scoring workload.
@@ -17,11 +17,19 @@ def main():
     parser.add_argument('--queries', type=pathlib.Path, required=True)
     parser.add_argument('--output', type=pathlib.Path, required=True)
     parser.add_argument('--dimension', type=int, default=128)
+    parser.add_argument('--dataset', default='PublicSample10K',
+                        help='Use a Local-prefixed label for other diagnostic inputs')
     args = parser.parse_args()
     root = args.output
-    root.mkdir(parents=True, exist_ok=False)
     base = np.fromfile(args.base, dtype='<f4').reshape(-1, args.dimension)
     queries = np.fromfile(args.queries, dtype='<f4').reshape(-1, args.dimension)
+    if args.dataset != 'PublicSample10K' and not args.dataset.startswith('Local'):
+        parser.error('Generated diagnostic labels must start with Local; never label them official datasets')
+    if args.dataset == 'PublicSample10K' and base.shape != (10000, 128):
+        parser.error('Use an explicit Local-prefixed label for inputs other than the 10K/128D sample')
+    if len(base) < 100 or not len(queries) or not np.isfinite(base).all() or not np.isfinite(queries).all():
+        parser.error('Require finite FP32 inputs, at least 100 base rows and one query')
+    root.mkdir(parents=True, exist_ok=False)
     # Non-contiguous external IDs exercise row-offset-to-SQL-ID mapping.
     ids = np.arange(len(base), dtype=np.int64) * 17 + 1009
     literal = lambda row: '[' + ','.join(format(float(x), '.9g') for x in row) + ']'
@@ -32,7 +40,8 @@ def main():
     truth = []
     reference = base.astype(np.float64)
     for query in queries:
-        distance = np.sum((reference - query.astype(np.float64)) ** 2, axis=1)
+        difference = reference - query.astype(np.float64)
+        distance = np.einsum('ij,ij->i', difference, difference)
         truth.append(ids[np.argsort(distance, kind='stable')[:100]].tolist())
     records = []
     for i in range(4096):
@@ -48,12 +57,15 @@ def main():
             'CREATE VECTOR INDEX idx_items ON items(v) WITH '
             f'(distance=l2,type=hnsw,lib={library},m=16,ef_construction=200,ef_search=64);\n',
             encoding='utf-8')
-    metadata = dict(dataset='PublicSample10K', rows=len(base), dimension=args.dimension,
+    def digest(path):
+        with path.open('rb') as source:
+            return hashlib.file_digest(source, 'sha256').hexdigest()
+    metadata = dict(dataset=args.dataset, rows=len(base), dimension=args.dimension,
+                    scope='local diagnostic; not an official scoring dataset',
                     unique_probes=len(queries), nq=4096, probe_policy='cyclic repetition of public probes',
                     external_ids='row offset * 17 + 1009',
-                    base_sha256=hashlib.sha256(args.base.read_bytes()).hexdigest(),
-                    queries_sha256=hashlib.sha256(args.queries.read_bytes()).hexdigest(),
-                    tsv_sha256=hashlib.sha256((root / 'items.tsv').read_bytes()).hexdigest())
+                    base_sha256=digest(args.base), queries_sha256=digest(args.queries),
+                    tsv_sha256=digest(root / 'items.tsv'))
     (root / 'fixture.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(metadata, indent=2))
 

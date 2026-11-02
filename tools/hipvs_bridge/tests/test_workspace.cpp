@@ -168,6 +168,12 @@ static void search(void* h, int k, int nq = 1) {
 
 int main(int argc, char** argv) {
   assert(argc == 2);
+  assert(sk_cuvs_cpu_budget(128, 1600000, 100000) == 16);
+  assert(sk_cuvs_cpu_budget(128, 2400000, 100000) == 24);
+  assert(sk_cuvs_cpu_budget(4, 2400000, 100000) == 4);
+  assert(sk_cuvs_cpu_budget(128, 0, 0) == 24);
+  assert(sk_cuvs_cpu_budget(128, 50000, 100000) == 1);
+  assert(sk_cuvs_cpu_budget(0, 0, 0) == 1);
   std::vector<float> base(2000 * 128);
   assert(!seekdb_cuvs_build(nullptr, 2000, 128));
   void* h = seekdb_cuvs_build(base.data(), 2000, 128); assert(h);

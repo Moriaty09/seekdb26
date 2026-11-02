@@ -19,6 +19,20 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def assert_equivalent_results(actual_ids, actual_dist, expected_ids, expected_dist):
+    """Require identical top-k sets; permit only FP32 rounding-scale reordering."""
+    actual_order = np.argsort(actual_ids, axis=1)
+    expected_order = np.argsort(expected_ids, axis=1)
+    np.testing.assert_array_equal(np.take_along_axis(actual_ids, actual_order, axis=1),
+                                  np.take_along_axis(expected_ids, expected_order, axis=1))
+    tolerance = 4 * np.finfo(np.float32).eps
+    np.testing.assert_allclose(np.take_along_axis(actual_dist, actual_order, axis=1),
+                                np.take_along_axis(expected_dist, expected_order, axis=1),
+                                rtol=tolerance, atol=tolerance)
+    # Even with equal sets, disallow arbitrary changes in distance ranking.
+    np.testing.assert_allclose(actual_dist, expected_dist, rtol=tolerance, atol=tolerance)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--library', type=pathlib.Path, required=True)
@@ -100,14 +114,18 @@ def main():
         first, _ = search(handle, queries[:1], 10)
         result['bridge_build_and_first_query_seconds'] = time.perf_counter() - started
         reference = {}
+        reference_distances = {}
         for k in [10, 100]:
             answers = []
+            answer_distances = []
             started = time.perf_counter()
             for query in queries:
-                ids, _ = search(handle, query.reshape(1, -1), k)
+                ids, distances = search(handle, query.reshape(1, -1), k)
                 answers.append(ids[0])
+                answer_distances.append(distances[0])
             elapsed = time.perf_counter() - started
             reference[k] = np.asarray(answers)
+            reference_distances[k] = np.asarray(answer_distances)
             result[f'top{k}'] = dict(
                 recall=float(np.mean([len(set(a) & set(t[:k])) / k
                                       for a, t in zip(answers, truth)])),
@@ -158,8 +176,10 @@ def main():
                 raise RuntimeError('Restored graph export failed')
             np.testing.assert_array_equal(again, graph)
             for k in [10, 100]:
-                answers = [search(handle, query.reshape(1, -1), k)[0][0] for query in queries]
-                np.testing.assert_array_equal(np.asarray(answers), reference[k])
+                answers = [search(handle, query.reshape(1, -1), k) for query in queries]
+                assert_equivalent_results(np.asarray([a[0][0] for a in answers]),
+                                           np.asarray([a[1][0] for a in answers]),
+                                           reference[k], reference_distances[k])
             result.update(compact_graph_restore=True, graph_degree=degree.value,
                           compact_adaptor_snapshot_bytes=32 + len(base) * 8 + base.nbytes + graph.nbytes)
         result.update(result_integrity=True, snapshot_reload=True, concurrent_search=True)

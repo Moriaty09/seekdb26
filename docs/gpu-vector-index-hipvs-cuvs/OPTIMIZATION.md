@@ -1,8 +1,8 @@
 # V5 CAGRA 外围优化与复现方法
 
-2026-11-02 新增无损紧凑快照候选，详见 [COMPACT_SNAPSHOT.md](COMPACT_SNAPSHOT.md)。
-新版本写 OBCUVS03、继续读 OBCUVS02；主机测试通过，真实 GPU 编译与性能尚未验证。
-下文的 10K GPU 测量对应上一版提交，不代表新快照候选。
+2026-11-02 新增无损紧凑快照和 OpenMP 预算优化，详见 [COMPACT_SNAPSHOT.md](COMPACT_SNAPSHOT.md)。
+新版本写 OBCUVS03、继续读 OBCUVS02；真实 ROCm 编译、GPU 功能、SQL 配对和重启检查已完成。
+本轮数值及适用范围见 [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)。
 
 ## 当前交付状态
 
@@ -10,7 +10,7 @@
 官方 AMD 比赛仓库为 `zihaomu/seekdb`，分支为 `amd-oceanbase-official-contest-base-v5`。
 完整专项规则与已核对的构建命令见 [OFFICIAL_RULES.md](OFFICIAL_RULES.md)。
 代码、主机控制流程测试和本地 SQL 测试工具已经准备；真实 ROCm bridge 编译和公开 10K 样例 GPU 功能检查已通过。
-完整 seekdb 编译、公开样例 SQL 正确性与重启测试均已通过；两轮查询吞吐综合约 2.285x，构建尚无稳定提升。
+完整 seekdb 编译、公开样例及 250K 合成 SQL 正确性与重启测试均已通过；本轮构建和查询均有实测提升。
 实测方法、原始数据和 profiler 限制见 PERFORMANCE_REPORT.md；公开样例不证明正式数据集门槛。
 
 ## 修改内容
@@ -29,10 +29,12 @@
 - 新快照直接保存 GPU 图和一份原始 FP32 向量，消除重复向量与临时文件中转。
   OBCUVS03 通过固定 hipVS 的 IndexFromArgs 恢复同一张图；不额外建图。
   旧 OBCUVS02 读取仍使用 4 MiB 中转块；详细格式、兼容性和资源开销见 COMPACT_SNAPSHOT.md。
+- 首次建图根据 CPU 亲和与配额配置 OpenMP 默认 team，最多 16 线程，默认关闭 blocktime 忙等。
+  尊重显式 OpenMP 设置；仅使用既有运行时的公开接口。库自身的建图、收敛和搜索实现保持不变。
 - 距离回拷贝失败返回非零值；增加参数/溢出检查，DLPack shape 使用明确的 int64_t。
-- `build.sh` 添加内部线程链接选项。对外构建入口不变，不新增第三方依赖。
+- `build.sh` 添加内部 pthread/dl 链接选项。对外构建入口不变，不新增第三方依赖。
 
-这是一版保留算法参数的候选优化。查询分配开销减少不等于建图计算减少，也不能据此承诺 3x 构建加速。
+算法参数保持 V5 值。性能按完整 SQL 计时与独立 GPU 诊断分别报告，正式数据集成绩仍由组织方确认。
 
 ## 已完成的主机检查
 
@@ -41,6 +43,7 @@
 ```powershell
 python tools/hipvs_bridge/tests/run_host_tests.py --temp-dir D:/projects/backups
 python tools/hipvs_bridge/tests/test_benchmark.py D:/projects/backups
+python tools/hipvs_bridge/tests/test_gpu_result_equivalence.py
 git diff --check
 git merge-base --is-ancestor 634888d9b037153fa143d2c913ba4b25503e1d62 HEAD
 ```
@@ -117,7 +120,14 @@ FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' (id,v);
   --output /work/pair-1 --order baseline,candidate
 ```
 
-fixtures 还需 environment.json，记录实际设备/软件/服务参数；本次文件已保存在交付证据中。
+fixtures 还需 environment.json，记录实际设备/软件/服务参数，可用以下只读采集命令生成：
+
+```bash
+/opt/venv/bin/python tools/hipvs_bridge/tests/capture_environment.py \
+  --output /work/fixtures/environment.json
+```
+
+采集程序仅记录现状，不加载 hipVS 或认证硬件/门槛。本次环境记录已保存在交付证据中。
 输出目录必须不存在。第二轮交换 order 为 candidate,baseline，并使用新的输出目录。
 工具创建自己的服务目录，完成后停止服务，保留数据与日志；旧实验数据需先保存证据再清理。
 实际 seekdb 运行目录没有 .meta 文件，重启已有目录时直接调用同一二进制和原启动参数，
@@ -127,6 +137,42 @@ SQL 重启功能检查可用 gpu_sql_smoke.py：指定 binary、bridge、base-di
 gpu-database、cpu-database，均指向上述隔离实验；它会重启旧 GPU/CPU 索引并新建另一个 GPU 图。
 本镜像中 rocprofv3 导致 V5 和候选均在建索引前退出，尚未定位原因；
 可显式传 --profiler none 只核对 SQL 功能，不将其作为 profiler 抽检成功。
+
+### 250K 合成规模复现
+
+以下命令使用模板已有的 NumPy 和离线编译产物。合成输入用于规模诊断，标签固定以 Local 开头，
+不能填成正式 SIFT250K 或 Hidden250K。为复现生成文件哈希，使用记录的 NumPy 版本和 BLAS 线程数。
+
+```bash
+OPENBLAS_NUM_THREADS=8 /opt/venv/bin/python \
+  tools/hipvs_bridge/tests/prepare_clustered_sample.py \
+  --dimension 128 --output /work/raw128
+/opt/venv/bin/python tools/hipvs_bridge/tests/prepare_public_sample.py \
+  --base /work/raw128/base.f32 --queries /work/raw128/query.f32 \
+  --dimension 128 --dataset LocalSyntheticClusters250K128D --output /work/sql128
+/opt/venv/bin/python tools/hipvs_bridge/tests/capture_environment.py \
+  --output /work/sql128/environment.json
+git diff --binary 634888d9b037153fa143d2c913ba4b25503e1d62 HEAD > /work/candidate.patch
+/opt/venv/bin/python tools/hipvs_bridge/tests/run_public_pair.py \
+  --baseline-bin /work/baseline/seekdb \
+  --baseline-bridge /work/baseline/libseekdb_cuvs_bridge.so \
+  --candidate-bin /work/candidate/seekdb \
+  --candidate-bridge /work/candidate/libseekdb_cuvs_bridge.so \
+  --fixtures /work/sql128 --source-patch /work/candidate.patch \
+  --output /work/pair128 --order baseline,candidate
+```
+
+256 维分别将 dimension 改为 256、标签改为 LocalSyntheticClusters250K256D，
+所有 raw/sql/pair 输出目录换成新的 256 后缀目录，order 使用 candidate,baseline。
+默认生成 250000 个向量、64 个独立查询，后者循环为 4096 条单行 SQL。
+配对工具为导入会话统一设置 300 秒超时；导入在计时外，建图和查询仍执行固定 SQL。
+--source-patch 必须对应实际编译源码；上述 git diff 适用于已提交且工作区干净的候选。
+补丁在本地结果中与 V5 完整 SHA 一起标识候选，服务二进制另记录 SHA-256。
+未提交改动也需纳入补丁，不能用 HEAD 补丁标识不同的二进制。
+
+CPU 回归可在另一张干净表运行生成的 ddl-cpu.sql，再用 benchmark_sql.py 的 cpu-vsag 变体。
+本轮 250K CPU 对比将 CPU ef_search 显式提高到 512，并报告实际 Recall；这项差异必须保留在报告中，
+不能作为严格同质量的 CPU/GPU 加速倍数。实际数值见 PERFORMANCE_REPORT.md。
 
 ### 正式规模配对方法
 
@@ -207,11 +253,12 @@ python tools/hipvs_bridge/score_runs.py \
 值为核验结果 true/false/null。该文件是本地实验记录，不能视为组织方认证。
 隐藏数据不公开时无需运行此汇总，更不能自行构造隐藏数据或结果。
 
-## 提交前仍待完成
+## 验证完成与正式待测
 
-- 已完成真实离线源码编译和公开样例测试；仍需确认镜像 hipVS 固定 commit 身份，并完成正式规模测试。
-- 在 AMD GPU 上确认参数等价性、Recall、ID、快照完整性、稳定性及 lib=vsag SQL 功能。
-- 完成 V5 GPU / 候选 GPU / CPU 的真实配对报告，补充独立 GPU 和资源证据。
+- 已完成真实离线源码编译、10K 与合成 250K 完整 SQL 配对、ID/Recall 检查、新旧快照重载和 lib=vsag SQL 回归。
+- 已保存 CPU/V5 GPU/候选 GPU 实测报告、独立 bridge 的 GPU kernel 跟踪与完整 SQL 资源采样。
+- 正式 SIFT250K/Hidden250K 尚未实测；镜像 hipVS 身份仅有库哈希，固定 commit 身份及全部硬门槛由组织方核验。
+  本地完整 SQL profiler 在两个版本上均于 ready 前 SIGABRT，不能视为正式 GPU 抽检通过。
 - 按用户选择继续使用 `Moriaty09/seekdb26`；正式提测前由所有者处理题面要求的仓库可见性和登记。
   评测登记令牌只在比赛平台保存，不写入本仓库、文档或聊天。
 - 提交后核验候选为 V5 后代；推送到答题仓库后，再填写分支及完整 commit，不能直接使用已分叉的远端 master。

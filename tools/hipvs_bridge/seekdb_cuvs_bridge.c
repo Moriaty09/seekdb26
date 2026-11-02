@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
+#include "host_thread_budget.h"
 
 typedef struct {
   cuvsResources_t        res;
@@ -29,6 +30,7 @@ void* seekdb_cuvs_build(const float* base, long n, long dim)
 {
   if (!base || n <= 0 || (uint64_t)n > UINT32_MAX || dim <= 0 ||
       (uint64_t)n > SIZE_MAX / sizeof(float) / (uint64_t)dim) return NULL;
+  sk_cuvs_configure_host_threads();
   sk_cuvs_index* h = (sk_cuvs_index*)calloc(1, sizeof(*h));
   if (!h) return NULL;
   if (cuvsResourcesCreate(&h->res) != CUVS_SUCCESS) { free(h); return NULL; }
