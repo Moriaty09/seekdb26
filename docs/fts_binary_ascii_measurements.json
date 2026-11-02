@@ -1,0 +1,3639 @@
+{
+  "source_commit": "45831f2d7001655010dabb11d0a3084e3370b925",
+  "baseline_source_commit": "acc14298157fbcc59a99e8fa95ddacb868ddead5",
+  "initial_documentation_head": "053cdb6bc704fa1da187f7d7a86abf7503692e95",
+  "initial_tracked_deletions_preserved": [
+    ".gitattributes",
+    ".gitignore",
+    "rust/.gitignore",
+    "tools/deploy/.gitignore",
+    "unittest/.gitignore",
+    "unittest/sql/resolver/.gitignore"
+  ],
+  "host": {
+    "platform": "Linux-6.8.0-90-generic-x86_64-with-glibc2.35",
+    "logical_cpus": 48
+  },
+  "provenance": {
+    "builds": [
+      {
+        "phase": "baseline",
+        "returncode": 0
+      },
+      {
+        "phase": "candidate",
+        "returncode": 0
+      }
+    ],
+    "binary_sha256": {
+      "seekdb-before": "d679376d63863c76f5b3f83603a0b7c114976a9435804d1445edf0d5661363b2",
+      "seekdb-baseline-rebuilt": "d679376d63863c76f5b3f83603a0b7c114976a9435804d1445edf0d5661363b2",
+      "seekdb-ascii-stopwords": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+      "seekdb-candidate-rebuilt": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+      "seekdb-binary-cmp": "ff8c0daa90e03fbf0fd2f465a1f870c231f8311e0a015a1447dbe015c70f4408"
+    },
+    "baseline_identical": true,
+    "candidate_identical": true
+  },
+  "method": {
+    "memory_budget": "4G",
+    "configured_cpu_count": 4,
+    "port": 11963,
+    "data_directory": "/tmp/obtest/ddl-two-full-after",
+    "controlled_affinity": "13",
+    "full_original_affinity": "12-15",
+    "controlled_rows": 20000,
+    "process_cpu_source": "/proc/PID/stat utime+stime; includes background threads"
+  },
+  "profiling": {
+    "method": "GDB MI all-stop interrupt samples; fixed CPU 13; most CPU-active thread chosen by task tick deltas",
+    "limitations": "Path-localization evidence, not an unbiased statistical CPU percentage. perf_event_paranoid remained 4. Raw MI frames and scripts are in the archive.",
+    "summaries": {
+      "en": {
+        "samples": 80,
+        "workload": "SELECT COUNT(*) FROM fts_large_bench.docs WHERE MATCH(title_en,content_en) AGAINST('database performance audit');",
+        "thread_names": {
+          "ReqWorker": 80
+        },
+        "top_frames": [
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)",
+            9
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)",
+            8
+          ],
+          [
+            "__memmove_evex_unaligned_erms",
+            5
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)",
+            4
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)",
+            4
+          ],
+          [
+            "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const",
+            4
+          ],
+          [
+            "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const",
+            4
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)",
+            3
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)",
+            3
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()",
+            3
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::compaction::ObPartitionMergeLoserTreeItem, oceanbase::compaction::ObPartitionMergeLoserTreeCmp>::empty() const",
+            3
+          ],
+          [
+            "oceanbase::sql::ObExpr::eval_one_datum_of_batch(oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum*&) const",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::strcmpsp(oceanbase::common::ObCollationType, char const*, long, char const*, long, bool)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const",
+            2
+          ],
+          [
+            "oceanbase::storage::ObTextDaaTIter::fill_merge_heap()",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::is_argument_valid(oceanbase::common::ObCollationType const&, char const*, long, char const*, long)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            2
+          ],
+          [
+            "__memcmp_evex_movbe",
+            2
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+            2
+          ],
+          [
+            "syscall",
+            2
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)",
+            1
+          ],
+          [
+            "je_te_event_trigger",
+            1
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObNullSafeDatumStrCmp<(oceanbase::common::ObCollationType)63, false, true>::cmp(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObISparseRetrievalMergeIter::set_datum_shallow(oceanbase::common::ObDatum&, oceanbase::sql::ObDocIdExt const&)",
+            1
+          ],
+          [
+            "ob_strnncollsp_binary(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned char const*, unsigned long, bool)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTextRetrievalTokenIter::get_next_batch(long, long&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObTableScanOp::do_init_before_get_row()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObMicroBlockDataHandle::ObMicroBlockDataHandle()",
+            1
+          ]
+        ],
+        "inclusive_frames": [
+          [
+            "??",
+            78
+          ],
+          [
+            "oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long)",
+            57
+          ],
+          [
+            "oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long)",
+            57
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&)",
+            54
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)",
+            54
+          ],
+          [
+            "oceanbase::storage::ObTextDaaTIter::fill_merge_heap()",
+            32
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)",
+            20
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)",
+            14
+          ],
+          [
+            "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_next_rows()",
+            12
+          ],
+          [
+            "oceanbase::sql::ObDASScanIter::inner_get_next_rows(long&, long)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::fetch_rows(oceanbase::storage::ObSSTableReadHandle&)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::get_next_rows()",
+            12
+          ],
+          [
+            "oceanbase::blocksstable::ObMicroBlockDecoder::get_rows(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, bool, int const*, char const**, long, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, long)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObMultipleScanMerge::inner_get_next_rows()",
+            12
+          ],
+          [
+            "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_rows_for_old_format(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, int const*, long, long, char const**, oceanbase::common::ObIArray<oceanbase::sql::ObExpr*>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObStorageDatum> const*, bool)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObVectorStore::fill_output_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObTableScanIterator::get_next_rows(long&, long)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObMultipleMerge::get_next_normal_rows(long&, long)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObMultipleMerge::get_next_rows(long&, long)",
+            12
+          ],
+          [
+            "oceanbase::storage::ObVectorStore::fill_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)",
+            12
+          ],
+          [
+            "oceanbase::blocksstable::ObMicroBlockDecoder::get_col_datums(int, int const*, char const**, long, oceanbase::common::ObDatum*)",
+            12
+          ],
+          [
+            "oceanbase::common::ObNullSafeDatumStrCmp<(oceanbase::common::ObCollationType)63, false, true>::cmp(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)",
+            10
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)",
+            9
+          ],
+          [
+            "oceanbase::common::ObCharset::strcmpsp(oceanbase::common::ObCollationType, char const*, long, char const*, long, bool)",
+            9
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)",
+            9
+          ],
+          [
+            "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::open_cur_data_block(oceanbase::storage::ObSSTableReadHandle&)",
+            8
+          ],
+          [
+            "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const",
+            8
+          ],
+          [
+            "__memmove_evex_unaligned_erms",
+            5
+          ],
+          [
+            "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()",
+            5
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)",
+            4
+          ],
+          [
+            "oceanbase::omt::ObThWorker::worker(long&, long&, int&)",
+            4
+          ],
+          [
+            "non-virtual thunk to oceanbase::omt::ObThWorker::run(long)",
+            4
+          ],
+          [
+            "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const",
+            4
+          ],
+          [
+            "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::inner_get_next_row(oceanbase::blocksstable::ObDatumRow const*&)",
+            4
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)",
+            3
+          ],
+          [
+            "ob_strnncollsp_binary(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned char const*, unsigned long, bool)",
+            3
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()",
+            3
+          ],
+          [
+            "oceanbase::storage::ObSimpleRowsMerger<oceanbase::compaction::ObPartitionMergeLoserTreeItem, oceanbase::compaction::ObPartitionMergeLoserTreeCmp>::empty() const",
+            3
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::project_results(long)",
+            3
+          ],
+          [
+            "oceanbase::lib::Thread::run()",
+            3
+          ],
+          [
+            "oceanbase::sql::ObExpr::eval_one_datum_of_batch(oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum*&) const",
+            2
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process_single_stmt(oceanbase::sql::ObMultiStmtItem const&, oceanbase::observer::ObSMConnection*, oceanbase::sql::ObSQLSessionInfo&, bool, bool, bool&, bool&)",
+            2
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process(oceanbase::rpc::ObRequest&)",
+            2
+          ],
+          [
+            "oceanbase::rpc::frame::ObSqlProcessor::run()",
+            2
+          ],
+          [
+            "oceanbase::sql::ObBatchRowIter::get_next_row()",
+            2
+          ],
+          [
+            "oceanbase::omt::ObThWorker::process_request(oceanbase::rpc::ObRequest&)",
+            2
+          ],
+          [
+            "oceanbase::observer::ObSyncPlanDriver::response_result(oceanbase::observer::ObMySQLResultSet&)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObResultSet::get_next_row(oceanbase::common::ObNewRow const*&)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExecuteResult::get_next_row(oceanbase::sql::ObExecContext&, oceanbase::common::ObNewRow const*&)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const",
+            2
+          ],
+          [
+            "oceanbase::observer::ObQueryDriver::response_query_result(oceanbase::sql::ObResultSet&, bool, bool, bool&, long)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObOperator::get_next_batch(long, oceanbase::sql::ObBatchRows const*&)",
+            2
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process()",
+            2
+          ],
+          [
+            "oceanbase::sql::ObScalarAggregateOp::inner_get_next_batch(long)",
+            2
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process_one(oceanbase::rpc::ObRequest&)",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::is_argument_valid(oceanbase::common::ObCollationType const&, char const*, long, char const*, long)",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            2
+          ],
+          [
+            "__memcmp_evex_movbe",
+            2
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+            2
+          ],
+          [
+            "oceanbase::storage::ObSRMergeCmp::get_id_datum(long)",
+            2
+          ],
+          [
+            "oceanbase::lib::Thread::__th_start(void*)",
+            2
+          ],
+          [
+            "oceanbase::common::SCondTemp<3>::wait(long)",
+            2
+          ],
+          [
+            "oceanbase::lib::ObFutex::wait(int, long)",
+            2
+          ],
+          [
+            "syscall",
+            2
+          ],
+          [
+            "oceanbase::common::ObPriorityQueue2<1, 2, 3>::do_pop(oceanbase::common::ObLink*&, long, long, int)",
+            2
+          ],
+          [
+            "start_thread",
+            2
+          ],
+          [
+            "oceanbase::sql::ObAggregateProcessor::process_batch(oceanbase::sql::ObAggregateProcessor::GroupRow&, oceanbase::sql::ObBatchRows const&, unsigned short, unsigned short)",
+            1
+          ],
+          [
+            "int oceanbase::sql::ObAggregateProcessor::process_aggr_batch_result<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::common::ObIArray<oceanbase::sql::ObExpr*> const*, oceanbase::sql::ObAggregateProcessor::AggrCell&, oceanbase::sql::ObAggrInfo const&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice const&)",
+            1
+          ],
+          [
+            "int oceanbase::sql::ObAggregateProcessor::inner_process_batch<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::sql::ObAggregateProcessor::GroupRow&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice&, long, long)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)",
+            1
+          ],
+          [
+            "pac_dalloc_impl",
+            1
+          ],
+          [
+            "je_free_default",
+            1
+          ],
+          [
+            "je_te_event_trigger",
+            1
+          ],
+          [
+            "oceanbase::sql::ObDocIdExt::from_datum(oceanbase::common::ObDatum const&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObISparseRetrievalMergeIter::set_datum_shallow(oceanbase::common::ObDatum&, oceanbase::sql::ObDocIdExt const&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTextRetrievalDaaTTokenIter::get_next_row()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTextRetrievalTokenIter::get_next_batch(long, long&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObTableScanOp::do_init_before_get_row()",
+            1
+          ],
+          [
+            "oceanbase::sql::ObTableScanOp::inner_get_next_batch_for_tsc(long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObMultipleScanMerge::construct_iters()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::ObSSTableRowScanner()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTableScanIterator::init_and_open_scan_merge_iter_()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObLSTabletService::table_scan(oceanbase::storage::ObTabletHandle&, oceanbase::storage::ObTableScanIterator&, oceanbase::storage::ObTableScanParam&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObDASLegacyTRMergeIter::do_table_scan()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObLSTabletService::inner_table_scan(oceanbase::storage::ObTabletHandle&, oceanbase::storage::ObTableScanIterator&, oceanbase::storage::ObTableScanParam&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTableScanIterator::open_iter()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObMicroBlockDataHandle::ObMicroBlockDataHandle()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObAccessService::table_scan(oceanbase::common::ObVTableScanParam&, oceanbase::common::ObNewRowIterator*&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObDASScanIter::do_table_scan()",
+            1
+          ],
+          [
+            "oceanbase::storage::ObTableScanIterator::init(oceanbase::storage::ObTableScanParam&, oceanbase::storage::ObTabletHandle const&)",
+            1
+          ],
+          [
+            "oceanbase::blocksstable::ObSSTable::scan(oceanbase::storage::ObTableIterParam const&, oceanbase::storage::ObTableAccessContext&, oceanbase::blocksstable::ObDatumRange const&, oceanbase::storage::ObStoreRowIterator*&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3>::ObIndexTreeMultiPassPrefetcher()",
+            1
+          ]
+        ]
+      },
+      "ik": {
+        "samples": 60,
+        "workload": "SELECT BENCHMARK(200000, TOKENIZE('OceanBase是一款非常稳定的数据库，全文索引的分词器热路径优化包括解析器实例复用、停用词全局单例、内存池化数据结构等技术，在大量文档索引和查询场景下可以显著降低 CPU 开销。', 'ik'));",
+        "thread_names": {
+          "ReqWorker": 60
+        },
+        "top_frames": [
+          [
+            "oceanbase::common::TCRWLock::wrlock(long)",
+            5
+          ],
+          [
+            "oceanbase::storage::ObArrayHashMap::find(oceanbase::storage::ObFTSingleWord const&, int&) const",
+            4
+          ],
+          [
+            "__memcmp_evex_movbe",
+            3
+          ],
+          [
+            "oceanbase::storage::ObFTDATReader<void>::match_with_hit(oceanbase::common::ObString const&, oceanbase::storage::ObDATrieHit const&, oceanbase::storage::ObDATrieHit&) const",
+            3
+          ],
+          [
+            "ob_well_formed_len_utf8mb4(ObCharsetInfo const*, char const*, char const*, unsigned long, int*)",
+            2
+          ],
+          [
+            "__strcmp_evex",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::strcmp(oceanbase::common::ObCollationType, oceanbase::common::ObString const&, oceanbase::common::ObString const&)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObFTRangeDict::find_first_char_range(oceanbase::common::ObString const&, oceanbase::storage::ObIFTDict*&) const",
+            2
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::make_token_array_json(oceanbase::common::hash::ObHashMap<oceanbase::storage::ObFTWord, long, oceanbase::common::hash::NoPthreadDefendMode, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l> const&, oceanbase::common::ObIJsonBase*&)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKQuantifierProcessor::process_CN_count(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            2
+          ],
+          [
+            "oceanbase::storage::TokenizeContext::step_next()",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKFTParser::process_next_batch()",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKQuantifierProcessor::process_CN_number(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::is_argument_valid(oceanbase::common::ObCollationType const&, char const*, long, char const*, long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::segment(oceanbase::common::ObObjMeta const&, char const*, long, long&, oceanbase::common::hash::ObHashMap<oceanbase::storage::ObFTWord, long, oceanbase::common::hash::NoPthreadDefendMode, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>&) const",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset_uninit(oceanbase::common::ObCollationType)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIKCJKProcessor::do_process(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTSortList::add_token(oceanbase::storage::ObIKToken const&)",
+            1
+          ],
+          [
+            "memcpy@plt",
+            1
+          ],
+          [
+            "oceanbase::common::ObVector<oceanbase::omt::ObSrsCacheSnapShot*, oceanbase::common::PageArena<oceanbase::omt::ObSrsCacheSnapShot*, oceanbase::common::ModulePageAllocator> >::insert(oceanbase::omt::ObSrsCacheSnapShot**, oceanbase::omt::ObSrsCacheSnapShot const*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObAddWord::groupby_word(oceanbase::storage::ObFTWord const&, long)",
+            1
+          ],
+          [
+            "oceanbase::common::PageArena<char, oceanbase::common::ModulePageAllocator>::_alloc_aligned(long, long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<std::pair<long, oceanbase::obcall::ObColumnSortItem> >::at(long)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::tokenize_fulltext(oceanbase::sql::ObExprTokenize::TokenizeParam const&, oceanbase::sql::ObExprTokenize::TokenizeParam::OUTPUT_MODE, oceanbase::common::ObIAllocator&, oceanbase::common::ObIJsonBase*&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonArray::update_serialize_size(long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIKLetterProcessor::process_mix_letter(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::reserve(unsigned long)",
+            1
+          ],
+          [
+            "__strlen_evex",
+            1
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+            1
+          ],
+          [
+            "oceanbase::storage::ObUnicodeBlockUtils::is_chinese(unsigned long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::try_update_inline(oceanbase::common::ObJsonBinMeta&, char*, int, oceanbase::common::ObIJsonBase const*, bool&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObLatch::rdlock(unsigned int, long)",
+            1
+          ],
+          [
+            "oceanbase::storage::TokenizeContext::current_char(char const*&, unsigned char&)",
+            1
+          ],
+          [
+            "__memmove_evex_unaligned_erms",
+            1
+          ],
+          [
+            "oceanbase::storage::ObUnicodeBlockUtils::is_unicode_cn_number(unsigned long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParser::is_builtin() const",
+            1
+          ],
+          [
+            "oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>::free(oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIKArbitrator::output_result(oceanbase::storage::TokenizeContext&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIKArbitrator::process(oceanbase::storage::TokenizeContext&)",
+            1
+          ],
+          [
+            "oceanbase::restore::ObRestoreHelperMacroBlockCtx::get_type() const",
+            1
+          ]
+        ],
+        "inclusive_frames": [
+          [
+            "oceanbase::sql::ObExprBenchmark::eval_benchmark(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum&)",
+            55
+          ],
+          [
+            "oceanbase::sql::ObResultSet::get_next_row(oceanbase::common::ObNewRow const*&)",
+            55
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::eval_tokenize(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum&)",
+            55
+          ],
+          [
+            "oceanbase::sql::ObExecuteResult::get_next_row(oceanbase::sql::ObExecContext&, oceanbase::common::ObNewRow const*&)",
+            55
+          ],
+          [
+            "oceanbase::observer::ObQueryDriver::response_query_result(oceanbase::sql::ObResultSet&, bool, bool, bool&, long)",
+            53
+          ],
+          [
+            "oceanbase::observer::ObSyncPlanDriver::response_result(oceanbase::observer::ObMySQLResultSet&)",
+            51
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process_single_stmt(oceanbase::sql::ObMultiStmtItem const&, oceanbase::observer::ObSMConnection*, oceanbase::sql::ObSQLSessionInfo&, bool, bool, bool&, bool&)",
+            47
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::tokenize_fulltext(oceanbase::sql::ObExprTokenize::TokenizeParam const&, oceanbase::sql::ObExprTokenize::TokenizeParam::OUTPUT_MODE, oceanbase::common::ObIAllocator&, oceanbase::common::ObIJsonBase*&)",
+            44
+          ],
+          [
+            "??",
+            41
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process()",
+            38
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::segment(oceanbase::common::ObObjMeta const&, char const*, long, long&, oceanbase::common::hash::ObHashMap<oceanbase::storage::ObFTWord, long, oceanbase::common::hash::NoPthreadDefendMode, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>&) const",
+            38
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::segment(oceanbase::storage::ObFTParserProperty const&, long, oceanbase::storage::ObIFTParserDesc const*, ObCharsetInfo const*, char const*, long, oceanbase::common::ObIAllocator&, oceanbase::storage::ObAddWord&)",
+            37
+          ],
+          [
+            "oceanbase::storage::ObIKFTParser::get_next_token(char const*&, long&, long&, long&)",
+            35
+          ],
+          [
+            "oceanbase::storage::ObIKFTParserDesc::segment(oceanbase::storage::ObFTParserParam*, oceanbase::storage::ObITokenIterator*&) const",
+            35
+          ],
+          [
+            "oceanbase::storage::ObIKFTParser::process_next_batch()",
+            35
+          ],
+          [
+            "oceanbase::rpc::frame::ObSqlProcessor::run()",
+            31
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process_one(oceanbase::rpc::ObRequest&)",
+            21
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process(oceanbase::rpc::ObRequest&)",
+            18
+          ],
+          [
+            "oceanbase::storage::ObIKCJKProcessor::do_process(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            18
+          ],
+          [
+            "oceanbase::omt::ObThWorker::worker(long&, long&, int&)",
+            17
+          ],
+          [
+            "oceanbase::omt::ObThWorker::process_request(oceanbase::rpc::ObRequest&)",
+            17
+          ],
+          [
+            "non-virtual thunk to oceanbase::omt::ObThWorker::run(long)",
+            14
+          ],
+          [
+            "oceanbase::lib::Thread::run()",
+            12
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::parse_param(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObArenaAllocator&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            9
+          ],
+          [
+            "oceanbase::storage::ObFTDATReader<void>::match_with_hit(oceanbase::common::ObString const&, oceanbase::storage::ObDATrieHit const&, oceanbase::storage::ObDATrieHit&) const",
+            9
+          ],
+          [
+            "oceanbase::storage::ObFTRangeDict::match(oceanbase::common::ObString const&, oceanbase::storage::ObDATrieHit&) const",
+            8
+          ],
+          [
+            "oceanbase::storage::ObFTRangeDict::find_first_char_range(oceanbase::common::ObString const&, oceanbase::storage::ObIFTDict*&) const",
+            8
+          ],
+          [
+            "oceanbase::storage::ObGenDicLoader::get_dic_loader(oceanbase::common::ObString const&, oceanbase::common::ObCharsetType, oceanbase::storage::ObDicLoaderHandle&)",
+            7
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::TokenizeParam::try_load_dictionary_for_ik()",
+            7
+          ],
+          [
+            "oceanbase::common::ObCharset::strcmp(oceanbase::common::ObCollationType, oceanbase::common::ObString const&, oceanbase::common::ObString const&)",
+            6
+          ],
+          [
+            "oceanbase::storage::ObArrayHashMap::find(oceanbase::storage::ObFTSingleWord const&, int&) const",
+            6
+          ],
+          [
+            "oceanbase::common::TCRWLock::wrlock(long)",
+            5
+          ],
+          [
+            "oceanbase::lib::Thread::__th_start(void*)",
+            5
+          ],
+          [
+            "start_thread",
+            5
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::make_token_array_json(oceanbase::common::hash::ObHashMap<oceanbase::storage::ObFTWord, long, oceanbase::common::hash::NoPthreadDefendMode, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l> const&, oceanbase::common::ObIJsonBase*&)",
+            4
+          ],
+          [
+            "oceanbase::storage::ObFTParser::is_builtin() const",
+            3
+          ],
+          [
+            "__memcmp_evex_movbe",
+            3
+          ],
+          [
+            "oceanbase::storage::TokenizeContext::step_next()",
+            3
+          ],
+          [
+            "oceanbase::storage::ObIKQuantifierProcessor::process_CN_count(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            3
+          ],
+          [
+            "oceanbase::storage::ObIKArbitrator::output_result(oceanbase::storage::TokenizeContext&)",
+            3
+          ],
+          [
+            "oceanbase::common::ObCharset::first_valid_char(oceanbase::common::ObCollationType, char const*, long, long&)",
+            2
+          ],
+          [
+            "ob_well_formed_len_utf8mb4(ObCharsetInfo const*, char const*, char const*, unsigned long, int*)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::construct_ft_parser_inner_name(oceanbase::common::ObString const&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::parse_parser_name(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObFTParser::init(oceanbase::common::ObString const&)",
+            2
+          ],
+          [
+            "__strcmp_evex",
+            2
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*>, oceanbase::common::hash::hash_func<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey>, oceanbase::common::hash::equal_to<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*> >, 57, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::LatchReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::get_refactored(oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*>&, long)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKQuantifierProcessor::process_CN_number(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKQuantifierProcessor::do_process(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::is_argument_valid(oceanbase::common::ObCollationType const&, char const*, long, char const*, long)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObIKArbitrator::process(oceanbase::storage::TokenizeContext&)",
+            2
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::append(char const*, unsigned long, signed char)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonArray::append(oceanbase::common::ObJsonNode*)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObAddWord::process_word(char const*, long, long, long)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBaseFactory::transform(oceanbase::common::ObIAllocator*, oceanbase::common::ObIJsonBase*, oceanbase::common::ObJsonInType, oceanbase::common::ObIJsonBase*&)",
+            2
+          ],
+          [
+            "oceanbase::share::ObJsonWrapper::get_raw_binary(oceanbase::common::ObIJsonBase*, oceanbase::common::ObString&, oceanbase::common::ObIAllocator*)",
+            2
+          ],
+          [
+            "oceanbase::sql::ObJsonExprHelper::pack_json_res(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObIAllocator&, oceanbase::common::ObIJsonBase*, oceanbase::common::ObDatum&)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_object(oceanbase::common::ObJsonNode*, oceanbase::common::ObStringBuffer&, bool, unsigned int)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_value(oceanbase::common::ObJsonNode*, oceanbase::common::ObStringBuffer&, bool)",
+            2
+          ],
+          [
+            "oceanbase::common::ObIJsonBase::get_raw_binary(oceanbase::common::ObString&, oceanbase::common::ObIAllocator*)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::try_update_inline(oceanbase::common::ObJsonBinMeta&, char*, int, oceanbase::common::ObIJsonBase const*, bool&)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBin::parse_tree(oceanbase::common::ObJsonNode*)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize(oceanbase::common::ObJsonNode*, oceanbase::common::ObString&)",
+            2
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*>, oceanbase::common::hash::hash_func<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey>, oceanbase::common::hash::equal_to<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*> >, 57, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::LatchReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::internal_get_with_timeout_unsafe(oceanbase::common::hash::ObHashTableBucket<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*>, oceanbase::common::ObLatch, oceanbase::common::hash::NCond>&, oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObGenDicLoader::ObGenDicLoaderKey, oceanbase::storage::ObDicLoader*> const*&, long)",
+            1
+          ],
+          [
+            "ob_strnncoll_mb_bin(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned char const*, unsigned long, bool)",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset_uninit(oceanbase::common::ObCollationType)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTSortList::add_token(oceanbase::storage::ObIKToken const&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_string(oceanbase::common::ObJBVerType, oceanbase::common::ObString const&, oceanbase::common::ObStringBuffer&)",
+            1
+          ],
+          [
+            "memcpy@plt",
+            1
+          ],
+          [
+            "oceanbase::common::ObVector<oceanbase::omt::ObSrsCacheSnapShot*, oceanbase::common::PageArena<oceanbase::omt::ObSrsCacheSnapShot*, oceanbase::common::ModulePageAllocator> >::insert(oceanbase::omt::ObSrsCacheSnapShot**, oceanbase::omt::ObSrsCacheSnapShot const*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObAddWord::groupby_word(oceanbase::storage::ObFTWord const&, long)",
+            1
+          ],
+          [
+            "oceanbase::common::PageArena<char, oceanbase::common::ModulePageAllocator>::_alloc_aligned(long, long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<std::pair<long, oceanbase::obcall::ObColumnSortItem> >::at(long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonArray::update_serialize_size(long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObIKLetterProcessor::process_mix_letter(oceanbase::storage::TokenizeContext&, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::reserve(unsigned long)",
+            1
+          ],
+          [
+            "__strlen_evex",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParserName::ObFTParserName(char const*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParserName::set_name(char const*)",
+            1
+          ],
+          [
+            "oceanbase::common::ObIArrayWrap<unsigned long>::at(long) const",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTCharUtil::classify_first_char(oceanbase::common::ObCollationType, char const*, unsigned char, oceanbase::storage::ObFTCharUtil::CharType&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObUnicodeBlockUtils::is_chinese(unsigned long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObLatch::rdlock(unsigned int, long)",
+            1
+          ],
+          [
+            "oceanbase::storage::TokenizeContext::current_char(char const*&, unsigned char&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObAddWord::casedown_word(oceanbase::storage::ObFTWord const&, oceanbase::storage::ObFTWord&)",
+            1
+          ],
+          [
+            "__memmove_evex_unaligned_erms",
+            1
+          ],
+          [
+            "oceanbase::storage::ObUnicodeBlockUtils::is_unicode_cn_number(unsigned long)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::init(oceanbase::common::ObIAllocator*, oceanbase::common::ObString const&, oceanbase::common::ObString const&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonVar::read_var(oceanbase::common::ObILobCursor const*, long, unsigned char, unsigned long*)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParser::parse_from_str(char const*, long)",
+            1
+          ],
+          [
+            "oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>::free(oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >*)",
+            1
+          ],
+          [
+            "oceanbase::restore::ObRestoreHelperMacroBlockCtx::get_type() const",
+            1
+          ]
+        ]
+      },
+      "beng": {
+        "samples": 60,
+        "workload": "SELECT BENCHMARK(500000, TOKENIZE('The quick brown fox jumps over the lazy dog. Full-text search indexing requires efficient tokenization on the hot path.', 'beng'));",
+        "thread_names": {
+          "ReqWorker": 60
+        },
+        "top_frames": [
+          [
+            "ob_hash_sort_utf8mb4(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned long*, unsigned long*, bool, unsigned long (*)(void const*, unsigned long, unsigned long))",
+            9
+          ],
+          [
+            "oceanbase::storage::ObAddWord::groupby_word(oceanbase::storage::ObFTWord const&, long)",
+            4
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, 108, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::ReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::get_refactored(oceanbase::storage::ObFTWord const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>&, long)",
+            4
+          ],
+          [
+            "oceanbase::share::ObTextWhitespaceTokenizer::get_next(oceanbase::common::ObDatum&, long&)",
+            4
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_object(oceanbase::common::ObJsonNode*, oceanbase::common::ObStringBuffer&, bool, unsigned int)",
+            3
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            3
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_string(oceanbase::common::ObJBVerType, oceanbase::common::ObString const&, oceanbase::common::ObStringBuffer&)",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset_uninit(oceanbase::common::ObCollationType)",
+            2
+          ],
+          [
+            "pthread_rwlock_rdlock",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExprBenchmark::clear_all_flags(oceanbase::common::ObIArray<oceanbase::sql::ObExpr*>&, oceanbase::sql::ObEvalCtx&)",
+            1
+          ],
+          [
+            "oceanbase::share::ObBasicEnglishNormalizer::get_next(oceanbase::common::ObDatum&, long&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::eval_tokenize(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinMetaParser::parse_header_v0_()",
+            1
+          ],
+          [
+            "pthread_rwlock_unlock",
+            1
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, 108, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::ReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::internal_get_with_timeout_unsafe(oceanbase::common::hash::ObHashTableBucket<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, pthread_rwlock_t, oceanbase::common::hash::NCond>&, oceanbase::storage::ObFTWord const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> const*&, long)",
+            1
+          ],
+          [
+            "ob_strnncollsp_utf8mb4(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned char const*, unsigned long, bool)",
+            1
+          ],
+          [
+            "__strcmp_evex",
+            1
+          ],
+          [
+            "oceanbase::storage::ObBasicEnglishFTParserDesc::segment(oceanbase::storage::ObFTParserParam*, oceanbase::storage::ObITokenIterator*&) const",
+            1
+          ],
+          [
+            "oceanbase::common::ObLobInRowCursor::get_data(oceanbase::common::ObString&) const",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParser::is_builtin() const",
+            1
+          ],
+          [
+            "oceanbase::storage::ObAddWord::process_word(char const*, long, long, long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObArenaAllocator::alloc(long, oceanbase::lib::ObMemAttr const&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObStopWordChecker::check_stopword(oceanbase::storage::ObFTWord const&, bool&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::set_length(unsigned long)",
+            1
+          ],
+          [
+            "__parse_one_specmb",
+            1
+          ],
+          [
+            "oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >* oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>::alloc<>()",
+            1
+          ],
+          [
+            "oceanbase::common::ObDatumFuncs::get_basic_func(oceanbase::common::ObObjType, oceanbase::common::ObCollationType, short, bool, short)",
+            1
+          ],
+          [
+            "pthread_spin_lock",
+            1
+          ],
+          [
+            "je_malloc_default",
+            1
+          ],
+          [
+            "oceanbase::share::ObEnglishTextAnalyzer::inner_init(oceanbase::share::ObTextAnalysisCtx const&, oceanbase::common::ObIAllocator&)",
+            1
+          ],
+          [
+            "oceanbase::common::PageArena<char, oceanbase::common::ModulePageAllocator>::_alloc_aligned(long, long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::try_update_inline(oceanbase::common::ObJsonBinMeta&, char*, int, oceanbase::common::ObIJsonBase const*, bool&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObCharset::hash(oceanbase::common::ObCollationType, char const*, long, unsigned long, bool, unsigned long (*)(void const*, unsigned long, unsigned long))",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::set_value_entry(oceanbase::common::ObJsonBinMeta const&, char*, int, unsigned long, unsigned char, bool)",
+            1
+          ],
+          [
+            "int oceanbase::common::ob_write_string<oceanbase::common::ObArenaAllocator>(oceanbase::common::ObArenaAllocator&, oceanbase::common::ObString const&, oceanbase::common::ObString&, bool)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::reserve(unsigned long)",
+            1
+          ]
+        ],
+        "inclusive_frames": [
+          [
+            "oceanbase::sql::ObExprBenchmark::eval_benchmark(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum&)",
+            49
+          ],
+          [
+            "oceanbase::observer::ObSyncPlanDriver::response_result(oceanbase::observer::ObMySQLResultSet&)",
+            49
+          ],
+          [
+            "oceanbase::rpc::frame::ObSqlProcessor::run()",
+            49
+          ],
+          [
+            "oceanbase::sql::ObResultSet::get_next_row(oceanbase::common::ObNewRow const*&)",
+            49
+          ],
+          [
+            "oceanbase::observer::ObQueryDriver::response_query_result(oceanbase::sql::ObResultSet&, bool, bool, bool&, long)",
+            49
+          ],
+          [
+            "oceanbase::sql::ObExecuteResult::get_next_row(oceanbase::sql::ObExecContext&, oceanbase::common::ObNewRow const*&)",
+            49
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process_single_stmt(oceanbase::sql::ObMultiStmtItem const&, oceanbase::observer::ObSMConnection*, oceanbase::sql::ObSQLSessionInfo&, bool, bool, bool&, bool&)",
+            49
+          ],
+          [
+            "oceanbase::observer::ObMPQuery::process()",
+            49
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::eval_tokenize(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObDatum&)",
+            48
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process_one(oceanbase::rpc::ObRequest&)",
+            43
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::segment(oceanbase::common::ObObjMeta const&, char const*, long, long&, oceanbase::common::hash::ObHashMap<oceanbase::storage::ObFTWord, long, oceanbase::common::hash::NoPthreadDefendMode, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>&) const",
+            35
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::tokenize_fulltext(oceanbase::sql::ObExprTokenize::TokenizeParam const&, oceanbase::sql::ObExprTokenize::TokenizeParam::OUTPUT_MODE, oceanbase::common::ObIAllocator&, oceanbase::common::ObIJsonBase*&)",
+            35
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::segment(oceanbase::storage::ObFTParserProperty const&, long, oceanbase::storage::ObIFTParserDesc const*, ObCharsetInfo const*, char const*, long, oceanbase::common::ObIAllocator&, oceanbase::storage::ObAddWord&)",
+            35
+          ],
+          [
+            "oceanbase::storage::ObAddWord::process_word(char const*, long, long, long)",
+            32
+          ],
+          [
+            "oceanbase::omt::ObWorkerProcessor::process(oceanbase::rpc::ObRequest&)",
+            30
+          ],
+          [
+            "oceanbase::omt::ObThWorker::process_request(oceanbase::rpc::ObRequest&)",
+            23
+          ],
+          [
+            "oceanbase::storage::ObStopWordChecker::check_stopword(oceanbase::storage::ObFTWord const&, bool&)",
+            21
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, 108, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::ReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::get_refactored(oceanbase::storage::ObFTWord const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>&, long)",
+            21
+          ],
+          [
+            "oceanbase::omt::ObThWorker::worker(long&, long&, int&)",
+            18
+          ],
+          [
+            "??",
+            15
+          ],
+          [
+            "oceanbase::common::DefHashFunc<oceanbase::common::DatumStrHashCalculator<(oceanbase::common::ObCollationType)45, false, oceanbase::common::ObDefaultHash, false> >::hash(oceanbase::common::ObDatum const&, unsigned long, unsigned long&, oceanbase::common::ObDatumAccessContext const*)",
+            14
+          ],
+          [
+            "oceanbase::common::ObCharset::hash(oceanbase::common::ObCollationType, char const*, long, unsigned long, bool, unsigned long (*)(void const*, unsigned long, unsigned long))",
+            14
+          ],
+          [
+            "non-virtual thunk to oceanbase::omt::ObThWorker::run(long)",
+            13
+          ],
+          [
+            "oceanbase::storage::ObAddWord::groupby_word(oceanbase::storage::ObFTWord const&, long)",
+            10
+          ],
+          [
+            "oceanbase::share::ObJsonWrapper::get_raw_binary(oceanbase::common::ObIJsonBase*, oceanbase::common::ObString&, oceanbase::common::ObIAllocator*)",
+            10
+          ],
+          [
+            "oceanbase::sql::ObJsonExprHelper::pack_json_res(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObIAllocator&, oceanbase::common::ObIJsonBase*, oceanbase::common::ObDatum&)",
+            10
+          ],
+          [
+            "oceanbase::common::ObIJsonBase::get_raw_binary(oceanbase::common::ObString&, oceanbase::common::ObIAllocator*)",
+            10
+          ],
+          [
+            "oceanbase::common::ObJsonBaseFactory::transform(oceanbase::common::ObIAllocator*, oceanbase::common::ObIJsonBase*, oceanbase::common::ObJsonInType, oceanbase::common::ObIJsonBase*&)",
+            9
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_object(oceanbase::common::ObJsonNode*, oceanbase::common::ObStringBuffer&, bool, unsigned int)",
+            9
+          ],
+          [
+            "oceanbase::common::ObJsonBin::parse_tree(oceanbase::common::ObJsonNode*)",
+            9
+          ],
+          [
+            "ob_hash_sort_utf8mb4(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned long*, unsigned long*, bool, unsigned long (*)(void const*, unsigned long, unsigned long))",
+            9
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_value(oceanbase::common::ObJsonNode*, oceanbase::common::ObStringBuffer&, bool)",
+            8
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize(oceanbase::common::ObJsonNode*, oceanbase::common::ObString&)",
+            8
+          ],
+          [
+            "oceanbase::lib::Thread::run()",
+            5
+          ],
+          [
+            "oceanbase::share::ObBasicEnglishNormalizer::get_next(oceanbase::common::ObDatum&, long&)",
+            5
+          ],
+          [
+            "oceanbase::share::ObTextWhitespaceTokenizer::get_next(oceanbase::common::ObDatum&, long&)",
+            4
+          ],
+          [
+            "oceanbase::lib::Thread::__th_start(void*)",
+            3
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset(oceanbase::common::ObCollationType)",
+            3
+          ],
+          [
+            "oceanbase::common::hash::ObHashTable<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, oceanbase::common::hash::hash_func<oceanbase::storage::ObFTWord>, oceanbase::common::hash::equal_to<oceanbase::storage::ObFTWord>, oceanbase::common::hash::pair_first<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> >, 108, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>, oceanbase::common::hash::ReadWriteDefendMode, oceanbase::common::hash::NormalPointer, oceanbase::common::ObMalloc, 1l>::internal_get_with_timeout_unsafe(oceanbase::common::hash::ObHashTableBucket<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj>, pthread_rwlock_t, oceanbase::common::hash::NCond>&, oceanbase::storage::ObFTWord const&, oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, oceanbase::common::hash::HashNullObj> const*&, long)",
+            3
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::serialize_json_string(oceanbase::common::ObJBVerType, oceanbase::common::ObString const&, oceanbase::common::ObStringBuffer&)",
+            3
+          ],
+          [
+            "start_thread",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::strcmpsp(oceanbase::common::ObCollationType, char const*, long, char const*, long, bool)",
+            2
+          ],
+          [
+            "oceanbase::common::ObNullSafeDatumStrCmp<(oceanbase::common::ObCollationType)45, false, true>::cmp(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)",
+            2
+          ],
+          [
+            "oceanbase::common::ObJsonBin::init_bin_data()",
+            2
+          ],
+          [
+            "oceanbase::storage::ObFTParser::is_builtin() const",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::is_argument_valid(oceanbase::common::ObCollationType const&, char const*, long, char const*, long)",
+            2
+          ],
+          [
+            "oceanbase::common::ObCharset::get_charset_uninit(oceanbase::common::ObCollationType)",
+            2
+          ],
+          [
+            "oceanbase::storage::ObBasicEnglishFTParserDesc::segment(oceanbase::storage::ObFTParserParam*, oceanbase::storage::ObITokenIterator*&) const",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::parse_param(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::common::ObArenaAllocator&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            2
+          ],
+          [
+            "oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >* oceanbase::common::hash::SimpleAllocer<oceanbase::common::hash::ObHashTableNode<oceanbase::common::hash::HashMapPair<oceanbase::storage::ObFTWord, long> >, 97, oceanbase::common::hash::SpinMutexDefendMode, oceanbase::common::hash::DefaultSimpleAllocerAllocator>::alloc<>()",
+            2
+          ],
+          [
+            "pthread_rwlock_rdlock",
+            2
+          ],
+          [
+            "oceanbase::sql::ObExprBenchmark::clear_all_flags(oceanbase::common::ObIArray<oceanbase::sql::ObExpr*>&, oceanbase::sql::ObEvalCtx&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinMetaParser::parse_header_v0_()",
+            1
+          ],
+          [
+            "pthread_rwlock_unlock",
+            1
+          ],
+          [
+            "ob_strnncollsp_utf8mb4(ObCharsetInfo const*, unsigned char const*, unsigned long, unsigned char const*, unsigned long, bool)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParseHelper::init(oceanbase::common::ObIAllocator*, oceanbase::common::ObString const&, oceanbase::common::ObString const&)",
+            1
+          ],
+          [
+            "__strcmp_evex",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParser::get_desc(oceanbase::storage::ObIFTParserDesc const*&) const",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBin::get_raw_binary(oceanbase::common::ObString&, oceanbase::common::ObIAllocator*) const",
+            1
+          ],
+          [
+            "oceanbase::common::ObLobInRowCursor::get_data(oceanbase::common::ObString&) const",
+            1
+          ],
+          [
+            "oceanbase::storage::ObFTParser::serialize_to_str(char*, long)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::construct_ft_parser_inner_name(oceanbase::common::ObString const&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::parse_parser_name(oceanbase::sql::ObExpr const&, oceanbase::sql::ObEvalCtx&, oceanbase::sql::ObExprTokenize::TokenizeParam&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObBEngFTParser::get_next_token(char const*&, long&, long&, long&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObArenaAllocator::alloc(long, oceanbase::lib::ObMemAttr const&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::set_length(unsigned long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinMeta::to_header(oceanbase::common::ObStringBuffer&)",
+            1
+          ],
+          [
+            "printf_positional",
+            1
+          ],
+          [
+            "__parse_one_specmb",
+            1
+          ],
+          [
+            "oceanbase::common::ObDatumFuncs::get_basic_func(oceanbase::common::ObObjType, oceanbase::common::ObCollationType, short, bool, short)",
+            1
+          ],
+          [
+            "pthread_spin_lock",
+            1
+          ],
+          [
+            "je_malloc_default",
+            1
+          ],
+          [
+            "oceanbase::share::ObEnglishTextAnalyzer::inner_init(oceanbase::share::ObTextAnalysisCtx const&, oceanbase::common::ObIAllocator&)",
+            1
+          ],
+          [
+            "oceanbase::storage::ObBEngFTParser::init(oceanbase::storage::ObFTParserParam*)",
+            1
+          ],
+          [
+            "oceanbase::share::ObITextAnalyzer::init(oceanbase::share::ObTextAnalysisCtx const&, oceanbase::common::ObIAllocator&)",
+            1
+          ],
+          [
+            "oceanbase::common::PageArena<char, oceanbase::common::ModulePageAllocator>::_alloc_aligned(long, long)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::try_update_inline(oceanbase::common::ObJsonBinMeta&, char*, int, oceanbase::common::ObIJsonBase const*, bool&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObJsonBinSerializer::set_value_entry(oceanbase::common::ObJsonBinMeta const&, char*, int, unsigned long, unsigned char, bool)",
+            1
+          ],
+          [
+            "int oceanbase::common::ob_write_string<oceanbase::common::ObArenaAllocator>(oceanbase::common::ObArenaAllocator&, oceanbase::common::ObString const&, oceanbase::common::ObString&, bool)",
+            1
+          ],
+          [
+            "oceanbase::sql::ObExprTokenize::TokenizeParam::reform_parser_properties(oceanbase::common::ObString const&)",
+            1
+          ],
+          [
+            "oceanbase::common::ObStringBuffer::reserve(unsigned long)",
+            1
+          ]
+        ]
+      }
+    }
+  },
+  "binary_comparator_isolated_query_experiment": {
+    "phase_order": [
+      "before",
+      "binary_cmp",
+      "before_repeat",
+      "binary_cmp_repeat"
+    ],
+    "phases": {
+      "before": {
+        "instance": {
+          "pid": 2400465,
+          "phase": "before",
+          "command": [
+            "/tmp/fts-20261102/seekdb-before",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.677931934595108,
+              "process_cpu_ms": 2.58,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.6072960048913956,
+              "process_cpu_ms": 2.52,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.572760835289955,
+              "process_cpu_ms": 2.5,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.937156468629837,
+              "process_cpu_ms": 3.86,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 4.3418870866298676,
+              "process_cpu_ms": 4.26,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 4.04859996587038,
+              "process_cpu_ms": 3.92,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.967211678624153,
+              "process_cpu_ms": 2.86,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.9517122879624367,
+              "process_cpu_ms": 2.84,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.9386112838983536,
+              "process_cpu_ms": 2.84,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.3368976190686226,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3445989117026329,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3397509902715683,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      "binary_cmp": {
+        "instance": {
+          "pid": 3438718,
+          "phase": "binary_cmp",
+          "command": [
+            "/tmp/fts-20261102/seekdb-binary-cmp",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.535469152033329,
+              "process_cpu_ms": 2.44,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.4928361922502518,
+              "process_cpu_ms": 2.38,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.4982538148760796,
+              "process_cpu_ms": 2.42,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.5670613795518875,
+              "process_cpu_ms": 3.46,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.651902958750725,
+              "process_cpu_ms": 3.56,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.6310848519206047,
+              "process_cpu_ms": 3.52,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.727839708328247,
+              "process_cpu_ms": 2.62,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.7580984383821487,
+              "process_cpu_ms": 2.68,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.6810667738318443,
+              "process_cpu_ms": 2.58,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.3296492025256157,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.34079309552907944,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3248365744948387,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      "before_repeat": {
+        "instance": {
+          "pid": 3551387,
+          "phase": "before_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-before",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.634691044688225,
+              "process_cpu_ms": 2.54,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.625331573188305,
+              "process_cpu_ms": 2.54,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.7042697742581367,
+              "process_cpu_ms": 2.62,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.9808487743139267,
+              "process_cpu_ms": 3.88,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 4.008580602705479,
+              "process_cpu_ms": 3.92,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.9819420501589775,
+              "process_cpu_ms": 3.88,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.9985253512859344,
+              "process_cpu_ms": 2.9,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.977697789669037,
+              "process_cpu_ms": 2.9,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.9766148924827576,
+              "process_cpu_ms": 2.88,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.32725612074136734,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.34509922564029694,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.33819909393787384,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      "binary_cmp_repeat": {
+        "instance": {
+          "pid": 3705609,
+          "phase": "binary_cmp_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-binary-cmp",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.4993032664060593,
+              "process_cpu_ms": 2.4,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.467913642525673,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.45648505538702,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.5919969007372856,
+              "process_cpu_ms": 3.5,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.500183515250683,
+              "process_cpu_ms": 3.4,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.5320390835404396,
+              "process_cpu_ms": 3.42,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.7061632499098778,
+              "process_cpu_ms": 2.6,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.6569489911198616,
+              "process_cpu_ms": 2.58,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.6788266375660896,
+              "process_cpu_ms": 2.58,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.3387077525258064,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.33533839136362076,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.35396188497543335,
+              "process_cpu_ms": 0.3,
+              "hits": "20"
+            }
+          ]
+        }
+      }
+    },
+    "summary": {
+      "cn": {
+        "wall_ms": {
+          "baseline_median": 2.630011308938265,
+          "candidate_median": 2.4955450035631657,
+          "reduction_percent": 5.112765291848998
+        },
+        "process_cpu_ms": {
+          "baseline_median": 2.54,
+          "candidate_median": 2.3899999999999997,
+          "reduction_percent": 5.905511811023634
+        }
+      },
+      "en": {
+        "wall_ms": {
+          "baseline_median": 3.995261326432228,
+          "candidate_median": 3.5795291401445866,
+          "reduction_percent": 10.40563188037792
+        },
+        "process_cpu_ms": {
+          "baseline_median": 3.9,
+          "candidate_median": 3.48,
+          "reduction_percent": 10.769230769230765
+        }
+      },
+      "mixed": {
+        "wall_ms": {
+          "baseline_median": 2.9719132855534554,
+          "candidate_median": 2.693615011870861,
+          "reduction_percent": 9.364279739769298
+        },
+        "process_cpu_ms": {
+          "baseline_median": 2.87,
+          "candidate_median": 2.59,
+          "reduction_percent": 9.756097560975618
+        }
+      },
+      "limit": {
+        "wall_ms": {
+          "baseline_median": 0.33897504210472107,
+          "candidate_median": 0.3370230719447136,
+          "reduction_percent": 0.5758448019911877
+        },
+        "process_cpu_ms": {
+          "baseline_median": 0.26,
+          "candidate_median": 0.27,
+          "reduction_percent": -3.8461538461538547
+        }
+      }
+    }
+  },
+  "ascii_stopwords_isolated_token_experiment": {
+    "control": "Comparator-only candidate; the sole runtime difference is the ASCII stopword table",
+    "phase_order": [
+      "tokens_cmp_before",
+      "tokens_ascii_after",
+      "tokens_cmp_before_repeat",
+      "tokens_ascii_after_repeat"
+    ],
+    "phases": {
+      "tokens_cmp_before": {
+        "instance": {
+          "pid": 3705609,
+          "phase": "binary_cmp_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-binary-cmp",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "rounds": {
+          "beng": 30000,
+          "ik": 10000
+        },
+        "warmup_groups": 1,
+        "measured_groups": 6,
+        "results": {
+          "beng": [
+            {
+              "wall_us": 12.551474695404371,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.436443691452345,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.123765299717585,
+              "process_cpu_us": 11.666666666666666
+            },
+            {
+              "wall_us": 12.586871658762297,
+              "process_cpu_us": 12.333333333333334
+            },
+            {
+              "wall_us": 12.617546568314234,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.314561878641447,
+              "process_cpu_us": 11.666666666666666
+            }
+          ],
+          "ik": [
+            {
+              "wall_us": 68.23088601231575,
+              "process_cpu_us": 66.0
+            },
+            {
+              "wall_us": 68.30570548772812,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 68.50844919681549,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 69.16691102087498,
+              "process_cpu_us": 68.0
+            },
+            {
+              "wall_us": 68.22609752416611,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 68.6358094215393,
+              "process_cpu_us": 68.0
+            }
+          ]
+        }
+      },
+      "tokens_ascii_after": {
+        "instance": {
+          "pid": 3759224,
+          "phase": "ascii_after",
+          "command": [
+            "/tmp/fts-20261102/seekdb-ascii-stopwords",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "rounds": {
+          "beng": 30000,
+          "ik": 10000
+        },
+        "warmup_groups": 1,
+        "measured_groups": 6,
+        "results": {
+          "beng": [
+            {
+              "wall_us": 9.612022216121355,
+              "process_cpu_us": 9.333333333333334
+            },
+            {
+              "wall_us": 9.451130529244741,
+              "process_cpu_us": 9.666666666666666
+            },
+            {
+              "wall_us": 9.862973913550377,
+              "process_cpu_us": 9.333333333333334
+            },
+            {
+              "wall_us": 9.593439847230911,
+              "process_cpu_us": 9.333333333333334
+            },
+            {
+              "wall_us": 10.224338620901108,
+              "process_cpu_us": 9.666666666666666
+            },
+            {
+              "wall_us": 11.203219989935556,
+              "process_cpu_us": 10.666666666666666
+            }
+          ],
+          "ik": [
+            {
+              "wall_us": 68.18514093756676,
+              "process_cpu_us": 66.0
+            },
+            {
+              "wall_us": 69.37251538038254,
+              "process_cpu_us": 68.0
+            },
+            {
+              "wall_us": 69.88971568644047,
+              "process_cpu_us": 68.0
+            },
+            {
+              "wall_us": 67.50785484910011,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 68.38242262601852,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 67.86738894879818,
+              "process_cpu_us": 68.0
+            }
+          ]
+        }
+      },
+      "tokens_cmp_before_repeat": {
+        "instance": {
+          "pid": 3843703,
+          "phase": "ascii_before_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-binary-cmp",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "rounds": {
+          "beng": 30000,
+          "ik": 10000
+        },
+        "warmup_groups": 1,
+        "measured_groups": 6,
+        "results": {
+          "beng": [
+            {
+              "wall_us": 12.747103720903397,
+              "process_cpu_us": 12.333333333333334
+            },
+            {
+              "wall_us": 12.499906246860823,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.321132173140844,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.510101621349653,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.57400872806708,
+              "process_cpu_us": 12.0
+            },
+            {
+              "wall_us": 12.757608170310656,
+              "process_cpu_us": 12.0
+            }
+          ],
+          "ik": [
+            {
+              "wall_us": 68.74397397041321,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 67.65925027430058,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 67.7837647497654,
+              "process_cpu_us": 66.0
+            },
+            {
+              "wall_us": 70.66212296485901,
+              "process_cpu_us": 69.0
+            },
+            {
+              "wall_us": 69.99474912881851,
+              "process_cpu_us": 70.0
+            },
+            {
+              "wall_us": 68.80149021744728,
+              "process_cpu_us": 67.0
+            }
+          ]
+        }
+      },
+      "tokens_ascii_after_repeat": {
+        "instance": {
+          "pid": 3925398,
+          "phase": "ascii_after_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-ascii-stopwords",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "rounds": {
+          "beng": 30000,
+          "ik": 10000
+        },
+        "warmup_groups": 1,
+        "measured_groups": 6,
+        "results": {
+          "beng": [
+            {
+              "wall_us": 9.863062078754107,
+              "process_cpu_us": 9.333333333333334
+            },
+            {
+              "wall_us": 9.953970710436503,
+              "process_cpu_us": 9.666666666666666
+            },
+            {
+              "wall_us": 10.185235117872557,
+              "process_cpu_us": 9.666666666666666
+            },
+            {
+              "wall_us": 10.198460519313812,
+              "process_cpu_us": 9.666666666666666
+            },
+            {
+              "wall_us": 9.802945454915365,
+              "process_cpu_us": 9.0
+            },
+            {
+              "wall_us": 10.176642735799154,
+              "process_cpu_us": 9.333333333333334
+            }
+          ],
+          "ik": [
+            {
+              "wall_us": 69.77973245084286,
+              "process_cpu_us": 68.0
+            },
+            {
+              "wall_us": 68.70332844555378,
+              "process_cpu_us": 67.0
+            },
+            {
+              "wall_us": 69.20867711305618,
+              "process_cpu_us": 69.0
+            },
+            {
+              "wall_us": 69.923135638237,
+              "process_cpu_us": 69.0
+            },
+            {
+              "wall_us": 69.11680959165096,
+              "process_cpu_us": 68.0
+            },
+            {
+              "wall_us": 68.85837018489838,
+              "process_cpu_us": 67.0
+            }
+          ]
+        }
+      }
+    },
+    "summary": {
+      "beng": {
+        "wall_us": {
+          "baseline_median": 12.530788158377012,
+          "candidate_median": 9.908516394595305,
+          "reduction_percent": 20.92663071658969
+        },
+        "process_cpu_us": {
+          "baseline_median": 12.0,
+          "candidate_median": 9.5,
+          "reduction_percent": 20.833333333333336
+        }
+      },
+      "ik": {
+        "wall_us": {
+          "baseline_median": 68.5721293091774,
+          "candidate_median": 68.98758988827467,
+          "reduction_percent": -0.6058738197031177
+        },
+        "process_cpu_us": {
+          "baseline_median": 67.0,
+          "candidate_median": 68.0,
+          "reduction_percent": -1.4925373134328401
+        }
+      }
+    }
+  },
+  "combined_candidate_query_checks": {
+    "combined_after": {
+      "instance": {
+        "pid": 3759224,
+        "phase": "ascii_after",
+        "command": [
+          "/tmp/fts-20261102/seekdb-ascii-stopwords",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "warmup": 500,
+      "executions_per_group": 500,
+      "measured_groups": 3,
+      "results": {
+        "cn": [
+          {
+            "wall_ms": 2.469399005174637,
+            "process_cpu_ms": 2.38,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.458810865879059,
+            "process_cpu_ms": 2.34,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.4533481150865555,
+            "process_cpu_ms": 2.32,
+            "hits": "8001"
+          }
+        ],
+        "en": [
+          {
+            "wall_ms": 3.643139101564884,
+            "process_cpu_ms": 3.54,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.553715892136097,
+            "process_cpu_ms": 3.46,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.5576357692480087,
+            "process_cpu_ms": 3.48,
+            "hits": "11000"
+          }
+        ],
+        "mixed": [
+          {
+            "wall_ms": 2.748654820024967,
+            "process_cpu_ms": 2.66,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.680188685655594,
+            "process_cpu_ms": 2.58,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.683891125023365,
+            "process_cpu_ms": 2.6,
+            "hits": "7332"
+          }
+        ],
+        "limit": [
+          {
+            "wall_ms": 0.34091197699308395,
+            "process_cpu_ms": 0.28,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.3403162881731987,
+            "process_cpu_ms": 0.3,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.3576301410794258,
+            "process_cpu_ms": 0.28,
+            "hits": "20"
+          }
+        ]
+      }
+    },
+    "combined_after_repeat": {
+      "instance": {
+        "pid": 3925398,
+        "phase": "ascii_after_repeat",
+        "command": [
+          "/tmp/fts-20261102/seekdb-ascii-stopwords",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "warmup": 500,
+      "executions_per_group": 500,
+      "measured_groups": 3,
+      "results": {
+        "cn": [
+          {
+            "wall_ms": 2.4912565872073174,
+            "process_cpu_ms": 2.4,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.431368924677372,
+            "process_cpu_ms": 2.32,
+            "hits": "8001"
+          },
+          {
+            "wall_ms": 2.4542937949299812,
+            "process_cpu_ms": 2.36,
+            "hits": "8001"
+          }
+        ],
+        "en": [
+          {
+            "wall_ms": 3.5473042353987694,
+            "process_cpu_ms": 3.44,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.5542101934552193,
+            "process_cpu_ms": 3.46,
+            "hits": "11000"
+          },
+          {
+            "wall_ms": 3.5813154876232147,
+            "process_cpu_ms": 3.48,
+            "hits": "11000"
+          }
+        ],
+        "mixed": [
+          {
+            "wall_ms": 2.6573854088783264,
+            "process_cpu_ms": 2.56,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.694517582654953,
+            "process_cpu_ms": 2.58,
+            "hits": "7332"
+          },
+          {
+            "wall_ms": 2.7891350463032722,
+            "process_cpu_ms": 2.66,
+            "hits": "7332"
+          }
+        ],
+        "limit": [
+          {
+            "wall_ms": 0.3465714380145073,
+            "process_cpu_ms": 0.3,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.3416522741317749,
+            "process_cpu_ms": 0.28,
+            "hits": "20"
+          },
+          {
+            "wall_ms": 0.34880223870277405,
+            "process_cpu_ms": 0.3,
+            "hits": "20"
+          }
+        ]
+      }
+    }
+  },
+  "full_original_benchmark": {
+    "command": "bash tools/benchmark/fts_large_bench.sh",
+    "parameters": {
+      "ROWS": 20000,
+      "BATCH": 500,
+      "ROUNDS": 3000,
+      "QUERY_ROUNDS": 200,
+      "SAMPLES": 3,
+      "WARMUP": 30,
+      "SKIP_LOAD": 0
+    },
+    "phases": [
+      {
+        "phase": "full_before",
+        "instance": {
+          "pid": 4072128,
+          "phase": "full_before",
+          "command": [
+            "/tmp/fts-20261102/seekdb-baseline-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity_cpus": "12-15",
+        "returncode": 0,
+        "wall_sec": 32.29438090324402
+      },
+      {
+        "phase": "full_after",
+        "instance": {
+          "pid": 4092964,
+          "phase": "full_after",
+          "command": [
+            "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity_cpus": "12-15",
+        "returncode": 0,
+        "wall_sec": 29.746509790420532
+      },
+      {
+        "phase": "full_before_repeat",
+        "instance": {
+          "pid": 4112154,
+          "phase": "full_before_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-baseline-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity_cpus": "12-15",
+        "returncode": 0,
+        "wall_sec": 31.12025237083435
+      },
+      {
+        "phase": "full_after_repeat",
+        "instance": {
+          "pid": 4132079,
+          "phase": "full_after_repeat",
+          "command": [
+            "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "affinity_cpus": "12-15",
+        "returncode": 0,
+        "wall_sec": 30.33681845664978
+      }
+    ],
+    "metrics": {
+      "full_before": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 0.0,
+        "select1_avg_ms": 0.0818,
+        "select1_stdev_ms": 0.0079,
+        "raw_load_sec": 0.704,
+        "raw_load_rows_per_sec": 28409.1,
+        "build_ik_all_sec": 9.271,
+        "build_ik_content_sec": 6.301,
+        "build_beng_en_sec": 3.375,
+        "build_total_sec": 18.97,
+        "tokenize_ik_avg_ms": 0.2418,
+        "tokenize_ik_median_ms": 0.2467,
+        "tokenize_ik_stdev_ms": 0.0102,
+        "tokenize_beng_avg_ms": 0.1267,
+        "tokenize_beng_median_ms": 0.1263,
+        "tokenize_beng_stdev_ms": 0.0065,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.8236,
+        "query_cn_stdev_ms": 0.0679,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 4.177,
+        "query_beng_stdev_ms": 0.0466,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 3.13,
+        "query_mixed_stdev_ms": 0.0366,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4485,
+        "query_limit_stdev_ms": 0.0226
+      },
+      "full_after": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 0.0,
+        "select1_avg_ms": 0.0759,
+        "select1_stdev_ms": 0.0092,
+        "raw_load_sec": 0.789,
+        "raw_load_rows_per_sec": 25348.5,
+        "build_ik_all_sec": 7.762,
+        "build_ik_content_sec": 6.204,
+        "build_beng_en_sec": 3.291,
+        "build_total_sec": 17.284,
+        "tokenize_ik_avg_ms": 0.2413,
+        "tokenize_ik_median_ms": 0.2456,
+        "tokenize_ik_stdev_ms": 0.0114,
+        "tokenize_beng_avg_ms": 0.1348,
+        "tokenize_beng_median_ms": 0.1156,
+        "tokenize_beng_stdev_ms": 0.028,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.6577,
+        "query_cn_stdev_ms": 0.049,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.7064,
+        "query_beng_stdev_ms": 0.049,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.8746,
+        "query_mixed_stdev_ms": 0.0486,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4305,
+        "query_limit_stdev_ms": 0.0183
+      },
+      "full_before_repeat": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 0.0,
+        "select1_avg_ms": 0.0897,
+        "select1_stdev_ms": 0.0111,
+        "raw_load_sec": 0.796,
+        "raw_load_rows_per_sec": 25125.6,
+        "build_ik_all_sec": 8.15,
+        "build_ik_content_sec": 6.306,
+        "build_beng_en_sec": 3.387,
+        "build_total_sec": 17.868,
+        "tokenize_ik_avg_ms": 0.2258,
+        "tokenize_ik_median_ms": 0.2191,
+        "tokenize_ik_stdev_ms": 0.0109,
+        "tokenize_beng_avg_ms": 0.1587,
+        "tokenize_beng_median_ms": 0.16,
+        "tokenize_beng_stdev_ms": 0.0122,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.8061,
+        "query_cn_stdev_ms": 0.0582,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 4.163,
+        "query_beng_stdev_ms": 0.0525,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 3.1283,
+        "query_mixed_stdev_ms": 0.0514,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4726,
+        "query_limit_stdev_ms": 0.0243
+      },
+      "full_after_repeat": {
+        "git_dirty": 1.0,
+        "rows": 20000.0,
+        "batch": 500.0,
+        "rounds": 3000.0,
+        "query_rounds": 200.0,
+        "samples": 3.0,
+        "warmup": 30.0,
+        "skip_load": 0.0,
+        "select1_avg_ms": 0.092,
+        "select1_stdev_ms": 0.0231,
+        "raw_load_sec": 0.755,
+        "raw_load_rows_per_sec": 26490.1,
+        "build_ik_all_sec": 7.843,
+        "build_ik_content_sec": 6.304,
+        "build_beng_en_sec": 3.175,
+        "build_total_sec": 17.345,
+        "tokenize_ik_avg_ms": 0.2613,
+        "tokenize_ik_median_ms": 0.2734,
+        "tokenize_ik_stdev_ms": 0.0232,
+        "tokenize_beng_avg_ms": 0.1466,
+        "tokenize_beng_median_ms": 0.1534,
+        "tokenize_beng_stdev_ms": 0.0253,
+        "query_cn_hits": 8001.0,
+        "query_cn_avg_ms": 2.6692,
+        "query_cn_stdev_ms": 0.0639,
+        "query_beng_hits": 11000.0,
+        "query_beng_avg_ms": 3.8393,
+        "query_beng_stdev_ms": 0.1857,
+        "query_mixed_hits": 7332.0,
+        "query_mixed_avg_ms": 2.8496,
+        "query_mixed_stdev_ms": 0.0194,
+        "query_limit_hits": 20.0,
+        "query_limit_avg_ms": 0.4462,
+        "query_limit_stdev_ms": 0.0112
+      }
+    },
+    "aggregate_means": {
+      "build_ik_all_sec": {
+        "baseline_mean": 8.7105,
+        "candidate_mean": 7.8025,
+        "reduction_percent": 10.424200677343432
+      },
+      "build_ik_content_sec": {
+        "baseline_mean": 6.3035,
+        "candidate_mean": 6.254,
+        "reduction_percent": 0.7852780201475396
+      },
+      "build_beng_en_sec": {
+        "baseline_mean": 3.3810000000000002,
+        "candidate_mean": 3.2329999999999997,
+        "reduction_percent": 4.377403135167124
+      },
+      "build_total_sec": {
+        "baseline_mean": 18.418999999999997,
+        "candidate_mean": 17.3145,
+        "reduction_percent": 5.996525327107872
+      },
+      "tokenize_beng_avg_ms": {
+        "baseline_mean": 0.1427,
+        "candidate_mean": 0.1407,
+        "reduction_percent": 1.4015416958654492
+      },
+      "tokenize_ik_avg_ms": {
+        "baseline_mean": 0.2338,
+        "candidate_mean": 0.25129999999999997,
+        "reduction_percent": -7.485029940119747
+      },
+      "query_cn_avg_ms": {
+        "baseline_mean": 2.81485,
+        "candidate_mean": 2.66345,
+        "reduction_percent": 5.378616977814088
+      },
+      "query_beng_avg_ms": {
+        "baseline_mean": 4.17,
+        "candidate_mean": 3.77285,
+        "reduction_percent": 9.523980815347722
+      },
+      "query_mixed_avg_ms": {
+        "baseline_mean": 3.12915,
+        "candidate_mean": 2.8621,
+        "reduction_percent": 8.534266494095844
+      },
+      "query_limit_avg_ms": {
+        "baseline_mean": 0.46055,
+        "candidate_mean": 0.43835,
+        "reduction_percent": 4.820323526218651
+      },
+      "select1_avg_ms": {
+        "baseline_mean": 0.08574999999999999,
+        "candidate_mean": 0.08395,
+        "reduction_percent": 2.0991253644314867
+      }
+    },
+    "raw_reports_and_all_sample_logs": "archive: cycle_full_before_report.txt, full_after.txt, full_before_repeat.txt, full_after_repeat.txt and corresponding full_*.log"
+  },
+  "auxiliary_original_skip_load_runs": {
+    "baseline_report": "========================================\nFTS Large Benchmark Report\n========================================\ntimestamp:              2026-11-02 10:47:42\nlabel:                  binary_cmp_before\ngit_head:               053cdb6\ngit_dirty:              1\nrows:                   20000\nbatch:                  500\nrounds:                 3000\nquery_rounds:           200\nsamples:                3\nwarmup:                 30\nskip_load:              1\n----------------------------------------\nselect1_avg_ms:         0.0749\nselect1_stdev_ms:       0.0040\nraw_load_sec:           N/A\nraw_load_rows_per_sec:  N/A\nbuild_ik_all_sec:       N/A\nbuild_ik_content_sec:   N/A\nbuild_beng_en_sec:      N/A\nbuild_total_sec:        N/A\n----------------------------------------\ntokenize_ik_avg_ms:     0.2186\ntokenize_ik_median_ms:  0.2166\ntokenize_ik_stdev_ms:   0.0036\ntokenize_beng_avg_ms:   0.1195\ntokenize_beng_median_ms:0.1179\ntokenize_beng_stdev_ms: 0.0039\n----------------------------------------\nquery_cn_hits:          8001\nquery_cn_avg_ms:        2.6716\nquery_cn_stdev_ms:      0.0152\nquery_beng_hits:        11000\nquery_beng_avg_ms:      6.2627\nquery_beng_stdev_ms:    3.0564\nquery_mixed_hits:       7332\nquery_mixed_avg_ms:     3.0810\nquery_mixed_stdev_ms:   0.0514\nquery_limit_hits:       20\nquery_limit_avg_ms:     0.4316\nquery_limit_stdev_ms:   0.0112\n========================================\n",
+    "comparator_only_report": "========================================\nFTS Large Benchmark Report\n========================================\ntimestamp:              2026-11-02 10:51:13\nlabel:                  binary_cmp_after\ngit_head:               053cdb6\ngit_dirty:              1\nrows:                   20000\nbatch:                  500\nrounds:                 3000\nquery_rounds:           200\nsamples:                3\nwarmup:                 30\nskip_load:              1\n----------------------------------------\nselect1_avg_ms:         0.0779\nselect1_stdev_ms:       0.0009\nraw_load_sec:           N/A\nraw_load_rows_per_sec:  N/A\nbuild_ik_all_sec:       N/A\nbuild_ik_content_sec:   N/A\nbuild_beng_en_sec:      N/A\nbuild_total_sec:        N/A\n----------------------------------------\ntokenize_ik_avg_ms:     0.2168\ntokenize_ik_median_ms:  0.2160\ntokenize_ik_stdev_ms:   0.0015\ntokenize_beng_avg_ms:   0.1239\ntokenize_beng_median_ms:0.1234\ntokenize_beng_stdev_ms: 0.0017\n----------------------------------------\nquery_cn_hits:          8001\nquery_cn_avg_ms:        2.5189\nquery_cn_stdev_ms:      0.0175\nquery_beng_hits:        11000\nquery_beng_avg_ms:      3.5933\nquery_beng_stdev_ms:    0.0182\nquery_mixed_hits:       7332\nquery_mixed_avg_ms:     2.7818\nquery_mixed_stdev_ms:   0.0463\nquery_limit_hits:       20\nquery_limit_avg_ms:     0.4282\nquery_limit_stdev_ms:   0.0102\n========================================\n",
+    "limitation": {
+      "early_report": "binary_cmp_before, SKIP_LOAD=1",
+      "later_report": "full_before, SKIP_LOAD=0",
+      "detail": "The full-cycle runner reused full_before.txt (append output) and full_before.log (overwrite log) from the initial auxiliary SKIP_LOAD=1 run. Both report summaries survive in the append output and were split without altering metrics. The initial SKIP_LOAD=1 old per-sample log was overwritten and is unavailable. It is not used for the main performance claims. All controlled CPU groups and all four new complete-run sample logs are preserved.",
+      "retained_original_append_output": "full_before.txt",
+      "split_reports": [
+        "early_skip_before_report.txt",
+        "cycle_full_before_report.txt"
+      ]
+    }
+  },
+  "concurrent_token_equivalence": {
+    "baseline": {
+      "instance": {
+        "pid": 3843703,
+        "phase": "ascii_before_repeat",
+        "command": [
+          "/tmp/fts-20261102/seekdb-binary-cmp",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "connections": 8,
+      "cases_per_connection": 97,
+      "workload_sha256": "d0c4d5d033bae21a1e3aa57b3ef8fd380a2db039fde5465aea88c2a16744bbe4",
+      "results": [
+        {
+          "connection": 0,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 1,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 2,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 3,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 4,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 5,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 6,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 7,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        }
+      ]
+    },
+    "candidate": {
+      "instance": {
+        "pid": 3925398,
+        "phase": "ascii_after_repeat",
+        "command": [
+          "/tmp/fts-20261102/seekdb-ascii-stopwords",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "connections": 8,
+      "cases_per_connection": 97,
+      "workload_sha256": "d0c4d5d033bae21a1e3aa57b3ef8fd380a2db039fde5465aea88c2a16744bbe4",
+      "results": [
+        {
+          "connection": 0,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 1,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 2,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 3,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 4,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 5,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 6,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        },
+        {
+          "connection": 7,
+          "rows": 97,
+          "sha256": "31800bc0bc3a1ee71db2263b22fde9d0f9f2103aaff7776f2de012f5d443d688",
+          "stderr": ""
+        }
+      ]
+    },
+    "all_output_digests_equal": true,
+    "coverage": "8 connections x 97 queries per version: baseline SQL cases, all alphabetic strings of lengths 1-3, and 2048 deterministic mixed-case alphabetic strings of lengths 1-84"
+  },
+  "plans": {
+    "baseline": {
+      "cn": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587536      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12669   |587307      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器'))\n",
+      "en": "==================================================================\n|ID|OPERATOR             |NAME             |EST.ROWS|EST.TIME(us)|\n------------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                 |1       |834767      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_en_beng)|18000   |834441      |\n==================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit')), \n      pushdown_match_filter(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit'))\n",
+      "mixed": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587359      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12665   |587130      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('OceanBase 稳定 database')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('OceanBase 稳定 database'))\n",
+      "limit": "=======================================================================\n|ID|OPERATOR               |NAME                |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------------\n|0 |SCALAR GROUP BY        |                    |1       |949         |\n|1 |└─SUBPLAN SCAN         |t                   |20      |948         |\n|2 |  └─TEXT RETRIEVAL SCAN|docs(fti_content_ik)|20      |948         |\n=======================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil)\n  2 - output([1]), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      limit(20), offset(nil), is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.content) AGAINST('倒排索引 tokenizer')), \n      pushdown_match_filter(MATCH(docs.content) AGAINST('倒排索引 tokenizer'))\n"
+    },
+    "candidate": {
+      "cn": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587536      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12669   |587307      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('全文索引 分词器'))\n",
+      "en": "==================================================================\n|ID|OPERATOR             |NAME             |EST.ROWS|EST.TIME(us)|\n------------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                 |1       |834767      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_en_beng)|18000   |834441      |\n==================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit')), \n      pushdown_match_filter(MATCH(docs.title_en, docs.content_en) AGAINST('database performance audit'))\n",
+      "mixed": "=================================================================\n|ID|OPERATOR             |NAME            |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------\n|0 |SCALAR GROUP BY      |                |1       |587359      |\n|1 |└─TEXT RETRIEVAL SCAN|docs(fti_all_ik)|12665   |587130      |\n=================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.title, docs.content) AGAINST('OceanBase 稳定 database')), \n      pushdown_match_filter(MATCH(docs.title, docs.content) AGAINST('OceanBase 稳定 database'))\n",
+      "limit": "=======================================================================\n|ID|OPERATOR               |NAME                |EST.ROWS|EST.TIME(us)|\n-----------------------------------------------------------------------\n|0 |SCALAR GROUP BY        |                    |1       |949         |\n|1 |└─SUBPLAN SCAN         |t                   |20      |948         |\n|2 |  └─TEXT RETRIEVAL SCAN|docs(fti_content_ik)|20      |948         |\n=======================================================================\nOutputs & filters:\n-------------------------------------\n  0 - output([T_FUN_COUNT(*)]), filter(nil), rowset=256\n      group(nil), agg_func([T_FUN_COUNT(*)])\n  1 - output(nil), filter(nil), rowset=256\n      access(nil)\n  2 - output([1]), filter(nil), rowset=256\n      access(nil), partitions(p0)\n      limit(20), offset(nil), is_index_back=false, is_global_index=false, \n      calc_relevance=false, match_expr(MATCH(docs.content) AGAINST('倒排索引 tokenizer')), \n      pushdown_match_filter(MATCH(docs.content) AGAINST('倒排索引 tokenizer'))\n"
+    },
+    "all_four_identical": true,
+    "note": "Plan control is comparator-only; neither runtime optimization changes planning"
+  },
+  "regression": {
+    "instance": {
+      "pid": 4132079,
+      "phase": "full_after_repeat",
+      "command": [
+        "/tmp/fts-20261102/seekdb-candidate-rebuilt",
+        "--nodaemon",
+        "--base-dir",
+        "/tmp/obtest/ddl-two-full-after",
+        "--port",
+        "11963",
+        "--parameter",
+        "memory_budget=4G",
+        "--parameter",
+        "datafile_size=2G",
+        "--parameter",
+        "log_disk_size=2G",
+        "--parameter",
+        "cpu_count=4"
+      ]
+    },
+    "results": [
+      {
+        "suite": "fts_index",
+        "name": "fts_binary_id_merge",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_binary_id_merge.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_binary_id_merge.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_ascii_stopwords",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_ascii_stopwords.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_ascii_stopwords.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_truth_filter",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_truth_filter.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_truth_filter.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_project_pruning",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_project_pruning.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_project_pruning.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "beng_pipeline_lifetime",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/beng_pipeline_lifetime.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/beng_pipeline_lifetime.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_collector_state",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_collector_state.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_collector_state.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_posting_refill",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_posting_refill.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_posting_refill.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_node_pool",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_node_pool.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_node_pool.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "ik_arbitration_batches",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/ik_arbitration_batches.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/ik_arbitration_batches.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_ik_ranges",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_ik_ranges.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_ik_ranges.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_hotpath",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_hotpath.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_hotpath.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "match_filter_relevance",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/match_filter_relevance.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/match_filter_relevance.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_aux_sampling",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_aux_sampling.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_aux_sampling.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "fts_result_batches",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/fts_result_batches.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_result_batches.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_scan_boundaries",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_scan_boundaries.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_scan_boundaries.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_function",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_function.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_function.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_defaults",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_defaults.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_defaults.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "tokenize_beng_normalization",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/tokenize_beng_normalization.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_beng_normalization.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "fts_index",
+        "name": "domain_id_merge_with_compare_null",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/fts_index/t/domain_id_merge_with_compare_null.test",
+          "--result-file=mysql_test/test_suite/fts_index/r/mysql/domain_id_merge_with_compare_null.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "ai_column",
+        "name": "ai_column_vector_index",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/ai_column/t/ai_column_vector_index.test",
+          "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_vector_index.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "vector_index",
+        "name": "sparse_vector_index_vsag_query",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/vector_index/t/sparse_vector_index_vsag_query.test",
+          "--result-file=mysql_test/test_suite/vector_index/r/mysql/sparse_vector_index_vsag_query.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "ai_column",
+        "name": "ai_column_retry_strict",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/ai_column/t/ai_column_retry_strict.test",
+          "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_retry_strict.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "ai_column",
+        "name": "ai_column_strict_scope",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/ai_column/t/ai_column_strict_scope.test",
+          "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_strict_scope.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      },
+      {
+        "suite": "ai_column",
+        "name": "ai_column_fts_projection",
+        "command": [
+          "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+          "--host=127.0.0.1",
+          "--port=11963",
+          "--user=root",
+          "--database=test",
+          "--test-file=mysql_test/test_suite/ai_column/t/ai_column_fts_projection.test",
+          "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_fts_projection.result"
+        ],
+        "returncode": 0,
+        "stdout": "ok\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "diagnostics_and_failed_trials": {
+    "gdb_first_attempt": {
+      "status": "failed",
+      "reason": "GDB loading full debug information exceeded 25-second command timeout; no timings were taken from debugger runs; retried with --readnever"
+    },
+    "new_regression_latin1_trial": {
+      "binary": "seekdb-before",
+      "returncode": 1,
+      "error": "1115: Unknown character set: latin1",
+      "disposition": "Only binary and utf8mb4 are exposed by SHOW CHARACTER SET. Replaced the unsupported new test statement with a binary-charset case. Existing tests and expectations were not changed."
+    },
+    "binary_pk_projection_probe": {
+      "baseline": "seekdb-before",
+      "candidate": "seekdb-binary-cmp",
+      "equal_outputs": true,
+      "status": "preexisting discrepancy",
+      "description": "HEX(k) selected from FTS with an id range after primary key updates, and from a partitioned FTS scan, differs from FORCE INDEX(PRIMARY) on the baseline and candidate. The new regression asserts IDs, scores and aggregate results but does not bless those incorrect projected HEX(k) values. Raw reproducer and both outputs retained."
+    },
+    "remote_read_attempt": {
+      "command": "git ls-remote origin refs/heads/competition-solutions",
+      "status": "terminated after hanging for >70 seconds without output; local work continues",
+      "resolved": "Direct HTTPS and SSH/22 and SSH/443 timed out. Explicit https_proxy=http://127.0.0.1:17897 (using the existing HTTP proxy) succeeded. Remote branch equals 053cdb6 and fetch updated origin/competition-solutions."
+    },
+    "report_path_collision": {
+      "early_report": "binary_cmp_before, SKIP_LOAD=1",
+      "later_report": "full_before, SKIP_LOAD=0",
+      "detail": "The full-cycle runner reused full_before.txt (append output) and full_before.log (overwrite log) from the initial auxiliary SKIP_LOAD=1 run. Both report summaries survive in the append output and were split without altering metrics. The initial SKIP_LOAD=1 old per-sample log was overwritten and is unavailable. It is not used for the main performance claims. All controlled CPU groups and all four new complete-run sample logs are preserved.",
+      "retained_original_append_output": "full_before.txt",
+      "split_reports": [
+        "early_skip_before_report.txt",
+        "cycle_full_before_report.txt"
+      ]
+    }
+  },
+  "installed_binary": {
+    "path": "/home/liyuelinxuan/seekdb/bin/seekdb",
+    "binary_sha256": "0631c61b3c68ad66869d409bbd1e1476f8aeb3fa3e5ed1b5f7d71934e85a5bd8",
+    "method": "copy to a new file then atomic replace; existing server processes retain their mapped executable"
+  },
+  "private_instance_shutdown": {
+    "pid": 4132079,
+    "stopped": true
+  },
+  "limitations": [
+    "No new platform evaluation exists for this source. The handover score 32.388/50 is kept separately and no platform score is estimated.",
+    "Full original BENG SQL-loop tokenization is mixed: first pair regresses and second pair improves; aggregate reduction is only 1.4%. A 20.9% internal-loop reduction is not a 20.9% platform reduction.",
+    "Full original IK SQL-loop mean regresses about 7.5%, despite no IK code change and a much smaller internal-loop difference. Keep this negative result; do not attribute the full build decrease to the two changes.",
+    "Only two full runs per version. CPU affinity controls scheduling placement, not host contention or frequency. All samples and negative results available are preserved.",
+    "The initial auxiliary old SKIP_LOAD=1 per-sample log was overwritten by a filename collision. Its report summary survives and is excluded from main benefit claims. All controlled microbenchmark samples and all four complete-run sample logs survive.",
+    "An additional binary-primary-key HEX(k) projection discrepancy exists on both baseline and comparator candidate. The raw reproducer and primary/FTS outputs are retained; it is not counted as a correctness pass or fixed here.",
+    "The 24 normal-protocol regressions pass. SQL PREPARE/EXECUTE in them passes. This run did not retry mysqltest --ps-protocol and does not upgrade the previous shared baseline/candidate failure to a pass."
+  ],
+  "raw_archive": {
+    "path": "docs/fts_binary_ascii_raw.json.gz",
+    "sha256": "956c67d3acb32e0cf96fc82b4e1830cf25ae10a22840fe41113f060ca7da78c9",
+    "uncompressed_bytes": 4192897,
+    "compressed_bytes": 209120,
+    "file_count": 80,
+    "files": [
+      "ascii_stopwords_latin1_trial.test",
+      "before.json",
+      "before_repeat.json",
+      "binary_cmp.json",
+      "binary_cmp_repeat.json",
+      "binary_pk_baseline_trial.result",
+      "binary_pk_trial.test",
+      "build_ascii_stopwords.log",
+      "build_baseline_provenance.log",
+      "build_binary_cmp.log",
+      "build_candidate_provenance.log",
+      "combined_after.json",
+      "combined_after_repeat.json",
+      "concurrent_tokens.py",
+      "concurrent_tokens.sql",
+      "concurrent_tokens_after.json",
+      "concurrent_tokens_before.json",
+      "cycle_full_before_report.txt",
+      "early_skip_before_report.txt",
+      "full_after.log",
+      "full_after.txt",
+      "full_after_repeat.log",
+      "full_after_repeat.txt",
+      "full_before.log",
+      "full_before.txt",
+      "full_before_repeat.log",
+      "full_before_repeat.txt",
+      "full_binary_cmp.log",
+      "full_binary_cmp.txt",
+      "full_cycle.json",
+      "full_cycle.py",
+      "full_cycle_metrics.json",
+      "installed_binary.json",
+      "instance.json",
+      "instance.py",
+      "measure.py",
+      "measure_tokens.py",
+      "pk_probe.sql",
+      "pk_probe_before.txt",
+      "pk_probe_binary_cmp.txt",
+      "plans.py",
+      "plans_after.json",
+      "plans_before.json",
+      "profile.py",
+      "profile_beng.json",
+      "profile_beng.sql",
+      "profile_beng_client.log",
+      "profile_beng_gdb.log",
+      "profile_en.json",
+      "profile_en.sql",
+      "profile_en_client.log",
+      "profile_en_gdb.log",
+      "profile_ik.json",
+      "profile_ik.sql",
+      "profile_ik_client.log",
+      "profile_ik_gdb.log",
+      "provenance.json",
+      "raw_state.json",
+      "rebuild_provenance.py",
+      "regression.json",
+      "regression.py",
+      "server_ascii_after.log",
+      "server_ascii_after_repeat.log",
+      "server_ascii_before_repeat.log",
+      "server_before.log",
+      "server_before_repeat.log",
+      "server_binary_cmp.log",
+      "server_binary_cmp_repeat.log",
+      "server_full_after.log",
+      "server_full_after_repeat.log",
+      "server_full_before.log",
+      "server_full_before_repeat.log",
+      "tokens_ascii_after.json",
+      "tokens_ascii_after_repeat.json",
+      "tokens_cmp_before.json",
+      "tokens_cmp_before_repeat.json",
+      "trial_notes.json",
+      "build_release/src/storage/CMakeFiles/ob_storage.dir/flags.make",
+      "binary_cmp_source.patch",
+      "combined_source.patch"
+    ]
+  }
+}

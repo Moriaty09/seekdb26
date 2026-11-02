@@ -1,0 +1,27 @@
+{
+  "reported_by": "user handover on 2026-11-02",
+  "score_out_of_50": 32.388,
+  "historical_max_score_out_of_50": 33.731,
+  "reported_current_source_commit": "acc14298157fbcc59a99e8fa95ddacb868ddead5",
+  "source_association_note": "The handover identifies acc1429 as the current performance source. A platform receipt with its own commit field and raw score was not supplied, so neither is inferred.",
+  "metrics": {
+    "build_beng_en_sec": 1.622,
+    "build_ik_all_sec": 4.052,
+    "build_ik_content_sec": 3.025,
+    "build_total_sec": 8.705,
+    "tokenize_beng_avg_ms": 0.0386,
+    "tokenize_ik_avg_ms": 0.0713,
+    "query_beng_avg_ms": 1.7304,
+    "query_cn_avg_ms": 1.1173,
+    "query_mixed_avg_ms": 1.2997,
+    "query_limit_avg_ms": 0.1238,
+    "query_beng_hits": 11000,
+    "query_cn_hits": 8001,
+    "query_mixed_hits": 7332,
+    "query_limit_hits": 20
+  },
+  "limitations": [
+    "This is a handover transcription, not a controlled same-condition A/B run.",
+    "The score and elapsed-time trends across platform receipts are inconsistent with interpreting all receipts as the same fixed baseline. Source choices use controlled local measurements and correctness checks instead of total score alone."
+  ]
+}
