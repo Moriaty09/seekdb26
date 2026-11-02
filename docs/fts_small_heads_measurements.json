@@ -1,0 +1,1977 @@
+{
+  "source_commit": "f73f78596969bf31c2aae0bfa6ca59ce2ec6ba35",
+  "baseline_source_commit": "243cbcd2f5c3291c7cc68a65a69490523b471658",
+  "initial_documentation_head": "2a94c110d9e654a4a82519fd93372e79855a7640",
+  "platform_feedback_for_candidate": null,
+  "baseline_platform_feedback": "docs/fts_36228_feedback.json; 36.228 points associated with 243cbcd by submission order, not this candidate",
+  "adopted_runtime_changes": [
+    "src/storage/retrieval/ob_text_daat_iter.cpp",
+    "src/storage/retrieval/ob_text_daat_iter.h"
+  ],
+  "new_regression_test_paths": [
+    "tools/deploy/mysql_test/test_suite/fts_index/t/fts_small_head_merge.test",
+    "tools/deploy/mysql_test/test_suite/fts_index/r/mysql/fts_small_head_merge.result"
+  ],
+  "source_patch_sha256": "8f00f016363c5bb26faa31fcfeec3f7dbf79b14d04e6e9472942fffca0d42717",
+  "baseline_inputs_and_scoring_unchanged": true,
+  "existing_test_expectations_unchanged": true,
+  "method": {
+    "host": "dell-PowerEdge-T640",
+    "memory_budget": "4G",
+    "cpu_count": 4,
+    "affinity": "13",
+    "rows": 20000,
+    "port": 11963,
+    "data_dir": "/tmp/obtest/ddl-two-full-after",
+    "build_command": [
+      "cmake",
+      "--build",
+      "build_release",
+      "--target",
+      "observer",
+      "-j16"
+    ],
+    "query_microbenchmark": {
+      "order": "A B A B",
+      "warmup_executions_per_query": 500,
+      "executions_per_group": 500,
+      "measured_groups_per_phase": 3,
+      "groups_per_variant_per_query": 6,
+      "validation": "All 500 outputs per group checked against CN8001 / EN11000 / mixed7332 / LIMIT20."
+    },
+    "original_sql_benchmark": {
+      "order": "A B A B",
+      "skip_load": 1,
+      "rounds": 3000,
+      "query_rounds": 200,
+      "samples": 3,
+      "warmup": 30,
+      "notes": "Unmodified original script and same reused corpus. No build-speed claim; query-only change."
+    },
+    "process_cpu_clock": "Whole-process utime+stime from /proc/PID/stat including background threads; 100 Hz tick resolution."
+  },
+  "profiling": {
+    "source_commit": "243cbcd2f5c3291c7cc68a65a69490523b471658",
+    "samples": 80,
+    "instance": {
+      "pid": 3858296,
+      "phase": "baseline_profile",
+      "command": [
+        "/tmp/fts-20261102-ik-routing/seekdb-routing-final",
+        "--nodaemon",
+        "--base-dir",
+        "/tmp/obtest/ddl-two-full-after",
+        "--port",
+        "11963",
+        "--parameter",
+        "memory_budget=4G",
+        "--parameter",
+        "datafile_size=2G",
+        "--parameter",
+        "log_disk_size=2G",
+        "--parameter",
+        "cpu_count=4"
+      ]
+    },
+    "workload": "SELECT COUNT(*) FROM fts_large_bench.docs WHERE MATCH(title_en,content_en) AGAINST('database performance audit');",
+    "leaf_frame_counts": {
+      "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)": 9,
+      "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const": 7,
+      "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)": 6,
+      "__memmove_evex_unaligned_erms": 5,
+      "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const": 4,
+      "oceanbase::storage::ObSRDaaTIterImpl::project_results(long)": 4,
+      "__memcmp_evex_movbe": 4,
+      "oceanbase::storage::(anonymous namespace)::compare_binary_ids(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)": 4,
+      "oceanbase::storage::ObSRMergeCmp::get_id_datum(long)": 3,
+      "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)": 3,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)": 3,
+      "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)": 3,
+      "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()": 3,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)": 2,
+      "oceanbase::storage::ObSRDaaTInnerProductRelevanceCollector::collect_one_dim(long, double)": 2,
+      "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)": 2,
+      "write": 2,
+      "syscall": 2,
+      "int oceanbase::sql::ObAggregateProcessor::inner_process_batch<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::sql::ObAggregateProcessor::GroupRow&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice&, long, long)": 1,
+      "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()": 1,
+      "int oceanbase::sql::ObAggregateProcessor::process_aggr_batch_result<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::common::ObIArray<oceanbase::sql::ObExpr*> const*, oceanbase::sql::ObAggregateProcessor::AggrCell&, oceanbase::sql::ObAggrInfo const&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice const&)": 1,
+      "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)": 1,
+      "oceanbase::storage::ObBlockBatchedRowStore::get_row_ids(oceanbase::blocksstable::ObIMicroBlockReader*, long&, long, long&, bool, oceanbase::storage::ObFilterResult const&)": 1,
+      "oceanbase::sql::ObDocIdExt::from_datum(oceanbase::common::ObDatum const&)": 1,
+      "oceanbase::common::ObArenaAllocator::alloc(long, oceanbase::lib::ObMemAttr const&)": 1,
+      "oceanbase::storage::ObMultipleMerge::get_next_normal_rows(long&, long)": 1,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const": 1,
+      "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)": 1,
+      "oceanbase::storage::ObTextRetrievalDaaTTokenIter::get_next_row()": 1,
+      "oceanbase::sql::ObAggregateProcessor::init_one_group(long, bool)": 1
+    },
+    "inclusive_frame_counts": {
+      "??": 77,
+      "oceanbase::sql::ObDASMergeIter::get_next_seq_rows(long&, long)": 48,
+      "oceanbase::sql::ObDASMergeIter::inner_get_next_rows(long&, long)": 48,
+      "oceanbase::storage::ObSRDaaTIterImpl::do_one_merge_round(long&)": 42,
+      "oceanbase::storage::ObSRDaaTIterImpl::get_next_rows(long, long&)": 42,
+      "oceanbase::storage::ObTextDaaTIter::fill_merge_heap()": 27,
+      "oceanbase::storage::ObMultipleMerge::get_next_rows(long&, long)": 15,
+      "oceanbase::sql::ObDASScanIter::inner_get_next_rows(long&, long)": 15,
+      "oceanbase::storage::ObTableScanIterator::get_next_rows(long&, long)": 15,
+      "oceanbase::storage::ObMultipleMerge::get_next_normal_rows(long&, long)": 15,
+      "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::fetch_rows(oceanbase::storage::ObSSTableReadHandle&)": 14,
+      "oceanbase::storage::ObMultipleScanMerge::inner_get_next_rows()": 14,
+      "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_next_rows()": 14,
+      "oceanbase::storage::ObVectorStore::fill_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)": 14,
+      "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::get_next_rows()": 14,
+      "oceanbase::storage::ObVectorStore::fill_output_rows(long, oceanbase::blocksstable::ObIMicroBlockRowScanner&, long&, long, oceanbase::storage::ObFilterResult const&)": 14,
+      "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::push(oceanbase::storage::ObSRMergeItem const&)": 14,
+      "oceanbase::blocksstable::ObIMicroBlockRowScanner::get_rows_for_old_format(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, int const*, long, long, char const**, oceanbase::common::ObIArray<oceanbase::sql::ObExpr*>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, oceanbase::common::ObIArray<oceanbase::blocksstable::ObStorageDatum> const*, bool)": 13,
+      "oceanbase::blocksstable::ObMicroBlockDecoder::get_col_datums(int, int const*, char const**, long, oceanbase::common::ObDatum*)": 13,
+      "oceanbase::blocksstable::ObMicroBlockDecoder::get_rows(oceanbase::common::ObIArray<int> const&, oceanbase::common::ObIArray<oceanbase::share::schema::ObColumnParam const*> const&, bool, int const*, char const**, long, oceanbase::common::ObIArray<oceanbase::blocksstable::ObSqlDatumInfo>&, long)": 13,
+      "oceanbase::storage::ObSRDaaTIterImpl::collect_dims_by_id(oceanbase::common::ObDatum const*&, double&, bool&)": 12,
+      "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::open_cur_data_block(oceanbase::storage::ObSSTableReadHandle&)": 12,
+      "oceanbase::blocksstable::ObStringDiffDecoder::batch_decode(oceanbase::blocksstable::ObColumnDecoderCtx const&, oceanbase::blocksstable::ObIRowIndex const*, int const*, char const**, long, oceanbase::common::ObDatum*) const": 9,
+      "oceanbase::storage::(anonymous namespace)::compare_binary_ids(oceanbase::common::ObDatum const&, oceanbase::common::ObDatum const&, int&, oceanbase::common::ObDatumAccessContext const*)": 8,
+      "oceanbase::storage::ObTextRetrievalDaaTTokenIter::save_docids()": 7,
+      "oceanbase::omt::ObThWorker::worker(long&, long&, int&)": 6,
+      "non-virtual thunk to oceanbase::omt::ObThWorker::run(long)": 6,
+      "oceanbase::storage::ObSRDaaTIterImpl::project_results(long)": 6,
+      "oceanbase::common::ObIArrayWrap<unsigned long>::at(long)": 6,
+      "oceanbase::lib::Thread::run()": 5,
+      "oceanbase::sql::ObDocIdExt::from_datum(oceanbase::common::ObDatum const&)": 5,
+      "__memmove_evex_unaligned_erms": 5,
+      "oceanbase::storage::ObSRDaaTIterImpl::filter_on_demand(long, double, bool&)": 5,
+      "oceanbase::omt::ObWorkerProcessor::process(oceanbase::rpc::ObRequest&)": 4,
+      "oceanbase::lib::Thread::__th_start(void*)": 4,
+      "oceanbase::observer::ObSyncPlanDriver::response_result(oceanbase::observer::ObMySQLResultSet&)": 4,
+      "oceanbase::observer::ObMPQuery::process()": 4,
+      "oceanbase::omt::ObWorkerProcessor::process_one(oceanbase::rpc::ObRequest&)": 4,
+      "oceanbase::observer::ObMPQuery::process_single_stmt(oceanbase::sql::ObMultiStmtItem const&, oceanbase::observer::ObSMConnection*, oceanbase::sql::ObSQLSessionInfo&, bool, bool, bool&, bool&)": 4,
+      "oceanbase::omt::ObThWorker::process_request(oceanbase::rpc::ObRequest&)": 4,
+      "oceanbase::rpc::frame::ObSqlProcessor::run()": 4,
+      "oceanbase::blocksstable::ObIntegerBaseDiffDecoder::batch_get_bitpacked_values(oceanbase::blocksstable::ObColumnDecoderCtx const&, int const*, long, long, long, oceanbase::common::ObDatum*) const": 4,
+      "__memcmp_evex_movbe": 4,
+      "oceanbase::sql::ObOperator::get_next_batch(long, oceanbase::sql::ObBatchRows const*&)": 3,
+      "oceanbase::sql::ObBatchRowIter::get_next_row()": 3,
+      "oceanbase::sql::ObAggregateProcessor::process_batch(oceanbase::sql::ObAggregateProcessor::GroupRow&, oceanbase::sql::ObBatchRows const&, unsigned short, unsigned short)": 3,
+      "oceanbase::sql::ObResultSet::get_next_row(oceanbase::common::ObNewRow const*&)": 3,
+      "oceanbase::observer::ObQueryDriver::response_query_result(oceanbase::sql::ObResultSet&, bool, bool, bool&, long)": 3,
+      "oceanbase::sql::ObExecuteResult::get_next_row(oceanbase::sql::ObExecContext&, oceanbase::common::ObNewRow const*&)": 3,
+      "int oceanbase::sql::ObAggregateProcessor::inner_process_batch<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::sql::ObAggregateProcessor::GroupRow&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice&, long, long)": 3,
+      "oceanbase::sql::ObScalarAggregateOp::inner_get_next_batch(long)": 3,
+      "oceanbase::storage::ObSRDaaTIterImpl::cache_result(long&, oceanbase::common::ObDatum const&, double)": 3,
+      "oceanbase::storage::ObSRMergeCmp::get_id_datum(long)": 3,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::set(long)": 3,
+      "oceanbase::common::ObIArrayWrap<oceanbase::sql::ObDocIdExt>::at(long)": 3,
+      "start_thread": 3,
+      "int oceanbase::sql::ObAggregateProcessor::process_aggr_batch_result<oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice>(oceanbase::common::ObIArray<oceanbase::sql::ObExpr*> const*, oceanbase::sql::ObAggregateProcessor::AggrCell&, oceanbase::sql::ObAggrInfo const&, oceanbase::sql::ObAggregateProcessor::ObBatchRowsSlice const&)": 2,
+      "oceanbase::storage::ObSSTableRowScanner<oceanbase::storage::ObIndexTreeMultiPassPrefetcher<32, 3> >::inner_get_next_row(oceanbase::blocksstable::ObDatumRow const*&)": 2,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::unset(long)": 2,
+      "oceanbase::storage::ObSRDaaTInnerProductRelevanceCollector::collect_one_dim(long, double)": 2,
+      "write": 2,
+      "oceanbase::storage::ObTextRetrievalTokenIter::get_next_batch(long, long&)": 2,
+      "oceanbase::common::ObPriorityQueue2<1, 2, 3>::do_pop(oceanbase::common::ObLink*&, long, long, int)": 2,
+      "oceanbase::common::SCondTemp<3>::wait(long)": 2,
+      "syscall": 2,
+      "oceanbase::lib::ObFutex::wait(int, long)": 2,
+      "oceanbase::storage::ObSimpleRowsMerger<oceanbase::storage::ObSRMergeItem, oceanbase::storage::ObSRMergeCmp>::pop()": 1,
+      "oceanbase::storage::ObBlockBatchedRowStore::get_row_ids(oceanbase::blocksstable::ObIMicroBlockReader*, long&, long, long&, bool, oceanbase::storage::ObFilterResult const&)": 1,
+      "oceanbase::common::ObArenaAllocator::alloc(long, oceanbase::lib::ObMemAttr const&)": 1,
+      "oceanbase::sql::ObBitVectorImpl<unsigned long>::at(long) const": 1,
+      "oceanbase::storage::ObTextRetrievalDaaTTokenIter::get_next_row()": 1,
+      "oceanbase::sql::ObOperator::open()": 1,
+      "oceanbase::sql::ObExecuteResult::open() const": 1,
+      "oceanbase::sql::ObAggregateProcessor::init_one_group(long, bool)": 1,
+      "oceanbase::sql::ObResultSet::open()": 1,
+      "oceanbase::sql::ObScalarAggregateOp::inner_open()": 1,
+      "oceanbase::sql::ObResultSet::open_result()": 1
+    },
+    "caveat": "Interrupted GDB snapshots locate paths, not precise CPU percentages. Profiling and timed groups do not overlap."
+  },
+  "binary_provenance": {
+    "baseline_source": "243cbcd2f5c3291c7cc68a65a69490523b471658",
+    "patch_sha256": "8f00f016363c5bb26faa31fcfeec3f7dbf79b14d04e6e9472942fffca0d42717",
+    "binary_sha256": "864dcf295e90defe6932f7b55815d1d62b52dc79f3eb7e11f1089e06754e7ad6",
+    "build_returncode": 0,
+    "build_seconds": 40.30640459060669
+  },
+  "query_microbenchmark": {
+    "summary": {
+      "cn": {
+        "wall_ms": {
+          "baseline": 2.4649070724844933,
+          "candidate": 2.330533068627119,
+          "reduction_percent": 5.451483561282188
+        },
+        "process_cpu_ms": {
+          "baseline": 2.36,
+          "candidate": 2.24,
+          "reduction_percent": 5.084745762711851
+        }
+      },
+      "en": {
+        "wall_ms": {
+          "baseline": 3.608791533857584,
+          "candidate": 3.3661592602729797,
+          "reduction_percent": 6.723366293348754
+        },
+        "process_cpu_ms": {
+          "baseline": 3.51,
+          "candidate": 3.26,
+          "reduction_percent": 7.122507122507127
+        }
+      },
+      "mixed": {
+        "wall_ms": {
+          "baseline": 2.7119737342000008,
+          "candidate": 2.54848138615489,
+          "reduction_percent": 6.0285372967795015
+        },
+        "process_cpu_ms": {
+          "baseline": 2.6100000000000003,
+          "candidate": 2.46,
+          "reduction_percent": 5.747126436781624
+        }
+      },
+      "limit": {
+        "wall_ms": {
+          "baseline": 0.3508201204240322,
+          "candidate": 0.36167414858937263,
+          "reduction_percent": -3.093901271176036
+        },
+        "process_cpu_ms": {
+          "baseline": 0.29000000000000004,
+          "candidate": 0.3,
+          "reduction_percent": -3.44827586206895
+        }
+      }
+    },
+    "phases": [
+      {
+        "instance": {
+          "pid": 4012794,
+          "phase": "query_baseline_1",
+          "command": [
+            "/tmp/fts-20261102-ik-routing/seekdb-routing-final",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.4898848310112953,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.4642061963677406,
+              "process_cpu_ms": 2.38,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.465607948601246,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.6500082686543465,
+              "process_cpu_ms": 3.58,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.613416500389576,
+              "process_cpu_ms": 3.52,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.6833519712090492,
+              "process_cpu_ms": 3.6,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.722305677831173,
+              "process_cpu_ms": 2.62,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.705073229968548,
+              "process_cpu_ms": 2.6,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.7518473342061043,
+              "process_cpu_ms": 2.64,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.34967590868473053,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3274479806423187,
+              "process_cpu_ms": 0.26,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3519643321633339,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      {
+        "instance": {
+          "pid": 4027902,
+          "phase": "query_candidate_1",
+          "command": [
+            "/tmp/fts-20261102-small-heads/seekdb-small-heads",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.3206004053354263,
+              "process_cpu_ms": 2.22,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 3.3014263212680817,
+              "process_cpu_ms": 3.28,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.3203119412064552,
+              "process_cpu_ms": 2.24,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.3633806258440018,
+              "process_cpu_ms": 3.26,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.3745512515306473,
+              "process_cpu_ms": 3.3,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.3810239136219025,
+              "process_cpu_ms": 3.28,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.7351417392492294,
+              "process_cpu_ms": 2.68,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.562401220202446,
+              "process_cpu_ms": 2.44,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.57075534760952,
+              "process_cpu_ms": 2.5,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.5076102837920189,
+              "process_cpu_ms": 0.46,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.35758040845394135,
+              "process_cpu_ms": 0.3,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3904186189174652,
+              "process_cpu_ms": 0.34,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      {
+        "instance": {
+          "pid": 4042009,
+          "phase": "query_baseline_2",
+          "command": [
+            "/tmp/fts-20261102-ik-routing/seekdb-routing-final",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.457339830696583,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.45779662579298,
+              "process_cpu_ms": 2.36,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.493534356355667,
+              "process_cpu_ms": 2.4,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.604166567325592,
+              "process_cpu_ms": 3.5,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.5685086399316788,
+              "process_cpu_ms": 3.46,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.5916175171732903,
+              "process_cpu_ms": 3.48,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.680336371064186,
+              "process_cpu_ms": 2.62,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.7188742384314537,
+              "process_cpu_ms": 2.6,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.6772773787379265,
+              "process_cpu_ms": 2.58,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.3879384621977806,
+              "process_cpu_ms": 0.32,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3418608158826828,
+              "process_cpu_ms": 0.3,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.44488829374313354,
+              "process_cpu_ms": 0.4,
+              "hits": "20"
+            }
+          ]
+        }
+      },
+      {
+        "instance": {
+          "pid": 4056093,
+          "phase": "query_candidate_2",
+          "command": [
+            "/tmp/fts-20261102-small-heads/seekdb-small-heads",
+            "--nodaemon",
+            "--base-dir",
+            "/tmp/obtest/ddl-two-full-after",
+            "--port",
+            "11963",
+            "--parameter",
+            "memory_budget=4G",
+            "--parameter",
+            "datafile_size=2G",
+            "--parameter",
+            "log_disk_size=2G",
+            "--parameter",
+            "cpu_count=4"
+          ]
+        },
+        "warmup": 500,
+        "executions_per_group": 500,
+        "measured_groups": 3,
+        "results": {
+          "cn": [
+            {
+              "wall_ms": 2.3100682348012924,
+              "process_cpu_ms": 2.2,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.3431611359119415,
+              "process_cpu_ms": 2.24,
+              "hits": "8001"
+            },
+            {
+              "wall_ms": 2.340465731918812,
+              "process_cpu_ms": 2.24,
+              "hits": "8001"
+            }
+          ],
+          "en": [
+            {
+              "wall_ms": 3.352947622537613,
+              "process_cpu_ms": 3.26,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.3689378947019577,
+              "process_cpu_ms": 3.26,
+              "hits": "11000"
+            },
+            {
+              "wall_ms": 3.3210341334342957,
+              "process_cpu_ms": 3.24,
+              "hits": "11000"
+            }
+          ],
+          "mixed": [
+            {
+              "wall_ms": 2.5295443311333656,
+              "process_cpu_ms": 2.42,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.534561552107334,
+              "process_cpu_ms": 2.46,
+              "hits": "7332"
+            },
+            {
+              "wall_ms": 2.522779665887356,
+              "process_cpu_ms": 2.46,
+              "hits": "7332"
+            }
+          ],
+          "limit": [
+            {
+              "wall_ms": 0.3459133505821228,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.3657678887248039,
+              "process_cpu_ms": 0.3,
+              "hits": "20"
+            },
+            {
+              "wall_ms": 0.34594736248254776,
+              "process_cpu_ms": 0.28,
+              "hits": "20"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "original_sql_benchmark": {
+    "runs": [
+      {
+        "phase": "sql_baseline_1",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 1.0,
+          "select1_avg_ms": 0.0802,
+          "select1_stdev_ms": 0.0048,
+          "tokenize_ik_avg_ms": 0.2096,
+          "tokenize_ik_median_ms": 0.2098,
+          "tokenize_ik_stdev_ms": 0.0006,
+          "tokenize_beng_avg_ms": 0.1172,
+          "tokenize_beng_stdev_ms": 0.0009,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.5697,
+          "query_cn_stdev_ms": 0.0107,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.7024,
+          "query_beng_stdev_ms": 0.0284,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.7901,
+          "query_mixed_stdev_ms": 0.0113,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4532,
+          "query_limit_stdev_ms": 0.0314
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 259.541,
+              "avg_ms": 0.0865
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 237.343,
+              "avg_ms": 0.0791
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 224.596,
+              "avg_ms": 0.0749
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 629.349,
+              "avg_ms": 0.2098
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 626.067,
+              "avg_ms": 0.2087
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 630.562,
+              "avg_ms": 0.2102
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 350.094,
+              "avg_ms": 0.1167
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 349.433,
+              "avg_ms": 0.1165
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 355.217,
+              "avg_ms": 0.1184
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 512.047,
+              "avg_ms": 2.5602
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 512.885,
+              "avg_ms": 2.5644
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 516.92,
+              "avg_ms": 2.5846
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 742.416,
+              "avg_ms": 3.7121
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 732.76,
+              "avg_ms": 3.6638
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 746.245,
+              "avg_ms": 3.7312
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 555.901,
+              "avg_ms": 2.7795
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 556.979,
+              "avg_ms": 2.7849
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 561.165,
+              "avg_ms": 2.8058
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 82.992,
+              "avg_ms": 0.415
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 90.508,
+              "avg_ms": 0.4525
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 98.398,
+              "avg_ms": 0.492
+            }
+          ]
+        }
+      },
+      {
+        "phase": "sql_candidate_1",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 1.0,
+          "select1_avg_ms": 0.0761,
+          "select1_stdev_ms": 0.0031,
+          "tokenize_ik_avg_ms": 0.2074,
+          "tokenize_ik_median_ms": 0.2078,
+          "tokenize_ik_stdev_ms": 0.0023,
+          "tokenize_beng_avg_ms": 0.1204,
+          "tokenize_beng_stdev_ms": 0.0016,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.3782,
+          "query_cn_stdev_ms": 0.0263,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.4634,
+          "query_beng_stdev_ms": 0.0296,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.6496,
+          "query_mixed_stdev_ms": 0.0512,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.427,
+          "query_limit_stdev_ms": 0.0187
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 228.055,
+              "avg_ms": 0.076
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 216.835,
+              "avg_ms": 0.0723
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 239.562,
+              "avg_ms": 0.0799
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 613.526,
+              "avg_ms": 0.2045
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 630.098,
+              "avg_ms": 0.21
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 623.475,
+              "avg_ms": 0.2078
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 361.353,
+              "avg_ms": 0.1205
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 366.985,
+              "avg_ms": 0.1223
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 355.582,
+              "avg_ms": 0.1185
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 471.326,
+              "avg_ms": 2.3566
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 483.048,
+              "avg_ms": 2.4152
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 472.555,
+              "avg_ms": 2.3628
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 685.568,
+              "avg_ms": 3.4278
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 692.428,
+              "avg_ms": 3.4621
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 700.041,
+              "avg_ms": 3.5002
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 544.397,
+              "avg_ms": 2.722
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 522.921,
+              "avg_ms": 2.6146
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 522.413,
+              "avg_ms": 2.6121
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 80.129,
+              "avg_ms": 0.4006
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 88.338,
+              "avg_ms": 0.4417
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 87.739,
+              "avg_ms": 0.4387
+            }
+          ]
+        }
+      },
+      {
+        "phase": "sql_baseline_2",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 1.0,
+          "select1_avg_ms": 0.0777,
+          "select1_stdev_ms": 0.0015,
+          "tokenize_ik_avg_ms": 0.2044,
+          "tokenize_ik_median_ms": 0.2037,
+          "tokenize_ik_stdev_ms": 0.0024,
+          "tokenize_beng_avg_ms": 0.1166,
+          "tokenize_beng_stdev_ms": 0.0055,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.5584,
+          "query_cn_stdev_ms": 0.011,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.713,
+          "query_beng_stdev_ms": 0.0297,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.7993,
+          "query_mixed_stdev_ms": 0.0326,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4507,
+          "query_limit_stdev_ms": 0.0497
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 239.188,
+              "avg_ms": 0.0797
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 228.47,
+              "avg_ms": 0.0762
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 231.174,
+              "avg_ms": 0.0771
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 623.12,
+              "avg_ms": 0.2077
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 605.563,
+              "avg_ms": 0.2019
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 610.992,
+              "avg_ms": 0.2037
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 355.933,
+              "avg_ms": 0.1186
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 366.352,
+              "avg_ms": 0.1221
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 327.043,
+              "avg_ms": 0.109
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 514.783,
+              "avg_ms": 2.5739
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 509.814,
+              "avg_ms": 2.5491
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 510.451,
+              "avg_ms": 2.5523
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 742.44,
+              "avg_ms": 3.7122
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 735.42,
+              "avg_ms": 3.6771
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 749.969,
+              "avg_ms": 3.7498
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 567.486,
+              "avg_ms": 2.8374
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 560.554,
+              "avg_ms": 2.8028
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 551.546,
+              "avg_ms": 2.7577
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 90.879,
+              "avg_ms": 0.4544
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 77.627,
+              "avg_ms": 0.3881
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 101.939,
+              "avg_ms": 0.5097
+            }
+          ]
+        }
+      },
+      {
+        "phase": "sql_candidate_2",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 1.0,
+          "select1_avg_ms": 0.0776,
+          "select1_stdev_ms": 0.0038,
+          "tokenize_ik_avg_ms": 0.206,
+          "tokenize_ik_median_ms": 0.2054,
+          "tokenize_ik_stdev_ms": 0.0029,
+          "tokenize_beng_avg_ms": 0.1206,
+          "tokenize_beng_stdev_ms": 0.0047,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.3979,
+          "query_cn_stdev_ms": 0.0174,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.4708,
+          "query_beng_stdev_ms": 0.0359,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.6242,
+          "query_mixed_stdev_ms": 0.0245,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4214,
+          "query_limit_stdev_ms": 0.0225
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 226.23,
+              "avg_ms": 0.0754
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 223.113,
+              "avg_ms": 0.0744
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 248.712,
+              "avg_ms": 0.0829
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 629.275,
+              "avg_ms": 0.2098
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 608.4,
+              "avg_ms": 0.2028
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 616.314,
+              "avg_ms": 0.2054
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 357.339,
+              "avg_ms": 0.1191
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 381.084,
+              "avg_ms": 0.127
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 347.544,
+              "avg_ms": 0.1158
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 475.242,
+              "avg_ms": 2.3762
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 479.728,
+              "avg_ms": 2.3986
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 483.756,
+              "avg_ms": 2.4188
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 685.283,
+              "avg_ms": 3.4264
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 694.34,
+              "avg_ms": 3.4717
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 702.867,
+              "avg_ms": 3.5143
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 531.688,
+              "avg_ms": 2.6584
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 522.29,
+              "avg_ms": 2.6114
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 520.531,
+              "avg_ms": 2.6027
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 88.173,
+              "avg_ms": 0.4409
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 77.986,
+              "avg_ms": 0.3899
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 86.657,
+              "avg_ms": 0.4333
+            }
+          ]
+        }
+      }
+    ],
+    "comparison": {
+      "tokenize_ik_avg_ms": {
+        "baseline_mean": 0.20700000000000002,
+        "candidate_mean": 0.2067,
+        "reduction_percent": 0.14492753623189802,
+        "pair_reduction_percent": [
+          1.0496183206106902,
+          -0.7827788649706457
+        ]
+      },
+      "tokenize_beng_avg_ms": {
+        "baseline_mean": 0.1169,
+        "candidate_mean": 0.1205,
+        "reduction_percent": -3.0795551753635575,
+        "pair_reduction_percent": [
+          -2.7303754266211566,
+          -3.430531732418518
+        ]
+      },
+      "select1_avg_ms": {
+        "baseline_mean": 0.07894999999999999,
+        "candidate_mean": 0.07685,
+        "reduction_percent": 2.6599113362887783,
+        "pair_reduction_percent": [
+          5.112219451371558,
+          0.12870012870013214
+        ]
+      },
+      "query_cn_avg_ms": {
+        "baseline_mean": 2.56405,
+        "candidate_mean": 2.38805,
+        "reduction_percent": 6.864140714884659,
+        "pair_reduction_percent": [
+          7.452231778028562,
+          6.273452157598491
+        ]
+      },
+      "query_beng_avg_ms": {
+        "baseline_mean": 3.7077,
+        "candidate_mean": 3.4671000000000003,
+        "reduction_percent": 6.489198155190545,
+        "pair_reduction_percent": [
+          6.455272255834055,
+          6.523027201723675
+        ]
+      },
+      "query_mixed_avg_ms": {
+        "baseline_mean": 2.7946999999999997,
+        "candidate_mean": 2.6369,
+        "reduction_percent": 5.646402118295346,
+        "pair_reduction_percent": [
+          5.035661804236402,
+          6.255135212374519
+        ]
+      },
+      "query_limit_avg_ms": {
+        "baseline_mean": 0.45194999999999996,
+        "candidate_mean": 0.4242,
+        "reduction_percent": 6.140059741121795,
+        "pair_reduction_percent": [
+          5.781112091791707,
+          6.500998446860439
+        ]
+      }
+    },
+    "sample_records": 84,
+    "all_query_hits_match": true
+  },
+  "correctness": {
+    "regressions": {
+      "instance": {
+        "pid": 3970067,
+        "phase": "candidate_correctness",
+        "command": [
+          "/tmp/fts-20261102-small-heads/seekdb-small-heads",
+          "--nodaemon",
+          "--base-dir",
+          "/tmp/obtest/ddl-two-full-after",
+          "--port",
+          "11963",
+          "--parameter",
+          "memory_budget=4G",
+          "--parameter",
+          "datafile_size=2G",
+          "--parameter",
+          "log_disk_size=2G",
+          "--parameter",
+          "cpu_count=4"
+        ]
+      },
+      "results": [
+        {
+          "suite": "fts_index",
+          "name": "fts_small_head_merge",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_small_head_merge.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_small_head_merge.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 1.117810558527708
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_ik_range_lookup",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_ik_range_lookup.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_ik_range_lookup.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 1.8601774498820305
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_binary_id_merge",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_binary_id_merge.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_binary_id_merge.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.6862529143691063
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_ascii_stopwords",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_ascii_stopwords.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_ascii_stopwords.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.15101053193211555
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_truth_filter",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_truth_filter.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_truth_filter.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.3467266857624054
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_project_pruning",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_project_pruning.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_project_pruning.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.363631185144186
+        },
+        {
+          "suite": "fts_index",
+          "name": "beng_pipeline_lifetime",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/beng_pipeline_lifetime.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/beng_pipeline_lifetime.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.022715196013450623
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_collector_state",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_collector_state.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_collector_state.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.1450297348201275
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_posting_refill",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_posting_refill.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_posting_refill.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.2793324515223503
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_node_pool",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_node_pool.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_node_pool.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.041805755347013474
+        },
+        {
+          "suite": "fts_index",
+          "name": "ik_arbitration_batches",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/ik_arbitration_batches.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/ik_arbitration_batches.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 2.7061423547565937
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_ik_ranges",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_ik_ranges.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_ik_ranges.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.08570493012666702
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_hotpath",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_hotpath.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_hotpath.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.019326157867908478
+        },
+        {
+          "suite": "fts_index",
+          "name": "match_filter_relevance",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/match_filter_relevance.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/match_filter_relevance.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.23430275917053223
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_aux_sampling",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_aux_sampling.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_aux_sampling.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 2.7031761966645718
+        },
+        {
+          "suite": "fts_index",
+          "name": "fts_result_batches",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/fts_result_batches.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_result_batches.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.31322166323661804
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_scan_boundaries",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_scan_boundaries.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_scan_boundaries.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.037060853093862534
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_function",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_function.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_function.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.21488384902477264
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_defaults",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_defaults.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_defaults.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.02079838514328003
+        },
+        {
+          "suite": "fts_index",
+          "name": "tokenize_beng_normalization",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/tokenize_beng_normalization.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/tokenize_beng_normalization.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.02247156947851181
+        },
+        {
+          "suite": "fts_index",
+          "name": "domain_id_merge_with_compare_null",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/fts_index/t/domain_id_merge_with_compare_null.test",
+            "--result-file=mysql_test/test_suite/fts_index/r/mysql/domain_id_merge_with_compare_null.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.3381671756505966
+        },
+        {
+          "suite": "ai_column",
+          "name": "ai_column_vector_index",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/ai_column/t/ai_column_vector_index.test",
+            "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_vector_index.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 4.429787624627352
+        },
+        {
+          "suite": "vector_index",
+          "name": "sparse_vector_index_vsag_query",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/vector_index/t/sparse_vector_index_vsag_query.test",
+            "--result-file=mysql_test/test_suite/vector_index/r/mysql/sparse_vector_index_vsag_query.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 13.28176387399435
+        },
+        {
+          "suite": "ai_column",
+          "name": "ai_column_retry_strict",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/ai_column/t/ai_column_retry_strict.test",
+            "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_retry_strict.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 2.6105015985667706
+        },
+        {
+          "suite": "ai_column",
+          "name": "ai_column_strict_scope",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/ai_column/t/ai_column_strict_scope.test",
+            "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_strict_scope.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 0.7785472013056278
+        },
+        {
+          "suite": "ai_column",
+          "name": "ai_column_fts_projection",
+          "command": [
+            "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+            "--host=127.0.0.1",
+            "--port=11963",
+            "--user=root",
+            "--database=test",
+            "--test-file=mysql_test/test_suite/ai_column/t/ai_column_fts_projection.test",
+            "--result-file=mysql_test/test_suite/ai_column/r/mysql/ai_column_fts_projection.result"
+          ],
+          "returncode": 0,
+          "stdout": "ok\n",
+          "stderr": "",
+          "seconds": 1.014448445290327
+        }
+      ]
+    },
+    "new_golden_capture": {
+      "command": [
+        "/home/liyuelinxuan/seekdb/deps/3rd/u01/obclient/bin/mysqltest",
+        "--host=127.0.0.1",
+        "--port=11963",
+        "--user=root",
+        "--database=test",
+        "--test-file=mysql_test/test_suite/fts_index/t/fts_small_head_merge.test",
+        "--result-file=mysql_test/test_suite/fts_index/r/mysql/fts_small_head_merge.result",
+        "--record"
+      ],
+      "returncode": 0,
+      "stdout": "ok\n",
+      "stderr": "",
+      "baseline_source": "243cbcd2f5c3291c7cc68a65a69490523b471658"
+    },
+    "native_ps_protocol": "Existing extra --ps-protocol failures on both earlier binaries remain unpassed and were not rerun. Normal-protocol SQL PREPARE/EXECUTE is included in passing cases."
+  },
+  "installation_and_closure": {
+    "binary_sha256": {
+      "baseline": "234f0ddccd1f2d14db5bb53ed30d3aa22fdcc2289f5b33de67055616f74033ff",
+      "candidate": "864dcf295e90defe6932f7b55815d1d62b52dc79f3eb7e11f1089e06754e7ad6",
+      "compiled": "864dcf295e90defe6932f7b55815d1d62b52dc79f3eb7e11f1089e06754e7ad6",
+      "installed_before": "234f0ddccd1f2d14db5bb53ed30d3aa22fdcc2289f5b33de67055616f74033ff",
+      "installed_after": "864dcf295e90defe6932f7b55815d1d62b52dc79f3eb7e11f1089e06754e7ad6"
+    },
+    "source_patch_matches_measured": true,
+    "source_file_sha256": {
+      "src/storage/retrieval/ob_text_daat_iter.cpp": "eb5e10f128d4ff5cd0f4342ad3953d3360dc59090bf0319469796a6856b5013b",
+      "src/storage/retrieval/ob_text_daat_iter.h": "8e5ac2976970566420891897c4b1ef4bb386a968aa70ffe493d9cfc861f5be5a"
+    },
+    "private_instance_stopped": true,
+    "atomic_binary_install": true,
+    "other_instances_restarted": false,
+    "regular_regressions_passed": 26
+  },
+  "adoption_decision": {
+    "action": "retain and submit",
+    "supporting_evidence": "CN/EN/mixed median wall improves 5.45%/6.72%/6.03%, process CPU improves 5.08%/7.12%/5.75%; original SQL improves in both pairs for all four query metrics (means 6.86%/6.49%/5.65%/6.14%).",
+    "negative_evidence": "Microbenchmark LIMIT wall is 3.09% slower and process CPU is 3.45% slower; original BENG SQL tokenization is 3.08% slower. These samples are retained and not normalized away. No tokenizer or build gain is claimed.",
+    "discarded_timing_records": 0
+  },
+  "limitations": [
+    "Only two original-script runs per version; shared host, no exclusive CPU or frequency control.",
+    "Original reports print the modified checkout HEAD (2a94c11) for both executables. Use binary paths, SHA-256 checks and source-patch identity rather than printed HEAD/git_dirty for provenance.",
+    "CPU ticks include background activity and are especially coarse for short LIMIT queries.",
+    "SELECT 1 was 2.66% faster although unchanged; this is evidence of residual environmental variation, not part of the implementation gain.",
+    "Do not infer a new platform score from local timings; 36.228 is the prior IK version feedback.",
+    "No index build or full reload benchmark was rerun for this query-only implementation.",
+    "Previously documented binary-PK projection, native PS protocol and rejected-trial limitations remain in their original records."
+  ],
+  "raw_archive": {
+    "path": "docs/fts_small_heads_raw.json.gz",
+    "sha256": "457d06da56db53b9e3c0e6b3d666724a6a823e1f836add1c4254222b4d28b86f",
+    "file_count": 52,
+    "files": [
+      "build_small_heads.log",
+      "candidate_provenance.json",
+      "closure.json",
+      "collect_evidence.py",
+      "compiler_flags.make",
+      "docs/fts_36228_feedback.json",
+      "instance.json",
+      "instance.py",
+      "measure.py",
+      "new_golden_baseline.json",
+      "profile.py",
+      "profile_en.json",
+      "profile_en.sql",
+      "profile_en_client.log",
+      "profile_en_gdb.log",
+      "query_baseline_1.json",
+      "query_baseline_1.log",
+      "query_baseline_2.json",
+      "query_baseline_2.log",
+      "query_candidate_1.json",
+      "query_candidate_1.log",
+      "query_candidate_2.json",
+      "query_candidate_2.log",
+      "query_cycle.json",
+      "query_cycle.py",
+      "query_summary.json",
+      "regression.json",
+      "regression.py",
+      "server_baseline_profile.log",
+      "server_candidate_correctness.log",
+      "server_query_baseline_1.log",
+      "server_query_baseline_2.log",
+      "server_query_candidate_1.log",
+      "server_query_candidate_2.log",
+      "server_sql_baseline_1.log",
+      "server_sql_baseline_2.log",
+      "server_sql_candidate_1.log",
+      "server_sql_candidate_2.log",
+      "small_heads_trial.patch",
+      "sql_baseline_1.log",
+      "sql_baseline_1.txt",
+      "sql_baseline_2.log",
+      "sql_baseline_2.txt",
+      "sql_candidate_1.log",
+      "sql_candidate_1.txt",
+      "sql_candidate_2.log",
+      "sql_candidate_2.txt",
+      "sql_cycle.json",
+      "sql_cycle.py",
+      "sql_summary.json",
+      "tools/deploy/mysql_test/test_suite/fts_index/r/mysql/fts_small_head_merge.result",
+      "tools/deploy/mysql_test/test_suite/fts_index/t/fts_small_head_merge.test"
+    ],
+    "uncompressed_bytes": 2839419,
+    "compressed_bytes": 54021
+  }
+}
