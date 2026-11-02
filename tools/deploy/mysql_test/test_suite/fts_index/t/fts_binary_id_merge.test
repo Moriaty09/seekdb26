@@ -1,0 +1,73 @@
+# Binary document IDs must preserve ordering, deduplication and scoring through
+# short-term merging, the general loser tree, refill, DML and tablet reuse.
+--disable_warnings
+drop database if exists fts_binary_id_merge;
+--enable_warnings
+create database fts_binary_id_merge;
+use fts_binary_id_merge;
+create table digits(n int primary key);
+insert into digits values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table docs(k varbinary(24) primary key, id int, body text,
+  fulltext index ft(body) with parser beng);
+--disable_query_log
+insert into docs
+select concat(unhex(lpad(hex(mod(n,256)),2,'0')), cast(n as char),
+              if(mod(n,2)=0, x'0020', x'ff')), n,
+       case mod(n,8)
+         when 0 then 'alpha beta'
+         when 1 then 'alpha gamma'
+         when 2 then 'gamma delta'
+         when 3 then 'beta epsilon'
+         when 4 then 'zeta eta'
+         when 5 then ''
+         when 6 then null
+         else 'alpha beta gamma delta epsilon zeta eta'
+       end
+from (select a.n + 10*b.n + 100*c.n + 1000*d.n as n
+      from digits a, digits b, digits c, digits d) s
+where n between 1 and 1057;
+--enable_query_log
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha');
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha beta');
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha beta gamma');
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha beta gamma delta epsilon zeta eta');
+select count(*), sum(id) from docs where match(body) against('missing');
+select count(*), sum(id) from docs where match(body) against('+alpha +beta -gamma' in boolean mode);
+select count(*), sum(id) from docs where match(body) against('+(alpha beta) -delta' in boolean mode);
+select count(*), sum(id) from docs where match(body) against('alpha beta gamma') > 0.1;
+select count(*), round(sum(match(body) against('alpha beta gamma')), 7) as score_sum
+  from docs where match(body) against('alpha beta gamma');
+select id, round(match(body) against('alpha beta gamma'), 7) as score
+  from docs where match(body) against('alpha beta gamma') order by id limit 4 offset 255;
+select id from docs where match(body) against('alpha beta gamma') order by id limit 4 offset 511;
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 256) t;
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 700) t;
+prepare p from 'select count(*), sum(id) from docs where match(body) against(?)';
+set @q='alpha beta';
+execute p using @q;
+set @q='alpha beta gamma delta epsilon zeta eta';
+execute p using @q;
+set @q='missing';
+execute p using @q;
+set @q='gamma';
+execute p using @q;
+deallocate prepare p;
+begin;
+update docs set body='omega' where id between 250 and 530;
+delete from docs where id between 900 and 950;
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha beta gamma');
+select count(*), sum(id) from docs where match(body) against('omega');
+rollback;
+select count(*), sum(id), bit_xor(id) from docs where match(body) against('alpha beta gamma');
+update docs set k=concat(k,x'20') where id between 255 and 257;
+select id from docs where match(body) against('alpha beta gamma') and id between 253 and 260 order by id;
+create table part_docs(bucket int, k varbinary(24), id int, body text,
+  primary key(bucket,k), fulltext index ft(body) with parser beng)
+  partition by hash(bucket) partitions 4;
+insert into part_docs select mod(id,4), k, id, body from docs;
+select count(*), sum(id), bit_xor(id) from part_docs where match(body) against('alpha beta gamma');
+select count(*), sum(id), bit_xor(id) from part_docs where match(body) against('alpha beta gamma delta epsilon zeta eta');
+select count(*), sum(id) from part_docs where match(body) against('+alpha +beta -gamma' in boolean mode);
+select count(*), sum(id) from part_docs where bucket=1 and match(body) against('alpha beta gamma');
+select id from part_docs where match(body) against('alpha beta gamma') order by id limit 4 offset 255;
+drop database fts_binary_id_merge;

@@ -1,0 +1,85 @@
+select tokenize('a about an are as at be by com de en for from how i in is it la of on or that the this to was what when where who will with und the www', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize('A ABOUT An ARE As AT Be BY Com DE En FOR From HOW I IN Is IT La OF On OR That THE This TO Was WHAT When WHERE Who WILL With UND The WWW', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize('aa abouts ana area asa ata bee bya coma dea ena fora froma howa ii ina isa ita laa ofa ona ora thata thee thisa toa wasa whata whena wherea whoa willa witha unda wwwa', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"thata": 1}, {"coma": 1}, {"whoa": 1}, {"dea": 1}, {"fora": 1}, {"wasa": 1}, {"ina": 1}, {"ii": 1}, {"toa": 1}, {"bya": 1}, {"froma": 1}, {"witha": 1}, {"area": 1}, {"ofa": 1}, {"asa": 1}, {"ita": 1}, {"thee": 1}, {"ata": 1}, {"ora": 1}, {"isa": 1}, {"whena": 1}, {"unda": 1}, {"ona": 1}, {"whata": 1}, {"abouts": 1}, {"wherea": 1}, {"thisa": 1}, {"willa": 1}, {"ena": 1}, {"aa": 1}, {"ana": 1}, {"wwwa": 1}, {"howa": 1}, {"laa": 1}, {"bee": 1}], "doc_len": 35}
+select tokenize('theory these therefore whereupon wherever aboutface withhold within winter uppercase LOWERCASE database performance indexing token token', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"database": 1}, {"these": 1}, {"winter": 1}, {"aboutface": 1}, {"therefore": 1}, {"performance": 1}, {"lowercase": 1}, {"wherever": 1}, {"uppercase": 1}, {"theory": 1}, {"within": 1}, {"token": 2}, {"indexing": 1}, {"withhold": 1}, {"whereupon": 1}], "doc_len": 16}
+select tokenize(_utf8mb4'the THE thé THÉ wíth WÍTH fróm Fróm wàs ÀBOUT ｔｈｅ café 中文' collate utf8mb4_general_ci, 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"café": 1}, {"ｔｈｅ": 1}, {"中文": 1}], "doc_len": 3}
+select tokenize(_utf8mb4'the THE thé THÉ wíth WÍTH fróm Fróm wàs ÀBOUT ｔｈｅ café 中文' collate utf8mb4_bin, 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"中文": 1}, {"ｔｈｅ": 1}, {"café": 1}], "doc_len": 3}
+select tokenize(_utf8mb4'the THE thé THÉ wíth WÍTH fróm Fróm wàs ÀBOUT ｔｈｅ café 中文' collate utf8mb4_unicode_ci, 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"café": 1}, {"中文": 1}, {"ｔｈｅ": 1}], "doc_len": 3}
+select tokenize(cast('the THE with WITH DATABASE' as binary), 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"DATABASE": 1}], "doc_len": 1}
+select tokenize('the.the the-the the0 the_ the_fox about-face www.com notstop x y z', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"x": 1}, {"notstop": 1}, {"y": 1}, {"face": 1}, {"fox": 1}, {"the0": 1}, {"z": 1}], "doc_len": 7}
+select tokenize(concat('the',char(0),'x the',char(0),' WITH',char(0),'in'), 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"x": 1}], "doc_len": 1}
+select tokenize(concat(repeat('a',7),' ',repeat('a',8),' ',repeat('b',84),' ',repeat('b',85)), 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"aaaaaaaa": 1}, {"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 1}, {"aaaaaaa": 1}], "doc_len": 3}
+select tokenize('THE the a about thé café THE', 'space', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"café": 1}], "doc_len": 1}
+select tokenize('THE the a about thé café THE', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"café": 1}], "doc_len": 1}
+select tokenize('THE the a about thé café THE', 'ik', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [{"th": 1}, {"caf": 1}, {"a": 1}, {"about": 1}, {"the": 3}], "doc_len": 7}
+select tokenize('THE the a about thé café THE', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":1}]}]') as tokens;
+tokens
+{"tokens": [{"café": 1}], "doc_len": 1}
+select tokenize('', 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+select tokenize(NULL, 'beng', '[{"output":"all"}]') as tokens;
+tokens
+{"tokens": [], "doc_len": 0}
+drop database if exists fts_ascii_stopwords;
+create database fts_ascii_stopwords;
+use fts_ascii_stopwords;
+create table docs(id int primary key, body text,
+fulltext index ft(body) with parser beng parser_properties=(min_token_size=1));
+insert into docs values (1,'the THE theory about database'),
+(2,'thé withhold wíth performance'),(3,'www.com data indexing'),(4,'THE about with');
+select id from docs where match(body) against('the') order by id;
+id
+select id from docs where match(body) against('theory') order by id;
+id
+1
+select id from docs where match(body) against('withhold database') order by id;
+id
+1
+2
+select id, round(match(body) against('theory database performance'),7) as score
+from docs where match(body) against('theory database performance') order by id;
+id	score
+1	2.5189936
+2	1.2594968
+begin;
+update docs set body='the theory performance' where id=4;
+select id from docs where match(body) against('theory performance') order by id;
+id
+1
+2
+4
+rollback;
+select id from docs where match(body) against('theory performance') order by id;
+id
+1
+2
+drop database fts_ascii_stopwords;

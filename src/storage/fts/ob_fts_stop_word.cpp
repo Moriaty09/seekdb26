@@ -27,6 +27,84 @@ namespace oceanbase
 namespace storage
 {
 
+namespace
+{
+// The built-in stopword list is immutable after initialization. Alphabetic
+// ASCII has the same case folding in its UTF8MB4_GENERAL_CI collation, so it
+// can use a compact read-only table instead of Unicode hashing and a bucket
+// latch. Other characters still use the collation-aware set below.
+struct AsciiStopWordTable
+{
+  static const int64_t KEY_MAX_LENGTH = 7;
+  static const int64_t SLOT_COUNT = 128;
+
+  AsciiStopWordTable() : keys_{}, valid_(true)
+  {
+    for (int64_t i = 0; valid_ && i < ARRAYSIZEOF(ob_stop_word_list); ++i) {
+      const ObString word(STRLEN(ob_stop_word_list[i]), ob_stop_word_list[i]);
+      uint64_t key = 0;
+      if (word.length() > KEY_MAX_LENGTH || !make_key(word, key)) {
+        // Keep the generic path if the built-in list gains other characters
+        // or words too long for the packed key.
+        valid_ = false;
+      } else {
+        int64_t slot = bucket(key);
+        while (keys_[slot] != 0 && keys_[slot] != key) {
+          slot = (slot + 1) % SLOT_COUNT;
+        }
+        keys_[slot] = key;
+      }
+    }
+  }
+
+  bool try_check(const ObString &word, bool &is_stopword) const
+  {
+    uint64_t key = 0;
+    if (!valid_ || !make_key(word, key)) {
+      return false;
+    }
+    is_stopword = false;
+    if (word.length() <= KEY_MAX_LENGTH) {
+      int64_t slot = bucket(key);
+      while (keys_[slot] != 0 && keys_[slot] != key) {
+        slot = (slot + 1) % SLOT_COUNT;
+      }
+      is_stopword = keys_[slot] == key;
+    }
+    return true;
+  }
+
+private:
+  static bool make_key(const ObString &word, uint64_t &key)
+  {
+    key = 0;
+    for (int64_t i = 0; i < word.length(); ++i) {
+      unsigned char ch = static_cast<unsigned char>(word.ptr()[i]);
+      if (ch >= 'A' && ch <= 'Z') {
+        ch += 'a' - 'A';
+      }
+      if (ch < 'a' || ch > 'z') {
+        return false;
+      }
+      if (i < KEY_MAX_LENGTH) {
+        key = (key << 8) | ch;
+      }
+    }
+    return !word.empty();
+  }
+
+  static int64_t bucket(const uint64_t key)
+  {
+    return ((key ^ (key >> 32)) * UINT64_C(11400714819323198485)) >> 57;
+  }
+
+  uint64_t keys_[SLOT_COUNT];
+  bool valid_;
+};
+
+const AsciiStopWordTable ASCII_STOP_WORDS;
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 // class ObStopWordChecker
 ObStopWordChecker::~ObStopWordChecker()
@@ -87,13 +165,15 @@ int ObStopWordChecker::check_stopword(const ObFTWord &word, bool &is_stopword)
     // Keep the stopword collation for hashing/comparison, but avoid creating
     // a temporary arena for every token on the usual UTF-8 path.
     const common::ObString key = word.get_word().get_string();
-    ObFTWord converted(key.length(), key.ptr(), stopword_type_);
-    ret = stopword_set_.exist_refactored(converted);
-    if (OB_HASH_NOT_EXIST == ret || OB_HASH_EXIST == ret) {
-      is_stopword = OB_HASH_EXIST == ret;
-      ret = OB_SUCCESS;
-    } else if (OB_SUCC(ret)) {
-      ret = OB_ERR_UNEXPECTED;
+    if (!ASCII_STOP_WORDS.try_check(key, is_stopword)) {
+      ObFTWord converted(key.length(), key.ptr(), stopword_type_);
+      ret = stopword_set_.exist_refactored(converted);
+      if (OB_HASH_NOT_EXIST == ret || OB_HASH_EXIST == ret) {
+        is_stopword = OB_HASH_EXIST == ret;
+        ret = OB_SUCCESS;
+      } else if (OB_SUCC(ret)) {
+        ret = OB_ERR_UNEXPECTED;
+      }
     }
   } else {
     common::ObArenaAllocator allocator(lib::ObMemAttr("ChkStopWord"));

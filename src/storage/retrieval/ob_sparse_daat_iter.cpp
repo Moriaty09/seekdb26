@@ -23,6 +23,25 @@ namespace oceanbase
 namespace storage
 {
 
+namespace
+{
+int compare_binary_ids(const ObDatum &left, const ObDatum &right, int &cmp_ret,
+                       const common::ObDatumAccessContext *)
+{
+  if (OB_UNLIKELY(left.is_null() || right.is_null())) {
+    cmp_ret = left.is_null() ? (right.is_null() ? 0 : -1) : 1;
+  } else {
+    // CS_TYPE_BINARY compares every byte, including trailing spaces. Avoid
+    // charset lookup and dispatch for the binary VARCHAR document IDs.
+    const uint32_t common_len = MIN(left.len_, right.len_);
+    const int diff = common_len > 0 ? MEMCMP(left.ptr_, right.ptr_, common_len) : 0;
+    cmp_ret = diff != 0 ? (diff < 0 ? -1 : 1)
+                       : (left.len_ < right.len_ ? -1 : (left.len_ > right.len_ ? 1 : 0));
+  }
+  return OB_SUCCESS;
+}
+} // namespace
+
 ObSRMergeCmp::ObSRMergeCmp()
   : cmp_func_(nullptr),
     iter_ids_(nullptr),
@@ -44,6 +63,9 @@ int ObSRMergeCmp::init(
     if (OB_ISNULL(cmp_func_)) {
       ret = OB_ERR_UNEXPECTED;
     } else {
+      if (ObVarcharType == id_meta.type_ && CS_TYPE_BINARY == id_meta.cs_type_) {
+        cmp_func_ = compare_binary_ids;
+      }
       is_inited_ = true;
     }
   }
