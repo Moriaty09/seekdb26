@@ -1,0 +1,934 @@
+{
+  "purpose": "Investigate the 42.598-to-37.747 feedback drop; no new runtime optimization or rollback.",
+  "baseline_source_commit": "f73f78596969bf31c2aae0bfa6ca59ce2ec6ba35",
+  "candidate_source_commit": "bc689eb14074a1ebaa6a16d3925f883b5c203434",
+  "runtime_source_retained": "bc689eb14074a1ebaa6a16d3925f883b5c203434",
+  "initial_documentation_head": "0bf7533d7c3d2208a35aedeef7dd60f946eec3ed",
+  "runtime_changes_this_diagnostic": [],
+  "method": {
+    "order": "A B A B",
+    "memory_budget": "4G",
+    "cpu_count": 4,
+    "cpu_affinity": "12-15",
+    "rows": 20000,
+    "skip_load": 0,
+    "data_dir": "/tmp/obtest/ddl-two-full-after",
+    "port": 11963,
+    "command": "Unmodified tools/benchmark/fts_large_bench.sh with all default rounds/batch/sample settings.",
+    "reload": "Every phase drops/recreates only the benchmark database and reloads all rows and all three fulltext indexes."
+  },
+  "binary_verification_and_closure": {
+    "baseline_source": "f73f78596969bf31c2aae0bfa6ca59ce2ec6ba35",
+    "candidate_source": "bc689eb14074a1ebaa6a16d3925f883b5c203434",
+    "binary_sha256": {
+      "baseline": "864dcf295e90defe6932f7b55815d1d62b52dc79f3eb7e11f1089e06754e7ad6",
+      "candidate": "8a696c82b74593e3f1f757276db2f2ec636d9942c6e3dcbe82913560452c42e1",
+      "installed": "8a696c82b74593e3f1f757276db2f2ec636d9942c6e3dcbe82913560452c42e1"
+    },
+    "private_instance_stopped": true,
+    "runtime_source_unchanged": true,
+    "scoring_and_benchmark_unchanged": true,
+    "correctness_tests_rerun_this_diagnostic": false,
+    "previous_candidate_regular_regression_passes": 26,
+    "other_instances_restarted": false,
+    "binary_installation_changed_this_diagnostic": false
+  },
+  "complete_original_benchmark": {
+    "runs": [
+      {
+        "phase": "full_baseline_1",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 0.0,
+          "select1_avg_ms": 0.0767,
+          "select1_stdev_ms": 0.0103,
+          "raw_load_sec": 0.796,
+          "raw_load_rows_per_sec": 25125.6,
+          "build_ik_all_sec": 7.957,
+          "build_ik_content_sec": 6.011,
+          "build_beng_en_sec": 3.387,
+          "build_total_sec": 17.38,
+          "tokenize_ik_avg_ms": 0.2444,
+          "tokenize_ik_median_ms": 0.2447,
+          "tokenize_ik_stdev_ms": 0.0055,
+          "tokenize_beng_avg_ms": 0.1578,
+          "tokenize_beng_stdev_ms": 0.0022,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.5425,
+          "query_cn_stdev_ms": 0.0215,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.5108,
+          "query_beng_stdev_ms": 0.0684,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.7743,
+          "query_mixed_stdev_ms": 0.051,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4674,
+          "query_limit_stdev_ms": 0.0266
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 199.05,
+              "avg_ms": 0.0664
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 218.564,
+              "avg_ms": 0.0729
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 271.952,
+              "avg_ms": 0.0907
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 752.814,
+              "avg_ms": 0.2509
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 712.524,
+              "avg_ms": 0.2375
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 734.199,
+              "avg_ms": 0.2447
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 464.54,
+              "avg_ms": 0.1548
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 475.689,
+              "avg_ms": 0.1586
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 479.651,
+              "avg_ms": 0.1599
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 502.448,
+              "avg_ms": 2.5122
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 510.973,
+              "avg_ms": 2.5549
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 512.062,
+              "avg_ms": 2.5603
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 706.768,
+              "avg_ms": 3.5338
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 683.572,
+              "avg_ms": 3.4179
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 716.136,
+              "avg_ms": 3.5807
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 542.56,
+              "avg_ms": 2.7128
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 567.544,
+              "avg_ms": 2.8377
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 554.465,
+              "avg_ms": 2.7723
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 96.829,
+              "avg_ms": 0.4841
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 85.982,
+              "avg_ms": 0.4299
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 97.647,
+              "avg_ms": 0.4882
+            }
+          ]
+        }
+      },
+      {
+        "phase": "full_candidate_1",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 0.0,
+          "select1_avg_ms": 0.0792,
+          "select1_stdev_ms": 0.0181,
+          "raw_load_sec": 0.707,
+          "raw_load_rows_per_sec": 28288.5,
+          "build_ik_all_sec": 7.747,
+          "build_ik_content_sec": 5.897,
+          "build_beng_en_sec": 3.275,
+          "build_total_sec": 16.944,
+          "tokenize_ik_avg_ms": 0.2175,
+          "tokenize_ik_median_ms": 0.2123,
+          "tokenize_ik_stdev_ms": 0.0099,
+          "tokenize_beng_avg_ms": 0.1195,
+          "tokenize_beng_stdev_ms": 0.0126,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.3355,
+          "query_cn_stdev_ms": 0.0475,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.1698,
+          "query_beng_stdev_ms": 0.0565,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.4698,
+          "query_mixed_stdev_ms": 0.0885,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4402,
+          "query_limit_stdev_ms": 0.0496
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 200.044,
+              "avg_ms": 0.0667
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 198.186,
+              "avg_ms": 0.0661
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 314.105,
+              "avg_ms": 0.1047
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 626.279,
+              "avg_ms": 0.2088
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 693.797,
+              "avg_ms": 0.2313
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 636.814,
+              "avg_ms": 0.2123
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 337.323,
+              "avg_ms": 0.1124
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 327.098,
+              "avg_ms": 0.109
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 411.687,
+              "avg_ms": 0.1372
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 468.713,
+              "avg_ms": 2.3436
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 477.829,
+              "avg_ms": 2.3891
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 454.745,
+              "avg_ms": 2.2737
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 624.565,
+              "avg_ms": 3.1228
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 649.863,
+              "avg_ms": 3.2493
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 627.473,
+              "avg_ms": 3.1374
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 468.943,
+              "avg_ms": 2.3447
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 507.421,
+              "avg_ms": 2.5371
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 505.51,
+              "avg_ms": 2.5275
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 77.966,
+              "avg_ms": 0.3898
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 84.62,
+              "avg_ms": 0.4231
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 101.543,
+              "avg_ms": 0.5077
+            }
+          ]
+        }
+      },
+      {
+        "phase": "full_baseline_2",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 0.0,
+          "select1_avg_ms": 0.0892,
+          "select1_stdev_ms": 0.0183,
+          "raw_load_sec": 0.595,
+          "raw_load_rows_per_sec": 33613.4,
+          "build_ik_all_sec": 7.441,
+          "build_ik_content_sec": 5.7,
+          "build_beng_en_sec": 3.368,
+          "build_total_sec": 16.531,
+          "tokenize_ik_avg_ms": 0.2248,
+          "tokenize_ik_median_ms": 0.2226,
+          "tokenize_ik_stdev_ms": 0.0155,
+          "tokenize_beng_avg_ms": 0.1186,
+          "tokenize_beng_stdev_ms": 0.01,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.431,
+          "query_cn_stdev_ms": 0.0553,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.4165,
+          "query_beng_stdev_ms": 0.0261,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.6536,
+          "query_mixed_stdev_ms": 0.0245,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.3881,
+          "query_limit_stdev_ms": 0.023
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 290.015,
+              "avg_ms": 0.0967
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 192.041,
+              "avg_ms": 0.064
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 320.97,
+              "avg_ms": 0.107
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 667.676,
+              "avg_ms": 0.2226
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 621.284,
+              "avg_ms": 0.2071
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 734.349,
+              "avg_ms": 0.2448
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 345.002,
+              "avg_ms": 0.115
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 396.508,
+              "avg_ms": 0.1322
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 325.588,
+              "avg_ms": 0.1085
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 501.8,
+              "avg_ms": 2.509
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 479.282,
+              "avg_ms": 2.3964
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 477.5,
+              "avg_ms": 2.3875
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 679.734,
+              "avg_ms": 3.3987
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 679.488,
+              "avg_ms": 3.3974
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 690.704,
+              "avg_ms": 3.4535
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 533.62,
+              "avg_ms": 2.6681
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 534.727,
+              "avg_ms": 2.6736
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 523.801,
+              "avg_ms": 2.619
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 71.564,
+              "avg_ms": 0.3578
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 78.572,
+              "avg_ms": 0.3929
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 82.725,
+              "avg_ms": 0.4136
+            }
+          ]
+        }
+      },
+      {
+        "phase": "full_candidate_2",
+        "metrics": {
+          "git_dirty": 1.0,
+          "rows": 20000.0,
+          "batch": 500.0,
+          "rounds": 3000.0,
+          "query_rounds": 200.0,
+          "samples": 3.0,
+          "warmup": 30.0,
+          "skip_load": 0.0,
+          "select1_avg_ms": 0.0893,
+          "select1_stdev_ms": 0.011,
+          "raw_load_sec": 0.803,
+          "raw_load_rows_per_sec": 24906.6,
+          "build_ik_all_sec": 7.661,
+          "build_ik_content_sec": 5.906,
+          "build_beng_en_sec": 3.379,
+          "build_total_sec": 16.969,
+          "tokenize_ik_avg_ms": 0.2514,
+          "tokenize_ik_median_ms": 0.2595,
+          "tokenize_ik_stdev_ms": 0.0123,
+          "tokenize_beng_avg_ms": 0.1518,
+          "tokenize_beng_stdev_ms": 0.0198,
+          "query_cn_hits": 8001.0,
+          "query_cn_avg_ms": 2.3702,
+          "query_cn_stdev_ms": 0.0659,
+          "query_beng_hits": 11000.0,
+          "query_beng_avg_ms": 3.2202,
+          "query_beng_stdev_ms": 0.038,
+          "query_mixed_hits": 7332.0,
+          "query_mixed_avg_ms": 2.5128,
+          "query_mixed_stdev_ms": 0.0668,
+          "query_limit_hits": 20.0,
+          "query_limit_avg_ms": 0.4383,
+          "query_limit_stdev_ms": 0.0171
+        },
+        "samples": {
+          "select1": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 248.461,
+              "avg_ms": 0.0828
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 241.158,
+              "avg_ms": 0.0804
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 314.523,
+              "avg_ms": 0.1048
+            }
+          ],
+          "tokenize_ik": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 778.452,
+              "avg_ms": 0.2595
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 702.373,
+              "avg_ms": 0.2341
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 782.066,
+              "avg_ms": 0.2607
+            }
+          ],
+          "tokenize_beng": [
+            {
+              "sample": 1,
+              "rounds": 3000,
+              "total_ms": 374.585,
+              "avg_ms": 0.1249
+            },
+            {
+              "sample": 2,
+              "rounds": 3000,
+              "total_ms": 515.857,
+              "avg_ms": 0.172
+            },
+            {
+              "sample": 3,
+              "rounds": 3000,
+              "total_ms": 475.856,
+              "avg_ms": 0.1586
+            }
+          ],
+          "query_cn": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 481.685,
+              "avg_ms": 2.4084
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 484.933,
+              "avg_ms": 2.4247
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 455.47,
+              "avg_ms": 2.2774
+            }
+          ],
+          "query_beng": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 641.036,
+              "avg_ms": 3.2052
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 636.601,
+              "avg_ms": 3.183
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 654.473,
+              "avg_ms": 3.2724
+            }
+          ],
+          "query_mixed": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 495.477,
+              "avg_ms": 2.4774
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 521.26,
+              "avg_ms": 2.6063
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 490.935,
+              "avg_ms": 2.4547
+            }
+          ],
+          "query_limit": [
+            {
+              "sample": 1,
+              "rounds": 200,
+              "total_ms": 90.108,
+              "avg_ms": 0.4505
+            },
+            {
+              "sample": 2,
+              "rounds": 200,
+              "total_ms": 90.068,
+              "avg_ms": 0.4503
+            },
+            {
+              "sample": 3,
+              "rounds": 200,
+              "total_ms": 82.818,
+              "avg_ms": 0.4141
+            }
+          ]
+        }
+      }
+    ],
+    "comparison": {
+      "build_ik_all_sec": {
+        "baseline_mean": 7.699,
+        "candidate_mean": 7.704,
+        "reduction_percent": -0.06494349915573405,
+        "pair_reduction_percent": [
+          2.639185622722129,
+          -2.9565918559333326
+        ]
+      },
+      "build_ik_content_sec": {
+        "baseline_mean": 5.8555,
+        "candidate_mean": 5.9015,
+        "reduction_percent": -0.7855862010075931,
+        "pair_reduction_percent": [
+          1.8965230410913358,
+          -3.6140350877192917
+        ]
+      },
+      "build_beng_en_sec": {
+        "baseline_mean": 3.3775,
+        "candidate_mean": 3.327,
+        "reduction_percent": 1.4951887490747606,
+        "pair_reduction_percent": [
+          3.306761145556547,
+          -0.32660332541567527
+        ]
+      },
+      "build_total_sec": {
+        "baseline_mean": 16.9555,
+        "candidate_mean": 16.9565,
+        "reduction_percent": -0.005897791277154063,
+        "pair_reduction_percent": [
+          2.508630609896434,
+          -2.649567479281356
+        ]
+      },
+      "tokenize_ik_avg_ms": {
+        "baseline_mean": 0.2346,
+        "candidate_mean": 0.23445,
+        "reduction_percent": 0.06393861892584063,
+        "pair_reduction_percent": [
+          11.006546644844518,
+          -11.832740213523142
+        ]
+      },
+      "tokenize_beng_avg_ms": {
+        "baseline_mean": 0.1382,
+        "candidate_mean": 0.13565,
+        "reduction_percent": 1.845151953690305,
+        "pair_reduction_percent": [
+          24.27122940430926,
+          -27.99325463743676
+        ]
+      },
+      "query_cn_avg_ms": {
+        "baseline_mean": 2.48675,
+        "candidate_mean": 2.35285,
+        "reduction_percent": 5.384538051673859,
+        "pair_reduction_percent": [
+          8.141592920353979,
+          2.5010283833813207
+        ]
+      },
+      "query_beng_avg_ms": {
+        "baseline_mean": 3.4636500000000003,
+        "candidate_mean": 3.1950000000000003,
+        "reduction_percent": 7.756268676107581,
+        "pair_reduction_percent": [
+          9.712885951919791,
+          5.7456461290794625
+        ]
+      },
+      "query_mixed_avg_ms": {
+        "baseline_mean": 2.71395,
+        "candidate_mean": 2.4913,
+        "reduction_percent": 8.2039094309033,
+        "pair_reduction_percent": [
+          10.975741628518909,
+          5.305999397045524
+        ]
+      },
+      "query_limit_avg_ms": {
+        "baseline_mean": 0.42774999999999996,
+        "candidate_mean": 0.43925000000000003,
+        "reduction_percent": -2.6884862653419273,
+        "pair_reduction_percent": [
+          5.81942661531879,
+          -12.93481061582067
+        ]
+      },
+      "select1_avg_ms": {
+        "baseline_mean": 0.08295,
+        "candidate_mean": 0.08425,
+        "reduction_percent": -1.5672091621458772,
+        "pair_reduction_percent": [
+          -3.25945241199479,
+          -0.11210762331839152
+        ]
+      }
+    },
+    "sample_records": 84,
+    "all_query_hits_match": true
+  },
+  "score_consistency_audit": "docs/fts_37747_score_analysis.json",
+  "score_audit_reproduction": {
+    "conditional_assumption": "Same repository-style formula, nine printed metrics, fixed positive baselines and weights; score fields correspond to these timing aggregates.",
+    "derivation": "I = 1-sum(w*t/b). Therefore (1-I_new)/(1-I_old) is a positive weighted mean of t_new/t_old and cannot exceed its maximum.",
+    "maximum_time_ratio": "1.071126760563380281690140845070422535211",
+    "reported_weighted_cost_ratio": "1.084501368279425989471654935923130717474",
+    "rounding_tolerant_maximum_time_ratio": "1.071856287425149700598802395209580838323",
+    "same_fixed_baseline_condition_violated": true,
+    "conditional_new_score_50_lower_bound": "38.51470497215073719014084507042253521128",
+    "rounding_tolerant_conditional_lower_bound": "38.47282834654664784431137724550898203595",
+    "checked_in_ci_baseline_raw_scores": [
+      100.0,
+      100.0
+    ],
+    "caveat": "Bounds are a consistency check, not platform predictions. Actual platform baseline/rules or timing-to-score association is unprovided."
+  },
+  "findings": {
+    "build": "Total build mean 16.9555 -> 16.9565 seconds, approximately flat; first candidate is faster, second slower. No stable build regression reproduced in this small controlled sample.",
+    "queries": "All three complete queries improve in both pairs: mean CN5.38%, EN7.76%, mixed8.20%. All hits remain identical.",
+    "negative_evidence": "Mean LIMIT is 2.69% slower with differing pair directions. Tokenization and SELECT 1 fluctuate; preserve every row and do not claim universal gains.",
+    "scoring": "The printed scores/timings cannot come from the same repository-style formula and one fixed positive baseline. Actual platform baseline/rules/metric-set or receipt association is not available, so exact cause remains unknown.",
+    "action": "Retain bc689eb as current query-performance implementation, retain f73f785 as highest-score historical reference, and do not change scoring/baseline/input to explain the result."
+  },
+  "correctness_scope": "No runtime changes, so the prior 26 regular regression passes are retained, not claimed as a fresh run. This diagnostic validates benchmark configuration, all reported hits, executable hashes and all 84 sample records. Extra native PS failure remains unpassed.",
+  "limitations": [
+    "Only two complete runs per version, shared host without exclusive CPU/frequency control. Failure to reproduce a stable build slowdown is not proof about platform cause.",
+    "Conditional score lower bounds (38.515, or 38.473 allowing report rounding) are consistency checks, not predictions or replacement platform scores.",
+    "Checked-in CI baseline yields raw score 100 for both receipts; platform scoring conditions differ from that default setup.",
+    "Original reports print the modified documentation checkout HEAD 0bf7533 for both executables; use verified paths/hashes rather than report HEAD/git_dirty for provenance.",
+    "Earlier binary-PK projection and native PS limitations remain documented; no runtime fixes are claimed in this diagnostic."
+  ],
+  "raw_archive": {
+    "path": "docs/fts_37747_full_raw.json.gz",
+    "sha256": "cb662bcfbafc224aa42e29d011cf0d926db5ce3d29edc2646d64c72ff5aaec27",
+    "file_count": 31,
+    "files": [
+      "closure.json",
+      "collect_evidence.py",
+      "docs/fts_37747_feedback.json",
+      "docs/fts_37747_score_analysis.json",
+      "docs/fts_42598_feedback.json",
+      "full_baseline_1.log",
+      "full_baseline_1.txt",
+      "full_baseline_2.log",
+      "full_baseline_2.txt",
+      "full_candidate_1.log",
+      "full_candidate_1.txt",
+      "full_candidate_2.log",
+      "full_candidate_2.txt",
+      "full_cycle.json",
+      "full_cycle.py",
+      "full_summary.json",
+      "instance.json",
+      "instance.py",
+      "score_analysis_initial.json",
+      "score_audit.py",
+      "score_audit_stdout.json",
+      "server_full_baseline_1.log",
+      "server_full_baseline_2.log",
+      "server_full_candidate_1.log",
+      "server_full_candidate_2.log",
+      "source_delta.patch",
+      "tools/benchmark/fts_large_bench.sh",
+      "tools/benchmark/fts_large_bench_baseline.json",
+      "tools/benchmark/fts_large_bench_gen.py",
+      "tools/benchmark/fts_large_bench_score.py",
+      "tools/benchmark/fts_large_bench_setup.sql"
+    ],
+    "uncompressed_bytes": 109650,
+    "compressed_bytes": 23632
+  }
+}

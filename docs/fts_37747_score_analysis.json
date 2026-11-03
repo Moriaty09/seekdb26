@@ -1,0 +1,174 @@
+{
+  "assumptions": [
+    "Repository-style mean of positive-baseline relative improvements with fixed positive metric/category weights.",
+    "Same nine printed timing metrics and same scoring baseline in both receipts.",
+    "Mean improvements correspond to the printed timing aggregates; do not treat this conditional audit as platform score prediction."
+  ],
+  "derivation": "Let C=1-I=sum(w*t/b). With fixed positive w and b, C_new/C_old is a positive weighted average of t_new/t_old and must be between their minimum and maximum.",
+  "metric_ratios": {
+    "build_ik_all_sec": 1.0293093441671504,
+    "build_ik_content_sec": 1.065217391304348,
+    "build_beng_en_sec": 1.0711267605633803,
+    "tokenize_ik_avg_ms": 1.0178571428571428,
+    "tokenize_beng_avg_ms": 0.988795518207283,
+    "query_cn_avg_ms": 0.952453653217012,
+    "query_beng_avg_ms": 0.911428157589803,
+    "query_mixed_avg_ms": 0.9261198371146016,
+    "query_limit_avg_ms": 1.042457091237579
+  },
+  "largest_slowdown_metric": "build_beng_en_sec",
+  "largest_slowdown_ratio": 1.0711267605633803,
+  "largest_slowdown_percent": 7.112676056338028,
+  "reported_weighted_cost_ratio": 1.084501368279426,
+  "reported_weighted_cost_increase_percent": 8.450136827942599,
+  "fixed_baseline_necessary_new_mean_lower_bound": 0.3851470497215074,
+  "conditional_new_score_50_lower_bound": 38.51470497215074,
+  "rounding_tolerant_max_ratio": 1.0718562874251496,
+  "rounding_tolerant_conditional_score_50_lower_bound": 38.47282834654665,
+  "bound_violated": true,
+  "rounding_tolerant_bound_violated": true,
+  "checked_in_ci_baseline_rescore": {
+    "old_raw_score": 100.0,
+    "new_raw_score": 100.0,
+    "old_mean_improvement": 0.9259035666032261,
+    "new_mean_improvement": 0.9250484298453483,
+    "note": "The checked-in CI baseline is not the platform baseline: both raw scores saturate at 100, unlike either platform receipt. Not a prediction of platform results."
+  },
+  "score_and_baseline_unchanged_between_sources": true,
+  "interpretation": "The reported 4.85-point drop cannot be generated from these printed timings under the same repository-style formula and any one fixed positive baseline. Platform baseline, rules/metric set, or timing-to-score association differs; exact cause is not identifiable from receipts alone.",
+  "unchanged_artifacts": {
+    "tools/benchmark/fts_large_bench_score.py": {
+      "sha256": "bea52eb1c68d05693bb3ac5b910ab0e2fa0e70e01582f40466898ee1e2e3ef55",
+      "identical_in_both_commits_and_workspace": true
+    },
+    "tools/benchmark/fts_large_bench_baseline.json": {
+      "sha256": "f4e97eddb2e49c982b967fc8047f7cf37177eebe53d648f6746d85aacda91f0c",
+      "identical_in_both_commits_and_workspace": true
+    },
+    "tools/benchmark/fts_large_bench.sh": {
+      "sha256": "596ea5d1c0038e666b78aa94bef22d2dfb87ffc9e84dbc7e2a1da1f746424462",
+      "identical_in_both_commits_and_workspace": true
+    },
+    "tools/benchmark/fts_large_bench_setup.sql": {
+      "sha256": "311826751df7f51ac45156fb4284aeca9bd9197370aceb88f4fb92832b458108",
+      "identical_in_both_commits_and_workspace": true
+    },
+    "tools/benchmark/fts_large_bench_gen.py": {
+      "sha256": "b0c816dd8211ac0471f60b72a37a3fb5c62580357a5b6d7ac95f5a8c2e3f143d",
+      "identical_in_both_commits_and_workspace": true
+    }
+  },
+  "local_full_control_summary": {
+    "baseline_source": "f73f78596969bf31c2aae0bfa6ca59ce2ec6ba35",
+    "candidate_source": "bc689eb14074a1ebaa6a16d3925f883b5c203434",
+    "order": "A B A B",
+    "rows": 20000,
+    "memory_budget": "4G",
+    "cpu_count": 4,
+    "cpu_affinity": "12-15",
+    "skip_load": 0,
+    "comparison": {
+      "build_ik_all_sec": {
+        "baseline_mean": 7.699,
+        "candidate_mean": 7.704,
+        "reduction_percent": -0.06494349915573405,
+        "pair_reduction_percent": [
+          2.639185622722129,
+          -2.9565918559333326
+        ]
+      },
+      "build_ik_content_sec": {
+        "baseline_mean": 5.8555,
+        "candidate_mean": 5.9015,
+        "reduction_percent": -0.7855862010075931,
+        "pair_reduction_percent": [
+          1.8965230410913358,
+          -3.6140350877192917
+        ]
+      },
+      "build_beng_en_sec": {
+        "baseline_mean": 3.3775,
+        "candidate_mean": 3.327,
+        "reduction_percent": 1.4951887490747606,
+        "pair_reduction_percent": [
+          3.306761145556547,
+          -0.32660332541567527
+        ]
+      },
+      "build_total_sec": {
+        "baseline_mean": 16.9555,
+        "candidate_mean": 16.9565,
+        "reduction_percent": -0.005897791277154063,
+        "pair_reduction_percent": [
+          2.508630609896434,
+          -2.649567479281356
+        ]
+      },
+      "tokenize_ik_avg_ms": {
+        "baseline_mean": 0.2346,
+        "candidate_mean": 0.23445,
+        "reduction_percent": 0.06393861892584063,
+        "pair_reduction_percent": [
+          11.006546644844518,
+          -11.832740213523142
+        ]
+      },
+      "tokenize_beng_avg_ms": {
+        "baseline_mean": 0.1382,
+        "candidate_mean": 0.13565,
+        "reduction_percent": 1.845151953690305,
+        "pair_reduction_percent": [
+          24.27122940430926,
+          -27.99325463743676
+        ]
+      },
+      "query_cn_avg_ms": {
+        "baseline_mean": 2.48675,
+        "candidate_mean": 2.35285,
+        "reduction_percent": 5.384538051673859,
+        "pair_reduction_percent": [
+          8.141592920353979,
+          2.5010283833813207
+        ]
+      },
+      "query_beng_avg_ms": {
+        "baseline_mean": 3.4636500000000003,
+        "candidate_mean": 3.1950000000000003,
+        "reduction_percent": 7.756268676107581,
+        "pair_reduction_percent": [
+          9.712885951919791,
+          5.7456461290794625
+        ]
+      },
+      "query_mixed_avg_ms": {
+        "baseline_mean": 2.71395,
+        "candidate_mean": 2.4913,
+        "reduction_percent": 8.2039094309033,
+        "pair_reduction_percent": [
+          10.975741628518909,
+          5.305999397045524
+        ]
+      },
+      "query_limit_avg_ms": {
+        "baseline_mean": 0.42774999999999996,
+        "candidate_mean": 0.43925000000000003,
+        "reduction_percent": -2.6884862653419273,
+        "pair_reduction_percent": [
+          5.81942661531879,
+          -12.93481061582067
+        ]
+      },
+      "select1_avg_ms": {
+        "baseline_mean": 0.08295,
+        "candidate_mean": 0.08425,
+        "reduction_percent": -1.5672091621458772,
+        "pair_reduction_percent": [
+          -3.25945241199479,
+          -0.11210762331839152
+        ]
+      }
+    },
+    "raw_evidence": "docs/fts_37747_full_control.json",
+    "interpretation": "Total build mean differs by only 0.001 sec; first candidate faster and second slower. No stable build regression reproduced in these four shared-host runs. All three complete queries improve in both pairs. LIMIT retains a negative mean and differing directions. Not a proof of platform cause."
+  }
+}
