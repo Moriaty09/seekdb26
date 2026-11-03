@@ -408,6 +408,7 @@ ObTextRetrievalDaaTTokenIter::ObTextRetrievalDaaTTokenIter()
     relevance_expr_(nullptr),
     inv_scan_domain_id_col_(nullptr),
     max_batch_size_(1),
+    refill_batch_size_(1),
     cur_idx_(-1),
     count_(0),
     relevance_(),
@@ -434,16 +435,15 @@ int ObTextRetrievalDaaTTokenIter::init(const ObTextRetrievalScanIterParam &iter_
       relevance_expr_ = iter_param.relevance_expr_;
       inv_scan_domain_id_col_ = iter_param.inv_scan_domain_id_col_;
       max_batch_size_ = OB_MAX(iter_param.eval_ctx_->max_batch_size_, 1);
+      refill_batch_size_ = max_batch_size_;
       common::ObDatumBasicFuncs *basic_funcs = ObDatumFuncs::get_basic_func(inv_scan_domain_id_col_->datum_meta_.type_, CS_TYPE_BINARY);
       cmp_func_ = basic_funcs->null_first_cmp_;
       if (OB_ISNULL(cmp_func_)) {
         ret = OB_ERR_UNEXPECTED;
       } else if (FALSE_IT(relevance_.set_allocator(allocator_))) {
-      } else if (OB_FAIL(relevance_.init(max_batch_size_))) {
-      } else if (OB_FAIL(relevance_.prepare_allocate(max_batch_size_))) {
+      } else if (nullptr != relevance_expr_ && OB_FAIL(relevance_.init(max_batch_size_))) {
+      } else if (nullptr != relevance_expr_ && OB_FAIL(relevance_.prepare_allocate(max_batch_size_))) {
       } else if (FALSE_IT(doc_id_.set_allocator(allocator_))) {
-      } else if (OB_FAIL(doc_id_.init(max_batch_size_))) {
-      } else if (OB_FAIL(doc_id_.prepare_allocate(max_batch_size_))) {
       } else {
         is_inited_ = true;
       }
@@ -454,6 +454,7 @@ int ObTextRetrievalDaaTTokenIter::init(const ObTextRetrievalScanIterParam &iter_
 
 void ObTextRetrievalDaaTTokenIter::reuse()
 {
+  refill_batch_size_ = max_batch_size_;
   cur_idx_ = -1;
   count_ = 0;
   token_iter_->reuse();
@@ -477,7 +478,7 @@ int ObTextRetrievalDaaTTokenIter::get_next_row() {
     if (OB_UNLIKELY(OB_ITER_END != ret)) {
     }
   } else if (!eval_ctx_->is_vectorized() && FALSE_IT(count_ = 1)) {
-  } else if (eval_ctx_->is_vectorized() && OB_FAIL(token_iter_->get_next_batch(max_batch_size_, count_))) {
+  } else if (eval_ctx_->is_vectorized() && OB_FAIL(token_iter_->get_next_batch(refill_batch_size_, count_))) {
     if (OB_UNLIKELY(OB_ITER_END != ret)) {
     } else if (count_ != 0) {
       ret = OB_SUCCESS;
@@ -487,7 +488,26 @@ int ObTextRetrievalDaaTTokenIter::get_next_row() {
     need_load = true;
   }
   if (OB_SUCC(ret) && need_load) {
-    if (OB_NOT_NULL(relevance_expr_)) {
+    // A small LIMIT may finish within the first batch. If selective filters
+    // need more postings, grow back to the ordinary batch size without
+    // restricting the number of rows that can be consumed.
+    if (refill_batch_size_ < max_batch_size_) {
+      refill_batch_size_ += OB_MIN(refill_batch_size_, max_batch_size_ - refill_batch_size_);
+    }
+    // The previous batch is fully consumed before a refill. No live posting
+    // head refers to this stream's old buffer, so it need not be copied when
+    // growing. Geometric capacity bounds arena allocation over all refills.
+    if (doc_id_.count() < count_) {
+      const int64_t old_capacity = doc_id_.count();
+      const int64_t capacity = OB_MAX(count_, old_capacity
+          + OB_MIN(old_capacity, max_batch_size_ - old_capacity));
+      doc_id_.reset();
+      if (OB_FAIL(doc_id_.init(capacity))) {
+      } else if (OB_FAIL(doc_id_.prepare_allocate(capacity))) {
+      }
+    }
+    if (OB_FAIL(ret)) {
+    } else if (OB_NOT_NULL(relevance_expr_)) {
       if (OB_FAIL(save_relevances_and_docids())) {
       }
     } else if (OB_FAIL(save_docids())) {

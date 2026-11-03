@@ -1,0 +1,39 @@
+# Repeated tokens exercise Unicode collation equality during index-build sorting.
+# Golden recorded with unmodified bc689eb binary.
+--disable_warnings
+drop database if exists fts_build_equal_keys;
+--enable_warnings
+create database fts_build_equal_keys;
+use fts_build_equal_keys;
+create table strings(id int primary key,s varchar(64) character set utf8mb4 collate utf8mb4_general_ci);
+insert into strings values (1,null),(2,''),(3,'a'),(4,'A'),(5,'á'),(6,'a '),
+(7,concat('a',char(0))),(8,'数据库'),(9,'数据库 '),(10,'𠀀'),(11,'😀'),(12,'é'),(13,'é'),(14,'Alpha'),(15,'alpha');
+select a.id as l,b.id as r,strcmp(a.s,b.s) as cmp from strings a,strings b
+where a.id in (2,3,5,7,8,10,12,13) and b.id in (1,2,3,4,5,6,7,8,9,10,11,12,13) order by a.id,b.id;
+select id,hex(s) from strings order by s,id;
+select id,hex(s) from strings order by s desc,id;
+select min(hex(s)),count(*) from strings group by s order by min(id);
+create table digits(n int primary key);
+insert into digits values(0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table docs(id int primary key,body text character set utf8mb4 collate utf8mb4_general_ci,
+bin_body text character set utf8mb4 collate utf8mb4_bin);
+--disable_query_log
+insert into docs select n,if(mod(n,31)=0,'Alpha alpha á rare 数据库 索引','alpha Alpha á common 数据库 索引'),
+if(mod(n,31)=0,'Alpha alpha á rare 数据库 索引','alpha Alpha á common 数据库 索引')
+from(select a.n+10*b.n+100*c.n+1000*d.n as n from digits a,digits b,digits c,digits d) t where n between 1 and 1057;
+--enable_query_log
+alter table docs add fulltext index ft(body) with parser ik;
+alter table docs add fulltext index fb(bin_body) with parser beng;
+select count(*) from docs where match(body) against('alpha 数据库');
+select count(*) from docs where match(bin_body) against('alpha rare');
+select id,round(match(body) against('alpha rare'),7) as score from docs
+where match(body) against('alpha rare') order by id limit 4 offset 255;
+select id,round(match(body) against('+alpha +rare' in boolean mode),7) as score from docs
+where match(body) against('+alpha +rare' in boolean mode) order by id limit 4;
+begin;
+update docs set body='unique changed token 数据库' where id between 30 and 35;
+select count(*) from docs where match(body) against('unique changed');
+rollback;
+select count(*) from docs where match(body) against('unique changed');
+select count(*) from docs where match(body) against('+alpha +rare' in boolean mode);
+drop database fts_build_equal_keys;

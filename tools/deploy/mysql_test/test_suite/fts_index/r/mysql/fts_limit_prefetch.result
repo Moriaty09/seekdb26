@@ -1,0 +1,109 @@
+drop database if exists fts_limit_prefetch;
+create database fts_limit_prefetch;
+use fts_limit_prefetch;
+create table digits(n int primary key);
+insert into digits values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table docs(id int primary key, body text, cn text,
+fulltext index ft(body) with parser beng,fulltext index fc(cn) with parser ik);
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 0 offset 0) t;
+count(*)
+0
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 1 offset 0) t;
+count(*)
+1
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 2 offset 0) t;
+count(*)
+2
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 7 offset 0) t;
+count(*)
+7
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 0) t;
+count(*)
+20
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 1 offset 5) t;
+count(*)
+1
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 500) t;
+count(*)
+20
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 257 offset 0) t;
+count(*)
+257
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 2000 offset 0) t;
+count(*)
+1057
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 20 offset 1040) t;
+count(*)
+17
+select count(*) from (select id from docs where match(body) against('alpha beta') limit 1 offset 2000) t;
+count(*)
+0
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 1 offset 0) t;
+count(*)
+1
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 2 offset 0) t;
+count(*)
+2
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 7 offset 0) t;
+count(*)
+7
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 20 offset 0) t;
+count(*)
+10
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 1 offset 5) t;
+count(*)
+1
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 20 offset 50) t;
+count(*)
+0
+select count(*) from (select id from docs where match(body) against('missing') limit 1) t;
+count(*)
+0
+select count(*) from (select id from docs where match(body) against('alpha')>0.1 limit 1) t;
+count(*)
+1
+select id,round(match(body) against('alpha rare'),7) as score from docs
+where match(body) against('alpha rare') order by id limit 4 offset 256;
+id	score
+257	0.3716216
+258	0.3716216
+259	0.3716216
+260	0.3716216
+select count(*) from (select id from docs where match(cn) against('倒排索引 tokenizer') limit 20) t;
+count(*)
+20
+prepare p from 'select count(*) from (select id from docs where match(body) against(?) limit ? offset ?) t';
+set @q='alpha beta',@l=1,@o=0;
+execute p using @q,@l,@o;
+count(*)
+1
+set @q='+alpha -beta',@l=20,@o=0;
+execute p using @q,@l,@o;
+count(*)
+20
+set @q='alpha',@l=257,@o=256;
+execute p using @q,@l,@o;
+count(*)
+257
+set @q='alpha',@l=1,@o=0;
+execute p using @q,@l,@o;
+count(*)
+1
+set @q='alpha',@l=0,@o=0;
+execute p using @q,@l,@o;
+count(*)
+0
+deallocate prepare p;
+select count(*) from (select id from docs where match(body) against('alpha') limit 3 offset 9223372036854775807) t;
+count(*)
+0
+begin;
+update docs set body='alpha rare' where id between 200 and 250;
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 7) t;
+count(*)
+7
+rollback;
+select count(*) from (select id from docs where match(body) against('+alpha -beta' in boolean mode) limit 20) t;
+count(*)
+10
+drop database fts_limit_prefetch;

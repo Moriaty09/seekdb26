@@ -1,0 +1,28 @@
+# Cover every ASCII byte adjacent to UTF-8, connectors, NUL, and parameter reuse.
+# Golden recorded with unmodified bc689eb binary.
+--disable_warnings
+drop database if exists tokenize_ik_ascii_context;
+--enable_warnings
+create database tokenize_ik_ascii_context;
+use tokenize_ik_ascii_context;
+create table digits(n int primary key);
+insert into digits values(0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table chars(n int primary key,s varchar(64) character set utf8mb4 collate utf8mb4_general_ci);
+--disable_query_log
+insert into chars select n,concat('Ab',char(n),'09数据库',char(n),'Z')
+from(select a.n+10*b.n+100*c.n as n from digits a,digits b,digits c) t where n<128;
+--enable_query_log
+select n,tokenize(s,'ik') from chars order by n;
+select n,tokenize(s collate utf8mb4_bin,'ik') from chars order by n;
+select tokenize('ＡＢＣ１２３ alpha-09 database_a@b.com 12.34 数据库𠀀😀','ik');
+select tokenize(concat(repeat('Aa09 数据库𠀀😀_',12),' ending'),'ik');
+select n,tokenize(s collate utf8mb4_unicode_ci,'ik') from chars order by n;
+prepare p from 'select tokenize(convert(? using utf8mb4), ''ik'')';
+set @s=concat('hello',char(0),'数据库09');
+execute p using @s;
+set @s='ＡＢＣ１２３';
+execute p using @s;
+set @s='a_b-c+d@e.com #12.3';
+execute p using @s;
+deallocate prepare p;
+drop database tokenize_ik_ascii_context;

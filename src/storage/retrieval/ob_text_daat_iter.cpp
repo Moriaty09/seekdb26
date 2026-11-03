@@ -162,6 +162,19 @@ int ObTextDaaTIter::collect_dims_by_id(
   return ret;
 }
 
+int ObTextDaaTIter::get_next_rows(const int64_t capacity, int64_t &count)
+{
+  // An outer LIMIT can restrict the requested batch even when the inverted
+  // scan's limit parameter is unset. Hint only the first read; subsequent
+  // refills grow normally if filtering or the caller needs more postings.
+  if (is_inited_ && capacity > 0 && input_row_cnt_ == 0 && output_row_cnt_ == 0) {
+    for (int64_t i = 0; i < dim_iters_->count(); ++i) {
+      static_cast<ObTextRetrievalDaaTTokenIter *>(dim_iters_->at(i))->set_initial_batch_size_hint(capacity);
+    }
+  }
+  return ObSRDaaTIterImpl::get_next_rows(capacity, count);
+}
+
 int ObTextDaaTIter::pre_process()
 {
   int ret = OB_SUCCESS;

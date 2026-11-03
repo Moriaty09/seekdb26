@@ -377,6 +377,13 @@ static int ob_strnncollsp_utf8mb4(const ObCharsetInfo *cs,
                        const unsigned char *dst, size_t dstlen,
                        bool diff_if_only_endspace_difference)
 {
+  // Repeated keys need no Unicode decoding or case folding. Byte equality
+  // implies equality for this collation, including identical invalid input;
+  // differing strings still use the complete collation and padding rules.
+  if (srclen == dstlen
+      && (src == dst || srclen == 0 || memcmp(src, dst, srclen) == 0)) {
+    return 0;
+  }
   int res;
   ob_wc_t src_wc = 0, dst_wc = 0;
   const unsigned char *se= src + srclen, *te= dst + dstlen;

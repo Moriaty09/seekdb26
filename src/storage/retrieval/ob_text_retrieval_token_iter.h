@@ -154,6 +154,10 @@ public:
     return ret;
   }
   int get_token_doc_cnt(int64_t &token_doc_cnt) const { return token_iter_->get_token_doc_cnt(token_doc_cnt); }
+  void set_initial_batch_size_hint(const int64_t rows)
+  {
+    refill_batch_size_ = OB_MAX(1, OB_MIN(max_batch_size_, rows));
+  }
   virtual int get_dim_max_score(double &score) override {
     int ret = OB_SUCCESS;
     score = token_iter_->get_max_token_relevance();
@@ -171,6 +175,7 @@ private:
   sql::ObExpr *relevance_expr_;
   sql::ObExpr *inv_scan_domain_id_col_;
   int64_t max_batch_size_;
+  int64_t refill_batch_size_;
   int64_t cur_idx_;
   int64_t count_;
   ObFixedArray<double, ObIAllocator> relevance_; // when ~ObFixedArray(), wikll destory itself
