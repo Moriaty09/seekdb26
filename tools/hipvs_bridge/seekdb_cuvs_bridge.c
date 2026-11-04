@@ -45,8 +45,10 @@ void* seekdb_cuvs_build(const float* base, long n, long dim)
   if (cuvsCagraIndexParamsCreate(&h->ip) != CUVS_SUCCESS) goto fail_res;
   h->ip->build_algo = NN_DESCENT;
   h->ip->graph_degree = 128;
-  h->ip->intermediate_graph_degree = 256;
-  h->ip->nn_descent_niter = 100;
+  // Pair three native GPU refinement rounds with the wider parallel CAGRA
+  // traversal below. Keep the final graph degree and FP32 dataset unchanged.
+  h->ip->intermediate_graph_degree = 128;
+  h->ip->nn_descent_niter = 3;
   if (cuvsCagraIndexCreate(&h->idx)      != CUVS_SUCCESS) goto fail_ip;
   if (cuvsCagraBuild(h->res, h->ip, &dset, h->idx) != CUVS_SUCCESS) goto fail_idx;
   if (pthread_mutex_init(&h->search_mutex, NULL) != 0) goto fail_idx;
@@ -110,9 +112,12 @@ int seekdb_cuvs_search(void* handle, const float* query, long nq, long topk,
     sp = h->search_params;
     {
       size_t required_itopk = (size_t)topk * 4;
-      if (required_itopk < 512) required_itopk = 512;
+      if (required_itopk < 4096) required_itopk = 4096;
       sp->itopk_size = h->default_itopk > required_itopk ? h->default_itopk : required_itopk;
       sp->search_width = 4;
+      // The C API defaults to SINGLE_CTA; MULTI_CTA exposes enough GPU
+      // parallelism for single-row SQL while retaining a larger candidate set.
+      sp->algo = MULTI_CTA;
     }
     cuvsFilter f; f.type=NO_FILTER; f.addr=(uintptr_t)0;
     if (cuvsCagraSearch(h->res, sp, h->idx, &qt, &nt, &dt, f) != CUVS_SUCCESS) { rc=15; goto done; }

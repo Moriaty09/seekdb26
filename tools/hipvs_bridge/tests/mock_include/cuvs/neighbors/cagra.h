@@ -3,11 +3,12 @@
 #include <cuvs/core/c_api.h>
 #include <dlpack/dlpack.h>
 enum { NN_DESCENT = 1, NO_FILTER = 0 };
+enum { SINGLE_CTA = 0, MULTI_CTA = 1 };
 typedef struct { int build_algo, graph_degree, intermediate_graph_degree, nn_descent_niter, metric; } MockIndexParams;
 typedef MockIndexParams* cuvsCagraIndexParams_t;
 typedef struct { int64_t n, dim, degree; std::vector<unsigned> graph; std::vector<float> vectors; } MockIndex;
 typedef MockIndex* cuvsCagraIndex_t;
-typedef struct { size_t itopk_size, search_width; } MockSearchParams;
+typedef struct { size_t itopk_size, search_width; int algo; } MockSearchParams;
 typedef MockSearchParams* cuvsCagraSearchParams_t;
 typedef struct { int type; uintptr_t addr; } cuvsFilter;
 cuvsError_t cuvsCagraIndexParamsCreate(cuvsCagraIndexParams_t*);

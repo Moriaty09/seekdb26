@@ -40,7 +40,7 @@ cuvsError_t cuvsCagraIndexCreate(cuvsCagraIndex_t* p) { *p = new MockIndex{}; ++
 cuvsError_t cuvsCagraIndexDestroy(cuvsCagraIndex_t p) { delete p; --indexes; return 0; }
 cuvsError_t cuvsCagraBuild(cuvsResources_t, cuvsCagraIndexParams_t p, DLManagedTensor* t, cuvsCagraIndex_t idx) {
   assert(p->build_algo == NN_DESCENT && p->graph_degree == 128 &&
-         p->intermediate_graph_degree == 256 && p->nn_descent_niter == 100);
+         p->intermediate_graph_degree == 128 && p->nn_descent_niter == 3);
   ++build_calls;
   idx->n = t->dl_tensor.shape[0]; idx->dim = t->dl_tensor.shape[1]; idx->degree = p->graph_degree;
   const auto* data = static_cast<float*>(t->dl_tensor.data);
@@ -52,14 +52,15 @@ cuvsError_t cuvsCagraBuild(cuvsResources_t, cuvsCagraIndexParams_t p, DLManagedT
 }
 cuvsError_t cuvsCagraSearchParamsCreate(cuvsCagraSearchParams_t* p) {
   if (fail_params) { --fail_params; return 1; }
-  *p = new MockSearchParams{64, 1}; ++param_creates; ++search_params; return 0;
+  *p = new MockSearchParams{64, 1, SINGLE_CTA}; ++param_creates; ++search_params; return 0;
 }
 cuvsError_t cuvsCagraSearchParamsDestroy(cuvsCagraSearchParams_t p) { delete p; --search_params; return 0; }
 cuvsError_t cuvsCagraSearch(cuvsResources_t, cuvsCagraSearchParams_t p, cuvsCagraIndex_t,
                           DLManagedTensor* q, DLManagedTensor* n, DLManagedTensor* d, cuvsFilter) {
   assert(active_searches.fetch_add(1) == 0);
   const size_t topk = n->dl_tensor.shape[1];
-  assert(p->itopk_size == std::max(size_t(512), topk * 4) && p->search_width == 4);
+  assert(p->itopk_size == std::max(size_t(4096), topk * 4) && p->search_width == 4 &&
+         p->algo == MULTI_CTA);
   if (fail_search) { --fail_search; --active_searches; return 1; }
   const int offset = int(static_cast<float*>(q->dl_tensor.data)[0]);
   for (int64_t row = 0; row < n->dl_tensor.shape[0]; ++row) {
@@ -186,9 +187,10 @@ int main(int argc, char** argv) {
   const int warm_allocs = alloc_calls, warm_params = param_creates;
   for (int i = 0; i < 100; ++i) search(h, 10);
   assert(alloc_calls == warm_allocs && param_creates == warm_params);
-  search(h, 100); search(h, 300); search(h, 10); // no sticky itopk after large k
+  search(h, 100); search(h, 300); search(h, 10); // grow and reuse the retained workspace
   const size_t retained = allocations.size();
   search(h, 100, 5); search(h, 1500); assert(allocations.size() == retained);
+  search(h, 10); // reset itopk from 6000 to 4096 after the transient large-k request
   fail_search = 1;
   assert(seekdb_cuvs_search(h, query, 1, 10, ids, distances) == 15); search(h, 10);
   fail_copy_at = copy_calls + 3;

@@ -44,6 +44,14 @@ def main():
     lib.seekdb_cuvs_free.restype = None
     hip = ctypes.CDLL('/opt/rocm/lib/libamdhip64.so')
     hip.hipDeviceSynchronize.restype = ctypes.c_int
+    hip.hipDeviceGetPCIBusId.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
+    hip.hipDeviceGetPCIBusId.restype = ctypes.c_int
+    pci = ctypes.create_string_buffer(64)
+    assert hip.hipDeviceGetPCIBusId(pci, len(pci), 0) == 0
+    actual_counter = pathlib.Path('/sys/bus/pci/devices') / pci.value.decode().lower() / 'mem_info_vram_used'
+    assert actual_counter.is_file(), actual_counter
+    requested_counter = str(args.vram_file)
+    args.vram_file = actual_counter
     peak = [int(args.vram_file.read_text())]
     finished = threading.Event()
 
@@ -57,6 +65,9 @@ def main():
     result = dict(scope='synthetic bridge-only diagnostic; not SQL or official scoring',
                   fixtures=metadata, library_sha256=digest(args.library),
                   result_integrity=False, sampled_vram_interval_seconds=0.01)
+    result['gpu_pci_bus_id'] = pci.value.decode()
+    result['sampled_vram_counter'] = str(actual_counter)
+    result['requested_vram_counter'] = requested_counter
     try:
         def search(query, k):
             ids = np.empty(k, dtype=np.uint32)

@@ -1,5 +1,8 @@
 # V5 CAGRA 外围优化与复现方法
 
+2026-11-04 在外围优化之上加入原生 CAGRA 建图/搜索联合调参；当前参数和完整复现步骤见
+[CAGRA_BUILD_SEARCH_TUNING.md](CAGRA_BUILD_SEARCH_TUNING.md)，实测结果见 [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)。
+
 2026-11-02 新增无损紧凑快照和 OpenMP 预算优化，详见 [COMPACT_SNAPSHOT.md](COMPACT_SNAPSHOT.md)。
 新版本写 OBCUVS03、继续读 OBCUVS02；真实 ROCm 编译、GPU 功能、SQL 配对和重启检查已完成。
 本轮数值及适用范围见 [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md)。
@@ -23,8 +26,8 @@
   仅缓存 `nq=1, k<=1024, dim<=4096` 的缓冲区，最大 24 KiB；增长时新旧缓冲区短暂并存。
   三个区域按 256 字节间隔对齐。批量查询保留临时分配方式，不增大缓存。
 - 句柄内互斥保护搜索状态；销毁句柄前，调用方仍需保证不再有搜索或序列化操作。
-- 每次搜索重新设置与 V5 相同的 `itopk_size=max(库默认值,512,4*k)` 和 `search_width=4`，避免先查大 k 导致后续小 k 参数变化。
-- 建图仍使用 NN_DESCENT、graph_degree=128、intermediate_graph_degree=256、nn_descent_niter=100。
+- 每次搜索重新设置 `itopk_size=max(库默认值,4096,4*k)`、`search_width=4` 和原生 `MULTI_CTA`，避免先查大 k 导致后续小 k 参数变化。
+- 建图使用 NN_DESCENT、graph_degree=128、intermediate_graph_degree=128、nn_descent_niter=3。
   数据保持 FP32，查询仍调用固定 hipVS CAGRA 搜索。
 - 新快照直接保存 GPU 图和一份原始 FP32 向量，消除重复向量与临时文件中转。
   OBCUVS03 通过固定 hipVS 的 IndexFromArgs 恢复同一张图；不额外建图。
@@ -34,7 +37,8 @@
 - 距离回拷贝失败返回非零值；增加参数/溢出检查，DLPack shape 使用明确的 int64_t。
 - `build.sh` 添加内部 pthread/dl 链接选项。对外构建入口不变，不新增第三方依赖。
 
-算法参数保持 V5 值。性能按完整 SQL 计时与独立 GPU 诊断分别报告，正式数据集成绩仍由组织方确认。
+2026-11-02 版本保持 V5 算法参数；2026-11-04 版本联合调整建图和搜索参数，具体质量验证见调参文档。
+性能按完整 SQL 计时与独立 GPU 诊断分别报告，正式数据集成绩仍由组织方确认。
 
 ## 已完成的主机检查
 
